@@ -1,0 +1,13 @@
+{
+  "name": "Symbulator — symbolic circuit simulation",
+  "short_name": "Symbulator",
+  "description": "Symbolic simulation of linear electrical circuits, created by Roberto Perez-Franco.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f4f5f7",
+  "theme_color": "#123c33",
+  "icons": [
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}
