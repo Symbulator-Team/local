@@ -27,7 +27,7 @@ HERE = Path(__file__).resolve().parent
 TEMPLATE = HERE.parent / "server" / "templates" / "index.html"
 OUTPUT = HERE / "index.html"
 
-WHEEL = "symbulator-0.4.0-py3-none-any.whl"
+WHEEL = "symbulator-0.4.1-py3-none-any.whl"
 
 
 def sub(text: str, old: str, new: str, *, count: int = 1, label: str = "") -> str:
@@ -240,6 +240,17 @@ def build() -> str:
 
     s = sub(
         s,
+        """    const r = await fetch('/api/plot', {
+      method: 'POST', headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify(body)
+    });
+    const data = await r.json();""",
+        """    const data = await py('plot', body);""",
+        label="plot fetch",
+    )
+
+    s = sub(
+        s,
         """    const r = await fetch('/api/evaluate', {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
@@ -261,6 +272,7 @@ def build() -> str:
       body: JSON.stringify({
         equations: $('solveqEqs').value,
         unknowns: $('solveqUnks').value,
+        conditions: $('solveqConds').value,
         values: last.values,
         ...roundingState(),
         si: $('siUnits').checked,
@@ -272,6 +284,7 @@ def build() -> str:
         """    const data = await py('solve_equations', {
       equations: $('solveqEqs').value,
       unknowns: $('solveqUnks').value,
+      conditions: $('solveqConds').value,
       values: last.values,
       ...roundingState(),
       si: $('siUnits').checked,

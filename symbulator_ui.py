@@ -45,14 +45,53 @@ MAX_VARIABLES = 40
 
 # Everything a legitimate circuit description or omega value can contain:
 # element names, node numbers, values like 1e-6 / 4.7u / 'k / 5/s / 2*v_2,
-# separators, parentheses, and basic arithmetic. Deliberately excluded:
-# [ ] { } = ; " \ ` @ # $ % & ! ? < > | ~ and whitespace other than space.
-_ALLOWED = re.compile("^[A-Za-z0-9_,.:+\\-*/()'^ \u00b5\u03bc]*$")
+# the `[a,b,c]` parallel-impedance shortcut (expand_shorthand turns it
+# into pr(a,b,c) before it ever reaches sympify), separators, and basic
+# arithmetic. Deliberately excluded: { } = ; " \ ` @ # $ % & ! ? < > | ~
+# and whitespace other than space.
+_ALLOWED = re.compile("^[A-Za-z0-9_,.:+\\-*/()\\[\\]'^ \u00b5\u03bc]*$")
 # Expert-mode equations/conditions additionally need "=".
-_ALLOWED_EQ = re.compile("^[A-Za-z0-9_,.=+\\-*/()'^ \u00b5\u03bc]*$")
+_ALLOWED_EQ = re.compile("^[A-Za-z0-9_,.=+\\-*/()\\[\\]'^ \u00b5\u03bc]*$")
+# The Solve panel's "Conditions / constraints" (solveq_ui) also allow
+# < and > (and, via >=/<=, both together) -- a post-solve filter, not a
+# substitution, so an actual inequality is meaningful there.
+_ALLOWED_COND = re.compile("^[A-Za-z0-9_,.=<>+\\-*/()\\[\\]'^ \u00b5\u03bc]*$")
 _VARNAME = re.compile(r"^[A-Za-z0-9_]{1,40}$")
 MAX_EXTRA = 20
 MAX_EXTRA_LEN = 300
+
+# Expert-mode equations/conditions are parsed the same way circuit values
+# are -- imaginary units (i/I/j/J) and the calculator's apostrophe SI-unit
+# shorthand (4.7'k) both work, because the engine's extra-equation/condition
+# parsing already runs the same expand_shorthand()+safe_sympify() a circuit
+# value goes through. What it can't do is a *bare* engineering suffix with
+# no apostrophe (4.7k) the way a lone circuit field value can: that bare
+# form is only ever auto-resolved when it's the *entire* field (so it can't
+# accidentally rewrite part of a longer expression), and an equation is
+# never just one field. So a bare suffix inside an equation/condition is
+# caught here and rejected with a message pointing at the two forms that
+# *are* always unambiguous, rather than left to fail deep in the solver as
+# a raw sympify SyntaxError.
+_BARE_SI_HINT = re.compile(
+    r"(?<![\w'])\d+\.?\d*[kKMGTPmuµμnpfa](?![A-Za-z0-9_])")
+
+
+def _bare_si_suffix_error(label, items):
+    """None, or an error message naming the first added equation/condition
+    that uses a bare SI suffix (see _BARE_SI_HINT above)."""
+    for it in items:
+        m = _BARE_SI_HINT.search(it)
+        if m:
+            tok = m.group(0)
+            return (f"Added {label} {it!r} uses {tok!r} as a bare unit "
+                     f"suffix, which isn't allowed here (unlike a circuit "
+                     f"value field, an equation can't ask which meaning "
+                     f"you intend). Write the SI-unit meaning explicitly "
+                     f"with an apostrophe -- {tok[:-1]}'{tok[-1]} -- "
+                     f"matching circuit syntax, or the variable meaning "
+                     f"with a star -- {tok[:-1]}*{tok[-1]}.")
+    return None
+
 
 VALID_DOMAINS = {"dc", "ac", "fd", "tr"}
 
@@ -84,6 +123,22 @@ def _validate(desc: str, domain: str, omega: str, variables) -> str | None:
     return None
 
 
+_AND_SPLIT = re.compile(r"(?i)\s+and\s+")
+
+
+def _expand_and(items):
+    """Expand 'a and b' lines into separate clauses, so one line of
+    added conditions can list more than one -- 'vin = 12 and pr2 = 0'
+    becomes two clauses, each validated and applied on its own, rather
+    than being sympify'd as a single (invalid) expression."""
+    if not items:
+        return items
+    out = []
+    for raw in items:
+        out.extend(p.strip() for p in _AND_SPLIT.split(raw) if p.strip())
+    return out
+
+
 def _validate_extras(equations, unknowns, conditions) -> str | None:
     """Validate the expert-mode extras (lists of strings)."""
     for label, items, rx in (("equation", equations, _ALLOWED_EQ),
@@ -96,6 +151,9 @@ def _validate_extras(equations, unknowns, conditions) -> str | None:
             if (not isinstance(it, str) or len(it) > MAX_EXTRA_LEN
                     or not rx.match(it) or "__" in it):
                 return f"Added {label} contains invalid characters: {it!r}"
+        bare_err = _bare_si_suffix_error(label, items)
+        if bare_err:
+            return bare_err
     if unknowns:
         if len(unknowns) > MAX_EXTRA:
             return f"Too many added unknowns (max {MAX_EXTRA})."
@@ -106,7 +164,7 @@ def _validate_extras(equations, unknowns, conditions) -> str | None:
 
 
 # ---------------------------------------------------------------------------
-# Rounding and SI-prefix formatting
+# Answer formatting: rounding, decimal and SI-prefix notation
 # ---------------------------------------------------------------------------
 
 MAX_DIGITS = 15
@@ -298,7 +356,7 @@ def _latex_with_j(expr) -> str:
 
 
 # ---------------------------------------------------------------------------
-# Guards on what a value may contain
+# Content checks, explanatory notes, and error-message formatting
 # ---------------------------------------------------------------------------
 
 def normalise_imaginary(desc: str):
@@ -435,10 +493,9 @@ def _impulse_notes(elements, domain: str):
 
 
 def _exc_text(exc: Exception) -> str:
-    """Human-readable text for any exception the solve/evaluate helpers
-    catch. Some exceptions (mpmath's ZeroDivisionError, for one) carry an
-    empty message, which would otherwise reach the user as a blank error
-    box."""
+    """Human-readable text for any exception crossing the process pipe.
+    Some exceptions (mpmath's ZeroDivisionError, for one) carry an empty
+    message, which would otherwise reach the user as a blank error box."""
     msg = str(exc).strip()
     if not msg:
         msg = f"{type(exc).__name__} while solving (no further detail)."
@@ -519,11 +576,12 @@ def solve_ui(desc: str, domain: str, omega: str, variables,
                   digits: int = 0, si: bool = False,
                   units: bool = False, use_rms: bool = False,
                   approx: bool = False):
-    """Run a full circuit solve, or a special tool (th/er/port), and
-    return a result dict via `_ok`/`_err` (see the module docstring). A
-    solve's payload groups answers into node voltages and per-element
-    results; a special tool's payload holds a single block of named
-    answers."""
+    """Solve a full circuit, or run the th/er/port tools. Returns
+    {"ok": True, ...} with the payload grouping answers into node voltages
+    and per-element results (or, for the special tools, one block of named
+    answers), or {"ok": False, "error": message} on failure. Every value
+    in the payload is a plain string, so it can cross a subprocess pipe
+    (as app.py does) or a Pyodide/JS boundary unchanged."""
     try:
         import sympy as sp
         from symbulator import ex, tr, th, er, port
@@ -531,14 +589,13 @@ def solve_ui(desc: str, domain: str, omega: str, variables,
 
         def fmt0(expr, unit=""):
             """Format one answer from a special tool (th/er/port) as a
-            (plain-text, LaTeX) pair: try SI-prefix notation (if `si`),
+            (plain-text, LaTeX) pair: SI-prefix notation first (if `si`),
             then forced-decimal (if `approx`), else the exact symbolic
-            form -- attaching `unit` only when the answer is a pure
-            number it applies to. Defined here, not at module level, to
-            close over this call's digits/si/approx/units flags;
-            duplicated below as `fmt` for the normal-solve path rather
-            than shared, since the two evolved separately but do the
-            same job."""
+            form -- with `unit` attached only when the answer is a pure
+            number. Local to solve_ui() because it closes over this
+            call's digits/si/approx/units flags; duplicated as `fmt`
+            below (same job, different call site) rather than factored
+            out, since the two evolved separately."""
             try:
                 expr = sp.simplify(expr)
             except Exception:
@@ -569,6 +626,18 @@ def solve_ui(desc: str, domain: str, omega: str, variables,
             return _err(_bad)
         _notes = _hijack_notes(_guard_elements)
         _notes += _impulse_notes(_guard_elements, domain)
+
+        # Expert mode: let "ir5" mean "i_r5" the same way Evaluate and
+        # the Solve panel already do, by rewriting equations/conditions
+        # against this circuit's real symbol names before they're parsed.
+        if extra_equations or extra_conditions:
+            _canon = _circuit_canonical_names(_guard_elements)
+            if extra_equations:
+                extra_equations = [_normalize_underscore_names(e, _canon)
+                                    for e in extra_equations]
+            if extra_conditions:
+                extra_conditions = [_normalize_underscore_names(c, _canon)
+                                     for c in extra_conditions]
 
         # ---- Special tools: th / er / port ------------------------------
         if tool != "solve":
@@ -615,9 +684,9 @@ def solve_ui(desc: str, domain: str, omega: str, variables,
         if extra_conditions:
             kwargs["conditions"] = extra_conditions
 
-        # Expert mode's ex() covers dc/ac/fd only -- the calculator's
-        # own prompt reads "1:DC 2:AC 3:FD". Transient has always been a
-        # separate verb, so call it directly.
+        # ex() covers dc/ac/fd only -- the calculator's own prompt reads
+        # "1:DC 2:AC 3:FD". Transient has always been a separate verb, so
+        # call it directly.
         if domain == "tr":
             res = tr(desc, **kwargs)
         else:
@@ -780,14 +849,145 @@ def _norm_name(name: str) -> str:
     return name.replace("_", "").lower()
 
 
-def _alias_mapping(values: dict, exclude=(), expr=None):
-    """Map the symbols in `expr` onto the circuit's solved answers.
+_IDENT_TOKEN = re.compile(r"[A-Za-z_]\w*")
 
-    Matching ignores case and underscores, so every spelling of a name
-    finds its answer. Names in `exclude` are skipped: a variable the
-    user is solving *for* must stay unknown rather than being
-    substituted away.
-    """
+
+def _circuit_canonical_names(elements):
+    """Every name a solved circuit can produce: `i_<name>` for each
+    element's current (every kind gets one), `v_<name>` for the branch
+    voltage of "rlcejs"-kind elements (matching the same test used when
+    building the flat results map), and `v_<node>` for every non-ground
+    node. Used to translate an
+    expert-mode equation/condition written the calculator's casual way
+    ("ir5") back to the real symbol ("i_r5") before it reaches the
+    solver -- see _normalize_underscore_names below."""
+    names = set()
+    for el in elements:
+        names.add(f"i_{el.name}")
+        if el.kind in "rlcejs":
+            names.add(f"v_{el.name}")
+        for n in (getattr(el, "n1", None), getattr(el, "n2", None)):
+            if n and n != "0":
+                names.add(f"v_{n}")
+    return names
+
+
+def _normalize_underscore_names(text, canonical):
+    """Rewrite identifiers in `text` that match a canonical circuit
+    symbol once case/underscores are ignored (_norm_name) to that
+    symbol's real, underscored spelling -- e.g. "ir5" -> "i_r5" -- so an
+    expert-mode "Add equations"/"Add conditions" line can refer to a
+    circuit quantity the same casual way Evaluate and the Solve panel
+    already accept (both already alias-match through _alias_mapping;
+    this is the equivalent for text that gets parsed *before* any
+    circuit values exist to alias against). A name with no canonical
+    match -- a genuinely new symbol like an unknown resistor's value --
+    passes through untouched."""
+    by_norm = {}
+    for n in canonical:
+        by_norm.setdefault(_norm_name(n), n)
+
+    def repl(m):
+        tok = m.group(0)
+        return by_norm.get(_norm_name(tok), tok)
+
+    return _IDENT_TOKEN.sub(repl, text)
+
+
+MAX_PLOT_POINTS = 2000
+
+
+def _resolve_plot_key(key: str, elements) -> str:
+    """Match a casually-typed plot variable ("vx", "ir5") to its real
+    solved name ("v_x", "i_r5"), the same underscore/case-insensitive
+    way expert-mode equations do (see _normalize_underscore_names) --
+    falls back to the typed name unchanged if nothing matches, so the
+    caller still gets a clear "not found" error instead of a silent
+    substitution."""
+    canonical = _circuit_canonical_names(elements)
+    by_norm = {_norm_name(n): n for n in canonical}
+    return by_norm.get(_norm_name(key), key)
+
+
+def plot_time_ui(desc: str, key: str, t_min: float, t_max: float, n: int,
+                 extra_equations, extra_unknowns, extra_conditions):
+    """Sample a circuit's transient (tr()) response for `key` over
+    `[t_min, t_max]`, for the "Plot vs time" tool. Returns
+    {"ok": True, "t": [...], "y": [...], "key": "<resolved name>"} --
+    plain lists of floats, ready for a chart -- or {"ok": False,
+    "error": ...}. Every value in the payload crosses a subprocess pipe
+    (app.py) or a Pyodide/JS boundary unchanged, same contract as
+    solve_ui."""
+    try:
+        from symbulator.elements import parse_circuit
+        from symbulator.plotting import time_samples, PlotError
+
+        elements = parse_circuit(desc)
+        _notes = _hijack_notes(elements)
+
+        if extra_equations or extra_conditions:
+            _canon = _circuit_canonical_names(elements)
+            if extra_equations:
+                extra_equations = [_normalize_underscore_names(e, _canon)
+                                    for e in extra_equations]
+            if extra_conditions:
+                extra_conditions = [_normalize_underscore_names(c, _canon)
+                                     for c in extra_conditions]
+        resolved = _resolve_plot_key(key, elements)
+
+        t_values, y_values = time_samples(
+            desc, resolved, t_max=t_max, t_min=t_min, n=n,
+            equations=extra_equations or None, unknowns=extra_unknowns or None,
+            conditions=extra_conditions or None)
+        return _ok({"t": t_values, "y": y_values, "key": resolved, "notes": _notes})
+    except PlotError as exc:
+        return _err(str(exc))
+    except Exception as exc:  # noqa: BLE001
+        return _err(_exc_text(exc))
+
+
+def bode_ui(desc: str, key: str, f_min: float, f_max: float, n: int,
+           extra_equations, extra_unknowns, extra_conditions):
+    """Sample a circuit's s-domain (fd()) response for `key` across a
+    frequency sweep from `f_min` to `f_max` Hz, for the "Bode plot"
+    tool. Returns {"ok": True, "freq": [...], "mag_db": [...],
+    "phase_deg": [...], "key": "<resolved name>"}, or {"ok": False,
+    "error": ...} -- same plain-list, cross-boundary contract as
+    plot_time_ui."""
+    try:
+        from symbulator.elements import parse_circuit
+        from symbulator.plotting import bode_samples, PlotError
+
+        elements = parse_circuit(desc)
+        _notes = _hijack_notes(elements)
+
+        if extra_equations or extra_conditions:
+            _canon = _circuit_canonical_names(elements)
+            if extra_equations:
+                extra_equations = [_normalize_underscore_names(e, _canon)
+                                    for e in extra_equations]
+            if extra_conditions:
+                extra_conditions = [_normalize_underscore_names(c, _canon)
+                                     for c in extra_conditions]
+        resolved = _resolve_plot_key(key, elements)
+
+        freq_values, mag_db, phase_deg = bode_samples(
+            desc, resolved, f_min=f_min, f_max=f_max, n=n,
+            equations=extra_equations or None, unknowns=extra_unknowns or None,
+            conditions=extra_conditions or None)
+        return _ok({"freq": freq_values, "mag_db": mag_db, "phase_deg": phase_deg,
+                    "key": resolved, "notes": _notes})
+    except PlotError as exc:
+        return _err(str(exc))
+    except Exception as exc:  # noqa: BLE001
+        return _err(_exc_text(exc))
+
+
+def _alias_mapping(values: dict, exclude=(), expr=None):
+    """Map the symbols in `expr` onto the circuit's solved answers,
+    ignoring case and underscores so every spelling of a name finds its
+    answer. Names in `exclude` are skipped: a variable the user is
+    solving *for* must stay unknown rather than being substituted away."""
     import sympy as sp
 
     skip = {_norm_name(str(e)) for e in exclude}
@@ -818,6 +1018,54 @@ def _parse_equation(text: str):
         lhs, rhs = text.split("=", 1)
         return sp.Eq(sp.sympify(lhs), sp.sympify(rhs))
     return sp.Eq(sp.sympify(text), 0)
+
+
+def _parse_condition(text: str):
+    """Parse one "Conditions / constraints" clause into a sympy relational
+    -- '=' becomes an equality, the four comparisons become the matching
+    sympy relational. Used to filter multiple solve() branches down to
+    the physically sensible one(s), e.g. "pr1 > 0". Checked
+    longest-operator-first, so ">=" and "<=" aren't misread as a bare
+    ">"/"<" followed by a stray "="."""
+    import sympy as sp
+
+    ops = (
+        (">=", lambda l, r: l >= r),
+        ("<=", lambda l, r: l <= r),
+        (">", lambda l, r: l > r),
+        ("<", lambda l, r: l < r),
+        ("=", sp.Eq),
+    )
+    for op, make in ops:
+        if op in text:
+            lhs, rhs = text.split(op, 1)
+            return make(sp.sympify(lhs), sp.sympify(rhs))
+    return sp.sympify(text)
+
+
+def _conditions_hold(sol, conditions, values, wanted) -> bool:
+    """True if every parsed condition holds once the solved unknowns and
+    the circuit's known answers are substituted in. A condition that
+    still can't be reduced to a concrete True/False (it has free symbols
+    left over) is treated as satisfied -- there's nothing concrete to
+    judge it against, so it isn't grounds to discard an otherwise valid
+    solution."""
+    import sympy as sp
+
+    if not conditions:
+        return True
+    alias = _alias_mapping(values, exclude=[str(w) for w in wanted])
+    for cond in conditions:
+        try:
+            c = cond.subs(sol).subs(alias)
+            c = sp.simplify(c)
+        except Exception:
+            continue  # a condition that fails to evaluate isn't grounds to reject
+        if c in (sp.true, True):
+            continue
+        if c in (sp.false, False):
+            return False
+    return True
 
 
 def evaluate_ui(expr_str: str, values: dict, digits: int = 0,
@@ -856,7 +1104,8 @@ _PREFIX_UNITS = {"v": "V", "i": "A", "p": "W", "ap": "W", "s": "VA",
 
 def solveq_ui(equations, unknowns, values: dict, digits: int = 0,
                    si: bool = False, approx: bool = False,
-                   units: bool = False, real_only: bool = False):
+                   units: bool = False, real_only: bool = False,
+                   conditions=None):
     """Solve user equations against the circuit's answers -- the web
     counterpart of the calculator's solve()/cSolve(). Known answers are
     substituted in first, so an equation can be written directly in
@@ -864,7 +1113,12 @@ def solveq_ui(equations, unknowns, values: dict, digits: int = 0,
 
     `real_only` is the difference between the calculator's two verbs:
     off is cSolve() (every root, complex ones included), on is solve()
-    (the unknowns are declared real, so complex roots never appear)."""
+    (the unknowns are declared real, so complex roots never appear).
+
+    `conditions`: constraints ("pr1 > 0", "v1 = 12") that filter down
+    which of possibly several solve() branches to keep -- sp.solve()
+    happily returns every algebraic root (e.g. both signs of a squared
+    term) with no way on its own to prefer the physically sensible one."""
     try:
         import sympy as sp
 
@@ -911,7 +1165,19 @@ def solveq_ui(equations, unknowns, values: dict, digits: int = 0,
                     return True          # symbolic -- can't judge, keep it
                 return sp.im(sp.nsimplify(v)) == 0 or v.is_real is not False
             sols = [s for s in sols if all(_is_real(v) for v in s.values())]
+
+        had_sols = bool(sols)
+        if conditions:
+            parsed_conds = [_parse_condition(c) for c in conditions]
+            sols = [s for s in sols
+                    if _conditions_hold(s, parsed_conds, values, wanted)]
+
         if not sols:
+            if conditions and had_sols:
+                return _ok({"solutions": [],
+                            "unknowns": [str(w) for w in wanted],
+                            "notes": ["No solution satisfies the given "
+                                      "conditions / constraints."]})
             if real_only:
                 return _ok({"solutions": [],
                             "unknowns": [str(w) for w in wanted],

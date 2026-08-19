@@ -17,6 +17,8 @@ import json
 import symbulator_ui as ui
 import circuitbook
 
+MAX_PLOT_POINTS = getattr(ui, "MAX_PLOT_POINTS", 2000)
+
 
 def _digits(payload):
     """Read and sanity-clamp the "digits" field of a JS payload dict
@@ -56,7 +58,9 @@ def solve(payload_json: str) -> str:
     variables = [v.strip() for v in
                  ui.re.split(r"[,\s]+", str(p.get("variables") or "")) if v.strip()]
     equations = lines("equations")
-    conditions = lines("conditions")
+    # "vin = 12 and pr2 = 0" is one line naming two conditions -- expand
+    # before validating/solving, matching app.py's /api/solve.
+    conditions = ui._expand_and(lines("conditions"))
     unknowns = [u.strip() for u in
                 ui.re.split(r"[,\s]+", str(p.get("unknowns") or "")) if u.strip()]
 
@@ -124,6 +128,84 @@ def solve(payload_json: str) -> str:
     return json.dumps(res)
 
 
+_VALID_PLOT_TOOLS = {"time", "bode"}
+_MAX_RANGE = 1e15
+
+
+def _clean_range(raw, lo_default, hi_default):
+    """Same parsing as app.py's /api/plot helper of the same name."""
+    try:
+        lo = float(raw.get("min")) if raw.get("min") not in (None, "") else lo_default
+        hi = float(raw.get("max")) if raw.get("max") not in (None, "") else hi_default
+    except (TypeError, ValueError):
+        return None, None, "Range values must be numbers."
+    if not (-_MAX_RANGE < lo < _MAX_RANGE and -_MAX_RANGE < hi < _MAX_RANGE):
+        return None, None, "Range values are out of bounds."
+    return lo, hi, None
+
+
+def plot(payload_json: str) -> str:
+    """JS-callable counterpart of app.py's /api/plot: samples a circuit
+    for the "Plot vs. time" / "Bode plot" tools, with no server
+    round-trip. Needs NumPy (see symbulator.plotting's module docstring
+    for why it's not vendored by default) -- until a NumPy wheel is
+    added to vendor/, this returns a friendly error rather than solving,
+    same as it would for any other missing package."""
+    p = json.loads(payload_json)
+    desc = str(p.get("desc", "")).strip()
+    desc = ui.re.sub(r"[\r\n]+", ":", desc)
+    desc = ui.re.sub(r":{2,}", ":", desc).strip(":")
+    tool = str(p.get("tool", "")).strip().lower()
+    key = str(p.get("key", "")).strip()
+    try:
+        n = int(p.get("n", 200))
+    except (TypeError, ValueError):
+        n = -1
+
+    def lines(field):
+        raw = p.get(field) or ""
+        if isinstance(raw, list):
+            return [str(x).strip() for x in raw if str(x).strip()]
+        return [ln.strip() for ln in ui.re.split(r"[\r\n]+", str(raw)) if ln.strip()]
+
+    extra_equations = lines("equations")
+    extra_conditions = ui._expand_and(lines("conditions"))
+    extra_unknowns = [u.strip() for u in
+                      ui.re.split(r"[,\s]+", str(p.get("unknowns") or "")) if u.strip()]
+
+    err = None
+    if not desc:
+        err = "Please enter a circuit description."
+    elif tool not in _VALID_PLOT_TOOLS:
+        err = "Unknown plot tool."
+    elif not key or not ui._VARNAME.match(key):
+        err = "Give a variable to plot, e.g. v_2 or i_r1."
+    elif not (2 <= n <= MAX_PLOT_POINTS):
+        err = f"Number of points must be between 2 and {MAX_PLOT_POINTS}."
+    if not err:
+        err = ui._validate_extras(extra_equations, extra_unknowns, extra_conditions)
+    if err:
+        return json.dumps({"ok": False, "error": err})
+
+    if tool == "time":
+        t_min, t_max, rng_err = _clean_range(p, 0.0, 1.0)
+        if rng_err:
+            return json.dumps({"ok": False, "error": rng_err})
+        res = ui.plot_time_ui(desc, key, t_min, t_max, n,
+                              extra_equations, extra_unknowns, extra_conditions)
+    else:
+        f_min, f_max, rng_err = _clean_range(p, 1.0, 1000.0)
+        if rng_err:
+            return json.dumps({"ok": False, "error": rng_err})
+        if f_min <= 0 or f_max <= 0:
+            return json.dumps({"ok": False, "error": "Bode frequencies must be positive (Hz)."})
+        res = ui.bode_ui(desc, key, f_min, f_max, n,
+                         extra_equations, extra_unknowns, extra_conditions)
+    if res.get("ok"):
+        res["tool"] = tool
+    return json.dumps(res)
+
+
 def evaluate(payload_json: str) -> str:
     """JS-callable counterpart of app.py's /api/evaluate: substitute the
     posted values into `expr` and format the result, with no server
@@ -148,10 +230,15 @@ def solve_equations(payload_json: str) -> str:
         return json.dumps({"ok": False, "error": "Enter at least one equation to solve."})
     unknowns = [u.strip() for u in
                 ui.re.split(r"[,\s]+", str(p.get("unknowns") or "")) if u.strip()]
+    raw_conds = p.get("conditions") or ""
+    conditions = ([str(x).strip() for x in raw_conds if str(x).strip()]
+                  if isinstance(raw_conds, list)
+                  else [ln.strip() for ln in ui.re.split(r"[\r\n]+", str(raw_conds)) if ln.strip()])
+    conditions = ui._expand_and(conditions)
     return json.dumps(ui.solveq_ui(equations, unknowns, p.get("values") or {},
                                    _digits(p), bool(p.get("si")),
                                    bool(p.get("approx")), bool(p.get("units")),
-                                   bool(p.get("real_only"))))
+                                   bool(p.get("real_only")), conditions))
 
 
 def parse_book(text: str) -> str:
@@ -179,7 +266,8 @@ def export_book(payload_json: str) -> str:
             continue
         circuit = {"name": str(raw.get("name") or "Circuit")[:circuitbook.MAX_NAME_LEN],
                    "desc": str(raw.get("desc") or "")}
-        for f in ("domain", "omega", "vars", "tool", "n1", "n2", "kind", "unknowns"):
+        for f in ("domain", "omega", "vars", "tool", "n1", "n2", "kind", "unknowns",
+                  "plotkey", "plotmin", "plotmax", "plotpoints"):
             if raw.get(f):
                 circuit[f] = str(raw[f])
         for f in ("equations", "conditions"):

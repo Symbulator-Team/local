@@ -21,6 +21,7 @@ window.MathJax = { tex: { inlineMath: [['\\(', '\\)']] }, svg: { fontCache: 'glo
     --muted: #5b6472;
     --accent: #0f6b5c;
     --accent-ink: #ffffff;
+    --accent-open: #b5540b;
     --line: #e2e5ea;
     --lcd-bg: #10241c;
     --lcd-ink: #9ff2c8;
@@ -43,23 +44,23 @@ window.MathJax = { tex: { inlineMath: [['\\(', '\\)']] }, svg: { fontCache: 'glo
              font-size: .88rem; }
   .bootbar.ready { display: none; }
   .bootbar.failed { background: var(--err-bg); border-color: #ecc8c8; color: var(--err-ink); }
-  .wrap { max-width: 880px; margin: 0 auto; padding: 0 1rem; }
+  .wrap { max-width: 880px; margin: 0 auto; padding-left: 1rem; padding-right: 1rem; }
   header h1 { margin: 0; font-size: 2rem; letter-spacing: .5px; }
   header h1 .tm { color: #7fd7b8; }
-  header p { margin: .4rem 0 0; color: #b9c6c2; max-width: 60ch; }
+  header p { margin: .4rem 0 0; color: #b9c6c2; }
   .nowrap { white-space: nowrap; }
-  .toplinks { margin-top: .7rem !important; }
-  .toplinks a { color: #7fd7b8; font-weight: 600; text-decoration: none;
-                border-bottom: 1px solid rgba(127,215,184,.45); padding-bottom: 1px; }
-  .toplinks a:hover { color: #a9e8cf; }
-  main { padding: 1.6rem 0 3rem; }
+  a.toplinks { color: #7fd7b8; font-weight: 600; text-decoration: none;
+                border-bottom: 1px solid rgba(127,215,184,.45); padding-bottom: 1px;
+                margin-left: .3rem; }
+  a.toplinks:hover { color: #a9e8cf; }
+  main { padding: 2rem 0 3rem; }
   .card {
     background: var(--card); border: 1px solid var(--line); border-radius: 10px;
     padding: 1.3rem 1.4rem; margin: 0 0 1.2rem; box-shadow: 0 1px 3px rgba(16,24,40,.05);
   }
   label { display: block; font-weight: 600; font-size: .9rem; margin: 0 0 .3rem; }
   .hint { font-weight: 400; color: var(--muted); }
-  textarea, select, input[type=text] {
+  textarea, select, input[type=text], input[type=number] {
     width: 100%; font-family: var(--mono); font-size: .95rem;
     border: 1px solid var(--line); border-radius: 7px; padding: .55rem .7rem;
     background: #fbfcfd; color: var(--ink);
@@ -75,7 +76,10 @@ window.MathJax = { tex: { inlineMath: [['\\(', '\\)']] }, svg: { fontCache: 'glo
   }
   button:hover { background: #0c5a4d; }
   button:disabled { background: #9db3ae; cursor: wait; }
-  #solveBtn { padding: .6rem 2.8rem; }
+  .run-row { text-align: center; margin: 1.6rem 0; }
+  #solveBtn { display: inline-block; width: 92%; max-width: 820px;
+    padding: 1rem 1.6rem; font-size: 1.15rem; }
+  .run-row #status { display: block; margin-top: .6rem; }
   .examples { font-size: .88rem; color: var(--muted); }
   .examples select { width: auto; font-family: inherit; font-size: .88rem; background: #fff; }
   #status { font-size: .88rem; color: var(--muted); }
@@ -93,6 +97,11 @@ window.MathJax = { tex: { inlineMath: [['\\(', '\\)']] }, svg: { fontCache: 'glo
   .result-name { font-family: var(--mono); color: #6fdfae; min-width: 5.5rem; font-size: .9rem; }
   .result-math { flex: 1; overflow-x: auto; overflow-y: hidden;
                  padding: .25rem 0; }
+  @media (max-width: 520px) {
+    .result-row { flex-direction: column; align-items: flex-start; gap: .15rem; }
+    .result-name { min-width: 0; }
+    .result-math { width: 100%; }
+  }
   .result-math mjx-container svg { color: var(--lcd-ink); }
   .lcd-meta { color: var(--lcd-dim); font-family: var(--mono); font-size: .78rem; margin-top: .7rem; }
   .results-h { font-size: 1.35rem; font-weight: 700; margin: 0 0 .9rem; }
@@ -106,7 +115,7 @@ window.MathJax = { tex: { inlineMath: [['\\(', '\\)']] }, svg: { fontCache: 'glo
   }
   summary.section-toggle::-webkit-details-marker { display: none; }
   summary.section-toggle::before {
-    content: "▾"; font-size: .85rem; color: var(--muted);
+    content: "▾"; font-size: 1.2rem; line-height: 1; color: var(--muted);
     transition: transform .15s ease;
   }
   details:not([open]) > summary.section-toggle { margin-bottom: 0; }
@@ -138,13 +147,30 @@ window.MathJax = { tex: { inlineMath: [['\\(', '\\)']] }, svg: { fontCache: 'glo
   .error { background: var(--err-bg); color: var(--err-ink); border: 1px solid #ecc8c8;
            border-radius: 8px; padding: .7rem 1rem; font-size: .92rem; }
   details { margin-top: .4rem; }
-  summary { cursor: pointer; font-weight: 600; font-size: .92rem; color: var(--accent); }
+  summary { cursor: pointer; font-weight: 600; font-size: .92rem; color: var(--accent);
+    list-style: none; display: flex; align-items: center; gap: .5rem; }
+  summary::-webkit-details-marker { display: none; }
+  summary::before {
+    content: "▾"; font-size: 1rem; line-height: 1; color: var(--muted);
+    transition: transform .15s ease;
+  }
+  details:not([open]) > summary::before { transform: rotate(-90deg); }
+  summary:hover::before { color: var(--accent); }
+  details[open] > summary:not(.section-toggle),
+  details[open] > summary:not(.section-toggle)::before { color: var(--accent-open); }
   table { border-collapse: collapse; width: 100%; margin-top: .6rem; font-size: .88rem; }
   th, td { text-align: left; padding: .3rem .5rem; border-bottom: 1px solid var(--line); }
   td:first-child, code { font-family: var(--mono); }
   code { background: #eef1f4; border-radius: 4px; padding: .05rem .35rem; font-size: .86em; }
   footer { color: var(--muted); font-size: .84rem; text-align: center; padding: 0 1rem 2rem; }
-  #omegaField, #varsField, #n1Field, #n2Field, #kindField { display: none; }
+  .section-divider { border: 0; border-top: 1px solid var(--line); margin: 2.4rem 0; }
+  #omegaField, #varsField, #n1Field, #n2Field, #kindField, #plotField { display: none; }
+  .chart-svg { width: 100%; height: auto; background: #fff; border-radius: 8px; }
+  .chart-svg text { font-family: var(--mono); font-size: 11px; fill: var(--muted); }
+  .chart-svg .chart-title { fill: var(--ink); font-weight: 600; font-size: 12px; }
+  .chart-svg .chart-line { fill: none; stroke: var(--accent); stroke-width: 1.6; }
+  .chart-svg .chart-axis { stroke: var(--line); stroke-width: 1; }
+  .chart-svg .chart-grid { stroke: var(--line); stroke-width: .5; opacity: .6; }
   .eval-row { display: flex; gap: .8rem; flex-wrap: wrap; align-items: flex-end; }
   .eval-row > div:first-child { flex: 1 1 260px; }
   .dl-row { display: flex; gap: 1.4rem; flex-wrap: wrap; align-items: center; }
@@ -152,6 +178,13 @@ window.MathJax = { tex: { inlineMath: [['\\(', '\\)']] }, svg: { fontCache: 'glo
                   align-items: center; gap: .45rem; margin: 0; cursor: pointer; }
   .dl-row input[type=checkbox] { width: 1rem; height: 1rem; accent-color: var(--accent); }
   .card.inactive { opacity: .55; }
+  .group-h {
+    font-size: 1.3rem; font-weight: 800; color: var(--ink);
+    text-align: center; white-space: nowrap; margin: 2rem 0 .6rem;
+  }
+  .group-h:first-of-type { margin-top: 0; }
+  .group-h .bracket { color: var(--accent); }
+  .group-intro { margin: 0 0 1.2rem; max-width: 68ch; }
   #evalOut, #solveqOut { margin-top: .9rem; display: none; }
   .disamb {
     background: #fff9ec; border: 1px solid #eadfc0; border-radius: 10px;
@@ -166,17 +199,19 @@ window.MathJax = { tex: { inlineMath: [['\\(', '\\)']] }, svg: { fontCache: 'glo
   .disamb-item input[type=radio] { accent-color: var(--accent); }
   .disamb button { margin-top: .8rem; }
   .uploadlbl {
-    display: inline-block; font-size: .88rem; font-weight: 500; cursor: pointer;
-    color: var(--accent); border: 1px dashed #9fc4bb; border-radius: 7px;
-    padding: .28rem .7rem; background: #f4fbf9;
+    display: inline-block; font-size: 1rem; font-weight: 600; cursor: pointer;
+    color: var(--accent-ink); border: 0; border-radius: 8px;
+    padding: .6rem 1.6rem; background: var(--accent);
   }
-  .uploadlbl:hover { background: #e8f5f1; }
+  .uploadlbl:hover { background: #0c5a4d; }
   button.linkish {
     background: none; border: 0; color: var(--accent); font-size: .84rem;
     padding: .1rem .3rem; text-decoration: underline; cursor: pointer;
     font-weight: 500;
   }
   button.linkish:hover { background: none; color: #0c5a4d; }
+  button.linkish:disabled { background: none; color: var(--muted);
+                             text-decoration: none; cursor: not-allowed; }
   a.btnlink {
     display: inline-block; background: var(--accent); color: var(--accent-ink);
     border: 0; border-radius: 8px; font-size: 1rem; font-weight: 600;
@@ -203,40 +238,49 @@ window.MathJax = { tex: { inlineMath: [['\\(', '\\)']] }, svg: { fontCache: 'glo
 <div class="wrap">
     <h1>Symbulator <span class="tm">Py</span></h1>
     <p>Symbolic simulator of linear circuits, by
-       <span class="nowrap">Roberto Perez-Franco</span>.</p>
-    <p class="toplinks"><a href="https://symbulator.com/indexpy.html"
+       <span class="nowrap">Roberto Perez-Franco</span>. <a class="toplinks" href="https://learn.symbulator.com"
        target="_blank" rel="noopener">Learn how to use</a></p>
   </div>
 </header>
 
 <main class="wrap">
-  <div class="card">
-    <div class="results-h">Describe</div>
+  <h2 class="group-h"><span class="bracket">[</span>   I N P U T S   <span class="bracket">]</span></h2>
+  <p class="group-intro">
+    Describe your circuit below, or upload an Input File.
+  </p>
+
+  <div class="card" id="inputsCard">
+    <div class="results-h" style="margin-top:0">Circuit Description</div>
     <label for="desc" class="hint-only">Describe the linear electric circuit
-      in the space below <em>or</em> upload a file.</label>
+      in the space below.</label>
     <textarea id="desc" spellcheck="false"
       placeholder="e1,1,0,5&#10;r1,1,2,1'k&#10;r2,2,0,1'k"></textarea>
 
-    <span class="examples" style="display:block;margin-top:.6rem">
-      <span id="pickerLabel">Example:</span>
-      <select id="examples">
-        <option value="">— loading… —</option>
-      </select>
-      <button type="button" id="backToExamples" class="linkish" hidden>back to examples</button>
-      <label for="fileInput" class="uploadlbl" title="Upload a file of circuit descriptions"
-        style="margin-left:.7rem">Upload File</label>
-      <input type="file" id="fileInput" accept=".sym,.txt,.circuits,text/plain" hidden>
-    </span>
+    <div class="actions" style="margin-top:.7rem">
+      <button type="button" id="addToFileBtn" class="linkish" hidden>Save to input file (update if exists)</button>
+    </div>
 
-    <div class="row" style="margin-top:1rem">
-      <div>
-    <details id="syntaxBox">
+      <div class="dl-row" style="margin-top:.9rem">
+        <label for="fileInput" class="uploadlbl" title="Upload an Input File of circuit descriptions">Upload Input File</label>
+        <input type="file" id="fileInput" accept=".cir" hidden>
+        <button type="button" id="downloadFileBtn" class="linkish" hidden>Download this input file</button>
+      </div>
+
+      <span class="examples" style="display:block;margin-top:.9rem">
+        <span id="pickerLabel" style="margin-right:.8rem">Want to try an example? </span>
+        <select id="examples">
+          <option value="">— loading… —</option>
+        </select>
+        <button type="button" id="backToExamples" class="linkish" hidden>Reload Examples</button>
+      </span>
+
+    <details id="syntaxBox" style="margin-top:.9rem">
       <summary>Circuit syntax reference</summary>
 
       <p class="hint" style="margin:.6rem 0 0">
         One element per line (or separated by <code>:</code>), fields
         separated by <code>,</code>; node <code>0</code> is ground. See
-        the <a href="https://symbulator.com/indexpy.html" target="_blank"
+        the <a href="https://learn.symbulator.com" target="_blank"
         rel="noopener">documentation</a> for a full walkthrough, or pick
         an example circuit above to see it in practice.
       </p>
@@ -335,15 +379,14 @@ window.MathJax = { tex: { inlineMath: [['\\(', '\\)']] }, svg: { fontCache: 'glo
         <code>z_</code>/<code>r_</code> impedance seen by a source.
       </p>
     </details>
-      </div>
-      <div>
-    <details id="fileFormatBox">
-      <summary>Circuit file format</summary>
+
+    <details id="fileFormatBox" style="margin-top:.9rem">
+      <summary>About input file (.cir) format</summary>
       <p style="font-size:.9rem;color:var(--muted);margin-top:.5rem">
-        A plain text file can hold as many circuits as you like. Each one
+        A plain text Input File can hold as many circuits as you like. Each one
         starts with its name in square brackets, followed by optional
         settings and then the element lines. Save it with a
-        <code>.sym</code> or <code>.txt</code> extension.
+        <code>.cir</code> extension.
       </p>
 <pre style="background:#f6f8fa;border:1px solid var(--line);border-radius:8px;padding:.8rem 1rem;font-size:.84rem;overflow-x:auto"># comments start with a hash
 
@@ -368,51 +411,38 @@ c1,2,0,4.7e-6</pre>
         <code>unknowns</code>.
       </p>
       <p style="font-size:.88rem;color:var(--muted)">
-        <em>Upload File</em>, above, reads a file like this — its
-        circuits become the live file in your browser, replacing
-        whatever was there before (nothing is stored on the server). The
-        <em>Download</em> section below lets you add the circuit you're
-        describing to that live file, and download a copy of it at any
-        time.
+        <em>Upload Input File</em>, above, reads a file like this — its
+        circuits become the live Input File in your browser, replacing
+        whatever was there before (nothing is stored on the server).
+        <em>Update this circuit in the input file when it already exists</em>,
+        above, adds the circuit you're describing to it — or updates it, if
+        a circuit by that name is already there. <em>Download this input
+        file</em>, above, appears once you've made a change to it (uploaded
+        a file, or added or updated a circuit).
       </p>
     </details>
-      </div>
-    </div>
-  </div>
 
-  <div class="card">
-    <div class="results-h">Simulate</div>
-
+    <div class="results-h" style="margin-top:1.6rem">Analysis and Settings</div>
     <div class="row">
       <div>
         <label for="tool">Tool</label>
         <select id="tool">
           <option value="solve">Solve circuit</option>
-          <option value="th">Thévenin / Norton equivalent</option>
-          <option value="er">Equivalent impedance</option>
-          <option value="port">Two-port parameters</option>
+          <option value="th">Find Thévenin / Norton equivalent</option>
+          <option value="er">Find equivalent impedance</option>
+          <option value="port">Find two-port parameters</option>
+          <option value="plot_time">Plot a variable vs. time</option>
+          <option value="bode">Bode plot (magnitude &amp; phase vs. frequency)</option>
         </select>
       </div>
-      <div>
+      <div id="domainField">
         <label for="domain">Analysis</label>
         <select id="domain">
-          <option value="dc">DC — steady state</option>
+          <option value="dc">DC — direct current</option>
           <option value="ac">AC — phasor (needs ω)</option>
           <option value="fd">FD — s-domain (Laplace)</option>
           <option value="tr">TR — transient (time domain)</option>
         </select>
-      </div>
-      <div id="varsField">
-        <label for="vars">Variables <span class="hint">(optional, comma-separated — limits the slow inverse-Laplace step)</span></label>
-        <input type="text" id="vars" placeholder="v_2, i_l1">
-      </div>
-      <div id="n1Field">
-        <label for="n1">Node 1 <span class="hint">(port terminal)</span></label>
-        <input type="text" id="n1" placeholder="2">
-      </div>
-      <div id="n2Field">
-        <label for="n2">Node 2 <span class="hint">(port terminal / ground)</span></label>
-        <input type="text" id="n2" placeholder="0">
       </div>
       <div id="kindField">
         <label for="kind">Parameters</label>
@@ -428,9 +458,51 @@ c1,2,0,4.7e-6</pre>
     </div>
 
     <div class="row">
+      <div id="n1Field">
+        <label for="n1">Node 1 <span class="hint">(port terminal)</span></label>
+        <input type="text" id="n1" placeholder="2">
+      </div>
+      <div id="n2Field">
+        <label for="n2">Node 2 <span class="hint">(port terminal / ground)</span></label>
+        <input type="text" id="n2" placeholder="0">
+      </div>
+    </div>
+
+    <div class="row" id="plotField">
+      <div>
+        <label for="plotKey">Variable to plot <span class="hint">e.g. v_2 or i_r1</span></label>
+        <input type="text" id="plotKey" placeholder="v_2">
+      </div>
+      <div id="plotMinField">
+        <label for="plotMin"><span id="plotMinLabel">Start time (s)</span></label>
+        <input type="text" id="plotMin" placeholder="0">
+      </div>
+      <div id="plotMaxField">
+        <label for="plotMax"><span id="plotMaxLabel">End time (s)</span></label>
+        <input type="text" id="plotMax" placeholder="0.01">
+      </div>
+      <div id="plotNField" style="flex: 0 1 10rem">
+        <label for="plotN">Points</label>
+        <input type="number" id="plotN" min="2" max="2000" step="1" value="300">
+      </div>
+    </div>
+
+    <div class="row">
       <div id="omegaField">
         <label for="omega">ω — angular frequency <span class="hint">(rad/s, number or symbol)</span></label>
         <input type="text" id="omega" placeholder="1000">
+      </div>
+    </div>
+
+    <div class="row">
+      <div id="varsField">
+        <label class="checkline"><input type="checkbox" id="limitVars"><span>Do you
+          want to limit the results to save time?</span></label>
+        <div id="varsSubfield" style="display:none;margin-top:.5rem">
+          <label for="vars">What results are you after? List the variables here:
+            <span class="hint">e.g. v_2, i_l1</span></label>
+          <input type="text" id="vars" placeholder="v_2, i_l1">
+        </div>
       </div>
     </div>
 
@@ -479,36 +551,43 @@ c1,2,0,4.7e-6</pre>
     </details>
 
     <details id="expertBox" style="margin-top:.9rem">
-      <summary>Expert Mode — add equations, unknowns, conditions</summary>
+      <summary>Expert Mode — add equations, unknowns, conditions<span id="expertEqFlag" class="hint" style="display:none"> — (equations entered)</span></summary>
       <div class="row">
         <div>
-          <label for="eqs">Add equations <span class="hint">(one per line, e.g. <code>v_2 = 6</code>)</span></label>
+          <label for="eqs">Add equations <span class="hint">(one per line, e.g. <code>v_2 = 6</code>;
+            parsed the same as circuit values — SI shorthand like <code>4.7'k</code>
+            and imaginary units (<code>i</code>/<code>j</code>) both work, but a bare
+            suffix like <code>4.7k</code> with no apostrophe doesn't)</span></label>
           <textarea id="eqs" spellcheck="false" style="min-height:3.2rem"></textarea>
         </div>
       </div>
 
       <div class="row">
         <div>
-          <label for="conds">Add conditions <span class="hint">(one per line, substitutions like <code>vin = 12</code>)</span></label>
-          <textarea id="conds" spellcheck="false" style="min-height:3.2rem"></textarea>
+          <label for="unks">Add unknowns <span class="hint">(comma-separated — needed when an equation constrains a symbolic component value, e.g. <code>x</code>)</span></label>
+          <input type="text" id="unks">
         </div>
       </div>
       <div class="row">
         <div>
-          <label for="unks">Add unknowns <span class="hint">(comma-separated — needed when an equation constrains a symbolic component value, e.g. <code>x</code>)</span></label>
-          <input type="text" id="unks" placeholder="x">
+          <label for="conds">Add conditions <span class="hint">(one per line, substitutions like <code>vin = 12 and pr2 = 0</code> — join more than one with "and")</span></label>
+          <textarea id="conds" spellcheck="false" style="min-height:3.2rem"></textarea>
         </div>
       </div>
     </details>
-
-    <div class="actions">
-      <button id="solveBtn">Run</button>
-      <span id="status"></span>
-    </div>
   </div>
 
-  <div class="card">
-    <details id="resultsBox" open>
+  <div class="run-row">
+    <button id="solveBtn">Run</button>
+    <span id="status"></span>
+  </div>
+
+  <hr class="section-divider">
+
+  <h2 class="group-h"><span class="bracket">[</span>   O U T P U T S   <span class="bracket">]</span></h2>
+
+  <div class="card inactive" id="resultsCard">
+    <details id="resultsBox">
       <summary class="results-h section-toggle">Results</summary>
       <div id="out">
         <div class="lcd"><div class="placeholder">— no analysis run yet —</div></div>
@@ -517,103 +596,107 @@ c1,2,0,4.7e-6</pre>
   </div>
 
   <div class="card inactive" id="evalCard">
-    <div class="results-h">Evaluate</div>
-    <label for="evalExpr">Evaluate an expression
-      <span class="hint">— in terms of the results above</span>
-    </label>
-    <details class="exhelp">
-      <summary>Examples</summary>
-      <p class="hint" style="margin:.5rem 0 0">
-        <code>v2 - v3</code> or <code>v_2 - v_3</code>,
-        <code>pr1 + pr2</code> or <code>p_r1 + p_r2</code>
-      </p>
+    <details>
+      <summary class="results-h section-toggle">Evaluate</summary>
+      <label for="evalExpr">Evaluate an expression in terms of the results</label>
+      <details class="exhelp">
+        <summary>Examples</summary>
+        <p class="hint" style="margin:.5rem 0 0">
+          <code>v2 - v3</code> or <code>v_2 - v_3</code>,
+          <code>pr1 + pr2</code> or <code>p_r1 + p_r2</code>
+        </p>
+      </details>
+      <div class="eval-row" style="margin-top:.7rem">
+        <div><input type="text" id="evalExpr" placeholder="solve a circuit first…" disabled></div>
+        <div><button id="evalBtn" disabled>Evaluate</button></div>
+      </div>
+      <div id="evalOut" class="lcd"></div>
     </details>
-    <div class="eval-row" style="margin-top:.7rem">
-      <div><input type="text" id="evalExpr" placeholder="solve a circuit first…" disabled></div>
-      <div><button id="evalBtn" disabled>Evaluate</button></div>
-    </div>
-    <div id="evalOut" class="lcd"></div>
   </div>
 
   <div class="card inactive" id="solveqCard">
-    <div class="results-h">Solve</div>
-    <label for="solveqEqs">Equations
-      <span class="hint">— one per line, in terms of the results above.
-      Works backwards: <code>pr2 = 0.05</code> finds what makes that
-      true.</span>
-    </label>
-    <details class="exhelp">
-      <summary>Examples</summary>
-      <p class="hint" style="margin:.5rem 0 0">
-        <code>v2 = 6</code> or <code>v_2 = 6</code>
-      </p>
-    </details>
-    <textarea id="solveqEqs" spellcheck="false" style="min-height:3.4rem;margin-top:.7rem"
-      placeholder="solve a circuit first…" disabled></textarea>
-    <div class="eval-row" style="margin-top:.7rem">
-      <div>
-        <label for="solveqUnks">Solve for
-          <span class="hint">— comma-separated; leave blank to solve for whatever is left</span>
-        </label>
-        <input type="text" id="solveqUnks" placeholder="x" disabled>
+    <details>
+      <summary class="results-h section-toggle">Solve</summary>
+      <label for="solveqEqs">Equation(s) to solve
+        <span class="hint">— e.g. <code>v2 = 6</code> or <code>v_2 = 6</code>;
+        one per line. Works backwards: <code>pr2 = 0.05</code> finds what
+        makes that true.</span>
+      </label>
+      <textarea id="solveqEqs" spellcheck="false" style="min-height:3.4rem;margin-top:.7rem"
+        placeholder="solve a circuit first…" disabled></textarea>
+      <div class="row" style="margin-top:.7rem">
+        <div>
+          <label for="solveqUnks">Unknown(s) to solve for
+            <span class="hint">— comma-separated; leave blank to solve for whatever is left</span>
+          </label>
+          <input type="text" id="solveqUnks" placeholder="x" disabled>
+        </div>
       </div>
-      <div><button id="solveqBtn" disabled>Solve equations</button></div>
-    </div>
-    <label class="checkline" style="margin-top:.6rem"><input type="checkbox"
-      id="solveqReal" disabled><span>real solutions only <span class="hint">—
-      off searches the complex plane too (the calculator's <code>cSolve</code>);
-      on keeps the unknowns real (its <code>solve</code>)</span></span></label>
-    <div id="solveqOut" class="lcd"></div>
+      <div class="row" style="margin-top:.7rem">
+        <div>
+          <label for="solveqConds">Conditions / constraints
+            <span class="hint">— e.g. <code>pr1 > 0</code> and <code>v1 = 12</code>;
+            use <code>>=</code> / <code>&lt;=</code>, not <code>=></code> / <code>=&lt;</code></span>
+          </label>
+          <textarea id="solveqConds" spellcheck="false" style="min-height:2.4rem" disabled></textarea>
+        </div>
+      </div>
+      <p style="margin:.7rem 0 0"><button id="solveqBtn" disabled>Solve equations</button></p>
+      <label class="checkline" style="margin-top:.6rem"><input type="checkbox"
+        id="solveqReal" disabled><span>real solutions only <span class="hint">—
+        off searches the complex plane too (the calculator's <code>cSolve</code>);
+        on keeps the unknowns real (its <code>solve</code>)</span></span></label>
+      <div id="solveqOut" class="lcd"></div>
+    </details>
   </div>
 
   <div class="card inactive" id="dlCard">
-    <div class="results-h">Download</div>
-    <label>What to include
-      <span class="hint">— saved as a plain-text file</span>
-    </label>
-    <div class="dl-row">
-      <label><input type="checkbox" id="dlDesc" checked disabled> circuit description</label>
-      <label><input type="checkbox" id="dlEqs" checked disabled> equations generated</label>
-      <label><input type="checkbox" id="dlAns" checked disabled> answers found</label>
-      <button id="dlBtn" disabled>Download</button>
-    </div>
-
-    <div class="section-cap">Your live file of circuits</div>
-    <p class="hint" style="margin:.2rem 0 .7rem">
-      Kept in the browser only — see <em>Circuit file format</em>, above,
-      for how it works. <em>Upload File</em> replaces it; the two buttons
-      below add to it and download it.
-    </p>
-    <div class="dl-row">
-      <button type="button" id="addToFileBtn" class="linkish">add this circuit to the file</button>
-      <button type="button" id="downloadFileBtn" class="linkish">download the file</button>
-    </div>
+    <details>
+      <summary class="results-h section-toggle">Output into file</summary>
+      <p class="hint" style="margin:0 0 .9rem">
+        Download an output file with the information you decide to include.
+      </p>
+      <label>What to include
+        <span class="hint">— saved as an Output File</span>
+      </label>
+      <div class="dl-row">
+        <label><input type="checkbox" id="dlDesc" checked disabled> circuit description</label>
+        <label><input type="checkbox" id="dlEqs" checked disabled> equations generated</label>
+        <label><input type="checkbox" id="dlAns" checked disabled> answers found</label>
+        <button id="dlBtn" disabled>Download</button>
+      </div>
+    </details>
   </div>
 
-</main>
+  <hr class="section-divider">
+
 
   <div class="card">
     <details>
       <summary>About Symbulator Py</summary>
       <p style="font-size:.92rem;margin-top:.7rem">
-        Symbulator Py was created in August 2026 by Roberto Perez-Franco,
-        realising a long-held wish to port Symbulator to Python and SymPy.
-        Every version for the TI calculators — from the first in 1999 to
-        version 8 in 2023 — was hand-written by the author. This Python
-        version was written entirely by Claude, Anthropic's AI assistant,
-        working to the author's design and instructions.
+        Symbulator Py was created by Roberto Perez-Franco in 2026. Up to
+        then, every version of Symbulator — from the first in 1999 — had
+        been 100% hand-written by the author directly into Texas
+        Instrument calculators. In contrast, Roberto created this
+        long-dreamed port of Symbulator to Python and SymPy without
+        writing a single line of code: Claude, Anthropic's AI assistant,
+        took care of coding, per Roberto's design and
+        instructions during a single week of collaboration in August.
       </p>
       <p style="font-size:.92rem">
         Symbulator Py is free and open-source software, released under the
         MIT licence: you may use, study, modify and share it, including
         commercially. The solver is published as the
         <a href="https://pypi.org/project/symbulator/" target="_blank" rel="noopener">symbulator</a>
-        package on PyPI, and the project lives on
+        package on PyPI, and the project for the solver and this interface
+        lives on
         <a href="https://github.com/Symbulator" target="_blank" rel="noopener">GitHub</a>.
         Contributions, bug reports and circuits that break it are all welcome.
       </p>
     </details>
   </div>
+</main>
 
 <footer>
   Symbulator © 1999–2026 Roberto Perez-Franco ·
@@ -633,9 +716,12 @@ const toolSel = $('tool');
 // tool + domain combination (omega only for AC, the two port-node fields
 // only for th/er/port, "kind" only for port, etc.), and lock th/er/port
 // to DC/AC since those tools don't support fd/tr.
+const PLOT_TOOLS = new Set(['plot_time', 'bode']);
+
 function syncFields() {
   const tool = toolSel.value;
-  if (tool !== 'solve') {
+  const isPlot = PLOT_TOOLS.has(tool);
+  if (tool !== 'solve' && !isPlot) {
     // th/er/port work in DC or AC only
     if (domainSel.value === 'fd' || domainSel.value === 'tr') domainSel.value = 'dc';
     for (const opt of domainSel.options) {
@@ -644,24 +730,62 @@ function syncFields() {
   } else {
     for (const opt of domainSel.options) opt.disabled = false;
   }
-  $('omegaField').style.display = domainSel.value === 'ac' ? 'block' : 'none';
-  $('varsField').style.display  = (domainSel.value === 'tr' && tool === 'solve') ? 'block' : 'none';
-  $('n1Field').style.display = tool !== 'solve' ? 'block' : 'none';
-  $('n2Field').style.display = tool !== 'solve' ? 'block' : 'none';
+  // Plot tools always run tr() or fd() internally -- there's no domain
+  // to choose, so the whole Analysis field (and everything that depends
+  // on which domain is picked) is hidden rather than shown-and-ignored.
+  $('domainField').style.display = isPlot ? 'none' : 'block';
+  $('omegaField').style.display = (!isPlot && domainSel.value === 'ac') ? 'block' : 'none';
+  $('varsField').style.display  = (!isPlot && domainSel.value === 'tr' && tool === 'solve') ? 'block' : 'none';
+  $('n1Field').style.display = (tool !== 'solve' && !isPlot) ? 'block' : 'none';
+  $('n2Field').style.display = (tool !== 'solve' && !isPlot) ? 'block' : 'none';
   $('kindField').style.display = tool === 'port' ? 'block' : 'none';
-  $('expertBox').style.display = tool === 'solve' ? 'block' : 'none';
+  $('plotField').style.display = isPlot ? 'flex' : 'none';
+  $('plotMinLabel').textContent = tool === 'bode' ? 'Start frequency (Hz)' : 'Start time (s)';
+  $('plotMaxLabel').textContent = tool === 'bode' ? 'End frequency (Hz)' : 'End time (s)';
+  $('plotMin').placeholder = tool === 'bode' ? '10' : '0';
+  $('plotMax').placeholder = tool === 'bode' ? '100000' : '0.01';
+  // Equations/conditions still make sense for a plot (e.g. pinning a
+  // symbolic component value before sampling it numerically); only
+  // th/er/port -- which don't accept expert-mode extras at all -- hide it.
+  $('expertBox').style.display = (tool === 'solve' || isPlot) ? 'block' : 'none';
 }
 domainSel.addEventListener('change', () => { syncFields(); syncSettings(); });
 toolSel.addEventListener('change', syncFields);
 syncFields();
 
+// Expert Mode has real impact on the solution but hides its own equations
+// once collapsed, so show a small "(equations entered)" flag next to the
+// summary heading whenever there's text in the equations box and the
+// details panel is closed (no need for the flag once it's open -- the
+// equations are right there).
+function updateExpertFlag() {
+  const has = $('eqs').value.trim() !== '';
+  $('expertEqFlag').style.display = (has && !$('expertBox').open) ? 'inline' : 'none';
+}
+$('eqs').addEventListener('input', updateExpertFlag);
+$('expertBox').addEventListener('toggle', updateExpertFlag);
+updateExpertFlag();
+
+// The "limit the results" checkbox reveals the actual variables field only
+// when checked, and clears it when unchecked so an unchecked toggle never
+// silently keeps limiting results behind the scenes.
+$('limitVars').addEventListener('change', () => {
+  const on = $('limitVars').checked;
+  $('varsSubfield').style.display = on ? 'block' : 'none';
+  if (!on) $('vars').value = '';
+});
+
 // Last successful solve -- feeds the evaluator and the download builder.
 let last = null;
 
-// Turn on the Evaluate, Solve-equations and Download cards, which start
-// disabled/greyed out because they all need a completed solve's answers
-// to be useful. Called once a solve has actually succeeded.
+// Turn on the Evaluate, Solve-equations and Download cards, plus
+// "Save to input file" (which requires a circuit that has actually been
+// parsed and solved, not just typed) -- all start disabled/hidden because
+// they need a completed solve's answers to be useful. Called once a
+// solve has actually succeeded.
 function activatePostSolve() {
+  $('resultsCard').classList.remove('inactive');
+  $('addToFileBtn').hidden = false;
   $('evalExpr').disabled = false;
   $('evalExpr').placeholder = 'e.g. v2 - v3, or p_r1 + p_r2';
   $('evalBtn').disabled = false;
@@ -669,6 +793,7 @@ function activatePostSolve() {
   $('solveqEqs').disabled = false;
   $('solveqEqs').placeholder = 'e.g. p_r2 = 0.05';
   $('solveqUnks').disabled = false;
+  $('solveqConds').disabled = false;
   $('solveqReal').disabled = false;
   $('solveqBtn').disabled = false;
   $('solveqCard').classList.remove('inactive');
@@ -689,7 +814,7 @@ const pyReady = (async () => {
   try {
     pyodide = await loadPyodide({ indexURL: 'vendor/' });
     await pyodide.loadPackage(['sympy']);
-    await pyodide.loadPackage('vendor/symbulator-0.4.0-py3-none-any.whl');
+    await pyodide.loadPackage('vendor/symbulator-0.4.1-py3-none-any.whl');
     // symbulator_ui.py and circuitbook.py are shared verbatim with the
     // server build; bridge.py is this build's own glue module.
     for (const f of ['symbulator_ui.py', 'circuitbook.py', 'bridge.py']) {
@@ -738,8 +863,9 @@ async function py(fnName, payload) {
 
 
 // ---- Circuit picker: built-in examples, or an opened file ----------
-// `builtIn` is kept so "back to examples" costs no second round trip.
-// `picker` doubles as the live file described in "Circuit file format":
+// `builtIn` is kept so "Reload Examples" costs no second round trip.
+// `picker` doubles as the live Input File described in "About input file
+// (.cir) format":
 // uploading a file replaces it, "add this circuit to the file" appends
 // or updates an entry in it, and "download the file" writes it out.
 let builtIn = [], picker = [], liveFileName = null;
@@ -787,15 +913,22 @@ function applyCircuit(c) {
   toolSel.value = c.tool || 'solve';
   $('omega').value = c.omega || '';
   $('vars').value = c.vars || '';
+  $('limitVars').checked = !!c.vars;
+  $('varsSubfield').style.display = c.vars ? 'block' : 'none';
   $('n1').value = c.n1 || '';
   $('n2').value = c.n2 || '';
   $('kind').value = c.kind || 'z';
   $('eqs').value = (c.equations || []).join('\n');
   $('conds').value = (c.conditions || []).join('\n');
   $('unks').value = c.unknowns || '';
+  $('plotKey').value = c.plotkey || '';
+  $('plotMin').value = c.plotmin || '';
+  $('plotMax').value = c.plotmax || '';
+  $('plotN').value = c.plotpoints || 300;
   if ((c.equations || []).length || (c.conditions || []).length || c.unknowns) {
     $('expertBox').open = true;
   }
+  updateExpertFlag();
   syncFields();
   showNote(c.note || '', false);
   autoGrowDesc();
@@ -820,18 +953,18 @@ $('examples').addEventListener('change', ev => {
   if (c) applyCircuit(c);
 });
 
-// Load the built-in example circuits (examples.sym) and populate the
-// picker with them; called once on page load, and again by "back to
-// examples" after a file has been loaded (see the button handler below).
+// Fetch the built-in example circuits from the server and populate the
+// picker with them; called once on page load, and again by "Reload
+// Examples" after a file has been loaded (see the button handler below).
 async function loadExamples() {
   try {
     const text = await (await fetch('examples.sym')).text();
     const data = await py('parse_book', text);
     builtIn = data.circuits || [];
-    populatePicker(builtIn, 'Example:',
+    populatePicker(builtIn, 'Want to try an example? ',
                    builtIn.length ? '— choose —' : '— none defined —');
   } catch (e) {
-    populatePicker([], 'Example:', '— unavailable —');
+    populatePicker([], 'Want to try an example? ', '— unavailable —');
   }
 }
 loadExamples();
@@ -851,6 +984,10 @@ $('fileInput').addEventListener('change', async ev => {
     populatePicker(data.circuits, 'From ' + data.filename + ':', '— choose —');
     liveFileName = data.filename;
     $('backToExamples').hidden = false;
+    // "Download this input file" only makes sense once an input file has
+    // actually been uploaded to build on -- a solved-but-never-uploaded
+    // circuit isn't an input file yet, just a description in the textarea.
+    $('downloadFileBtn').hidden = false;
     const n = data.circuits.length;
     let msg = `Loaded ${n} circuit${n === 1 ? '' : 's'} from ${data.filename}.`;
     if (data.warnings && data.warnings.length) msg += ' ' + data.warnings.join(' ');
@@ -935,12 +1072,14 @@ $('showUnits').addEventListener('change', () => { if (last) solve(); });
 $('useRms').addEventListener('change', () => { if (last) solve(); });
 
 // Turns a textarea's raw text into a clean list of non-blank lines --
-// used when building a circuit dict for the live file, matching how
+// used when building a circuit dict for the live Input File, matching how
 // applyCircuit() reads them back out.
 function linesOf(text) {
   return String(text || '').split(/[\r\n]+/).map(s => s.trim()).filter(Boolean);
 }
 
+// Save (or, if the name matches an existing entry, update) the currently
+// described circuit into the live Input File, prompting for a name.
 $('addToFileBtn').addEventListener('click', () => {
   const desc = $('desc').value.trim();
   if (!desc) { showNote('Enter a circuit first.', true); return; }
@@ -949,6 +1088,7 @@ $('addToFileBtn').addEventListener('click', () => {
   const name = window.prompt('Name for this circuit:', suggested);
   if (name === null) return;
   const trimmedName = name.trim() || 'Circuit';
+  const isPlot = PLOT_TOOLS.has(toolSel.value);
   const circuit = {
     name: trimmedName, desc: desc,
     domain: domainSel.value, tool: toolSel.value === 'solve' ? '' : toolSel.value,
@@ -957,7 +1097,11 @@ $('addToFileBtn').addEventListener('click', () => {
     kind: toolSel.value === 'port' ? $('kind').value : '',
     unknowns: $('unks').value,
     equations: linesOf($('eqs').value),
-    conditions: linesOf($('conds').value)
+    conditions: linesOf($('conds').value),
+    plotkey: isPlot ? $('plotKey').value : '',
+    plotmin: isPlot ? $('plotMin').value : '',
+    plotmax: isPlot ? $('plotMax').value : '',
+    plotpoints: isPlot ? $('plotN').value : ''
   };
   const existingIdx = picker.findIndex(c => c.name === trimmedName);
   let verb;
@@ -965,11 +1109,14 @@ $('addToFileBtn').addEventListener('click', () => {
   else { picker.push(circuit); verb = 'Added'; }
   populatePicker(picker, $('pickerLabel').textContent, picker.length ? '— choose —' : '— none defined —');
   $('examples').value = String(picker.findIndex(c => c.name === trimmedName));
-  showNote(`${verb} '${trimmedName}' in the live file (${picker.length} circuit${picker.length === 1 ? '' : 's'} now). Download it any time.`, false);
+  $('downloadFileBtn').hidden = false;
+  showNote(`${verb} '${trimmedName}' in the Input File (${picker.length} circuit${picker.length === 1 ? '' : 's'} now). Download it any time.`, false);
 });
 
+// Render the live Input File (picker) to .cir text via the server and
+// trigger a browser download.
 $('downloadFileBtn').addEventListener('click', async () => {
-  if (!picker.length) { showNote('The live file is empty — add a circuit to it first.', true); return; }
+  if (!picker.length) { showNote('The Input File is empty — add a circuit to it first.', true); return; }
   try {
     const data = await py('export_book', { circuits: picker });
     if (!data.ok) { showNote(data.error || 'Could not build that file.', true); return; }
@@ -977,7 +1124,7 @@ $('downloadFileBtn').addEventListener('click', async () => {
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
     const base = (liveFileName || 'circuits').replace(/\.[^./\\]+$/, '').replace(/[^A-Za-z0-9 _.-]/g, '') || 'circuits';
-    a.download = base + '.sym';
+    a.download = base + '.cir';
     a.click();
     URL.revokeObjectURL(a.href);
   } catch (e) {
@@ -986,9 +1133,10 @@ $('downloadFileBtn').addEventListener('click', async () => {
 });
 
 $('backToExamples').addEventListener('click', () => {
-  populatePicker(builtIn, 'Example:', builtIn.length ? '— choose —' : '— none defined —');
+  populatePicker(builtIn, 'Want to try an example? ', builtIn.length ? '— choose —' : '— none defined —');
   liveFileName = null;
   $('backToExamples').hidden = true;
+  $('downloadFileBtn').hidden = true;
   showNote('', false);
 });
 
@@ -1052,7 +1200,7 @@ function askSuffix(groups) {
   $('status').textContent = '';
 }
 
-// Read the whole form, hand it to the Python solver, and render the response:
+// Read the whole form, send it to the solve endpoint, and render the response:
 // either the answers (handed off to whatever builds the results cards
 // further down), an ambiguous-suffix question (via askSuffix, which
 // calls back into solve() with the user's choices once answered), or an
@@ -1068,6 +1216,7 @@ async function solve(suffixChoices) {
   $('solveqOut').style.display = 'none';
   $('solveqOut').innerHTML = '';
   $('resultsBox').open = true;   // pressing Solve means you want to see them
+  $('resultsCard').classList.remove('inactive');   // no longer "no analysis run yet"
   try {
     const body = {
       desc: $('desc').value,
@@ -1118,7 +1267,7 @@ async function solve(suffixChoices) {
       status.textContent = '';
       return;
     }
-    // The solver rewrote ambiguous values to their explicit spelling --
+    // The server rewrote ambiguous values to their explicit spelling --
     // show that in the box so the choice is visible and permanent.
     if (data.desc_used) $('desc').value = data.desc_used;
     // If MathJax is ready we render TeX; otherwise fall back to the
@@ -1180,7 +1329,7 @@ async function solve(suffixChoices) {
     if (data.elements.length) {
       const cap = document.createElement('div');
       cap.className = 'section-cap';
-      cap.textContent = 'Elements';
+      cap.textContent = 'Results by Element';
       out.appendChild(cap);
       const grid = document.createElement('div');
       grid.className = 'elgrid';
@@ -1211,7 +1360,7 @@ async function solve(suffixChoices) {
     if (data.extras.length) {
       const cap = document.createElement('div');
       cap.className = 'section-cap';
-      cap.textContent = TOOL_CAPTION[data.tool] || 'Other results';
+      cap.textContent = TOOL_CAPTION[data.tool] || 'Expert mode unknowns';
       out.appendChild(cap);
       const lcd = document.createElement('div');
       lcd.className = 'lcd';
@@ -1270,9 +1419,158 @@ async function solve(suffixChoices) {
     btn.disabled = false;
   }
 }
+// ---- Plotting: shared SVG line-chart builder, plus the two chart tools ----
+//
+// No charting library -- one small function that lays out axes, a handful
+// of ticks and a polyline in an SVG, in the same no-CDN spirit as vendoring
+// MathJax locally instead of pulling it from a third party. `logX` draws
+// the x-axis on a log10 scale (decade gridlines), for the Bode plot.
+function svgLineChart(xs, ys, {width = 640, height = 260, xLabel = '', yLabel = '',
+                                title = '', logX = false} = {}) {
+  const pad = {l: 64, r: 32, t: title ? 24 : 10, b: 40};
+  const plotW = width - pad.l - pad.r, plotH = height - pad.t - pad.b;
+  const finiteYs = ys.filter(Number.isFinite);
+  let yMin = Math.min(...finiteYs), yMax = Math.max(...finiteYs);
+  if (!Number.isFinite(yMin) || !Number.isFinite(yMax)) { yMin = -1; yMax = 1; }
+  if (yMax - yMin < 1e-12) { yMax += 1; yMin -= 1; }
+  const yPad = (yMax - yMin) * 0.08;
+  yMin -= yPad; yMax += yPad;
+
+  const xVal = x => logX ? Math.log10(x) : x;
+  const xMin = xVal(xs[0]), xMax = xVal(xs[xs.length - 1]);
+  const xSpan = (xMax - xMin) || 1;
+  const px = x => pad.l + (xVal(x) - xMin) / xSpan * plotW;
+  const py = y => pad.t + plotH - (y - yMin) / (yMax - yMin) * plotH;
+
+  let path = '';
+  for (let i = 0; i < xs.length; i++) {
+    if (!Number.isFinite(ys[i])) continue;
+    path += (path ? 'L' : 'M') + px(xs[i]).toFixed(2) + ',' + py(ys[i]).toFixed(2) + ' ';
+  }
+
+  // X ticks: decades for a log axis, evenly spaced otherwise.
+  let xTicks = [];
+  if (logX) {
+    const d0 = Math.floor(xMin), d1 = Math.ceil(xMax);
+    for (let d = d0; d <= d1; d++) xTicks.push(Math.pow(10, d));
+    if (xTicks.length > 8) xTicks = xTicks.filter((_, i) => i % Math.ceil(xTicks.length / 8) === 0);
+  } else {
+    const n = 5;
+    for (let i = 0; i <= n; i++) xTicks.push(xs[0] + (xs[xs.length - 1] - xs[0]) * i / n);
+  }
+  const yTicks = [];
+  for (let i = 0; i <= 4; i++) yTicks.push(yMin + (yMax - yMin) * i / 4);
+
+  const fmt = v => {
+    const av = Math.abs(v);
+    if (av !== 0 && (av < 1e-3 || av >= 1e5)) return v.toExponential(2);
+    return (Math.round(v * 1000) / 1000).toString();
+  };
+
+  let svg = `<svg class="chart-svg" viewBox="0 0 ${width} ${height}" xmlns="http://www.w3.org/2000/svg">`;
+  if (title) svg += `<text class="chart-title" x="${pad.l}" y="16">${title}</text>`;
+  for (const yt of yTicks) {
+    const y = py(yt);
+    svg += `<line class="chart-grid" x1="${pad.l}" y1="${y.toFixed(2)}" x2="${width - pad.r}" y2="${y.toFixed(2)}"/>`;
+    svg += `<text x="${pad.l - 8}" y="${(y + 3).toFixed(2)}" text-anchor="end">${fmt(yt)}</text>`;
+  }
+  for (const xt of xTicks) {
+    const x = px(xt);
+    // Clamp the label anchor near the plot's edges so a tick at the very
+    // start/end (a decade boundary on a log axis, or xs[0]/xs[last] on a
+    // linear one) doesn't center its text half outside the SVG viewBox.
+    const anchor = x < pad.l + 18 ? 'start' : x > width - pad.r - 18 ? 'end' : 'middle';
+    svg += `<line class="chart-grid" x1="${x.toFixed(2)}" y1="${pad.t}" x2="${x.toFixed(2)}" y2="${height - pad.b}"/>`;
+    svg += `<text x="${x.toFixed(2)}" y="${height - pad.b + 16}" text-anchor="${anchor}">${fmt(xt)}</text>`;
+  }
+  svg += `<line class="chart-axis" x1="${pad.l}" y1="${pad.t}" x2="${pad.l}" y2="${height - pad.b}"/>`;
+  svg += `<line class="chart-axis" x1="${pad.l}" y1="${height - pad.b}" x2="${width - pad.r}" y2="${height - pad.b}"/>`;
+  svg += `<path class="chart-line" d="${path.trim()}"/>`;
+  if (xLabel) svg += `<text x="${pad.l + plotW / 2}" y="${height - 4}" text-anchor="middle">${xLabel}</text>`;
+  if (yLabel) svg += `<text x="10" y="${pad.t + plotH / 2}" text-anchor="middle" transform="rotate(-90 10 ${pad.t + plotH / 2})">${yLabel}</text>`;
+  svg += '</svg>';
+  return svg;
+}
+
+// Run one of the two plotting tools (Plot vs. time / Bode plot): call
+// the plot endpoint and render the result as an SVG chart instead of
+// the MathJax equation cards solve() builds -- the response shape
+// (number arrays, not formatted answers) is different enough to
+// warrant its own small render path rather than shoehorning it into
+// solve()'s.
+async function plot() {
+  const btn = $('solveBtn'), out = $('out'), status = $('status');
+  const tool = toolSel.value;
+  btn.disabled = true;
+  status.textContent = 'sampling…';
+  out.innerHTML = '<div class="lcd"><div class="placeholder">computing symbolically…</div></div>';
+  $('evalOut').style.display = 'none'; $('evalOut').innerHTML = '';
+  $('solveqOut').style.display = 'none'; $('solveqOut').innerHTML = '';
+  $('resultsBox').open = true;
+  $('resultsCard').classList.remove('inactive');
+  try {
+    const body = {
+      desc: $('desc').value, tool: tool === 'bode' ? 'bode' : 'time',
+      key: $('plotKey').value, min: $('plotMin').value, max: $('plotMax').value,
+      n: $('plotN').value,
+      equations: $('eqs').value, unknowns: $('unks').value, conditions: $('conds').value
+    };
+    const data = await py('plot', body);
+    out.innerHTML = '';
+    if (!data.ok) {
+      const div = document.createElement('div');
+      div.className = 'error';
+      div.style.whiteSpace = 'pre-line';
+      div.textContent = data.error || 'Something went wrong.';
+      out.appendChild(div);
+      status.textContent = '';
+      return;
+    }
+    if (data.notes && data.notes.length) {
+      const box = document.createElement('div');
+      box.className = 'booknote warn';
+      box.style.margin = '0 0 1rem';
+      data.notes.forEach((n, i) => {
+        const line = document.createElement('div');
+        if (i) line.style.marginTop = '.35rem';
+        line.textContent = n;
+        box.appendChild(line);
+      });
+      out.appendChild(box);
+    }
+    const chartWrap = document.createElement('div');
+    chartWrap.className = 'lcd';
+    chartWrap.style.padding = '1rem';
+    if (tool === 'bode') {
+      chartWrap.innerHTML =
+        svgLineChart(data.freq, data.mag_db, {
+          title: `${data.key} — magnitude`, xLabel: 'frequency (Hz, log scale)',
+          yLabel: 'dB', logX: true}) +
+        svgLineChart(data.freq, data.phase_deg, {
+          title: `${data.key} — phase`, xLabel: 'frequency (Hz, log scale)',
+          yLabel: 'degrees', logX: true});
+    } else {
+      chartWrap.innerHTML = svgLineChart(data.t, data.y, {
+        title: data.key, xLabel: 'time (s)', yLabel: data.key});
+    }
+    out.appendChild(chartWrap);
+    const meta = document.createElement('div');
+    meta.className = 'lcd-meta';
+    const nPts = tool === 'bode' ? data.freq.length : data.t.length;
+    meta.textContent = `${tool === 'bode' ? 'Bode plot' : 'Time plot'} · ${nPts} point(s) · ${data.elapsed}s`;
+    out.appendChild(meta);
+    status.textContent = '';
+  } catch (e) {
+    out.innerHTML = '<div class="error">Could not reach the solver. Please try again.</div>';
+    status.textContent = '';
+  } finally {
+    btn.disabled = false;
+  }
+}
+
 // Note the arrow wrapper: a raw listener would pass the click Event as
 // the suffixChoices argument.
-$('solveBtn').addEventListener('click', () => solve());
+$('solveBtn').addEventListener('click', () => (PLOT_TOOLS.has(toolSel.value) ? plot() : solve()));
 
 // ---- Expression evaluator -------------------------------------------
 async function evaluate() {
@@ -1324,6 +1622,7 @@ async function solveEquations() {
     const data = await py('solve_equations', {
       equations: $('solveqEqs').value,
       unknowns: $('solveqUnks').value,
+      conditions: $('solveqConds').value,
       values: last.values,
       ...roundingState(),
       si: $('siUnits').checked,
@@ -1423,7 +1722,7 @@ $('dlBtn').addEventListener('click', () => {
   const blob = new Blob([parts.join('\n')], { type: 'text/plain' });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
-  a.download = `symbulator_${last.tool === 'solve' ? last.domain : last.tool}.txt`;
+  a.download = `symbulator_${last.tool === 'solve' ? last.domain : last.tool}.sym`;
   a.click();
   URL.revokeObjectURL(a.href);
 });
