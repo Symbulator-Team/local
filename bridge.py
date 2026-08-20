@@ -75,8 +75,10 @@ def solve(payload_json: str) -> str:
     if err:
         return json.dumps({"ok": False, "error": err})
 
-    # --- i / I / j all mean the imaginary unit; settle on j, and say so ---
-    desc, imaginary_notes = ui.normalise_imaginary(desc)
+    # --- i / I / j all mean the imaginary unit in AC; settle on j, and
+    # say so -- outside AC those letters are ordinary variables, so this
+    # is a no-op there (see symbulator_ui.normalise_imaginary) ---
+    desc, imaginary_notes = ui.normalise_imaginary(desc, domain)
 
     # --- ambiguous bare suffixes: ask, then rewrite explicitly ---
     choices = {str(k): str(v) for k, v in (p.get("suffix_choices") or {}).items()

@@ -27,7 +27,7 @@ HERE = Path(__file__).resolve().parent
 TEMPLATE = HERE.parent / "server" / "templates" / "index.html"
 OUTPUT = HERE / "index.html"
 
-WHEEL = "symbulator-0.4.1-py3-none-any.whl"
+WHEEL = "symbulator-0.4.2-py3-none-any.whl"
 
 
 def sub(text: str, old: str, new: str, *, count: int = 1, label: str = "") -> str:
@@ -104,8 +104,20 @@ _u.solve_ui("e1,1,0,1:r1,1,0,1", "dc", "", None, "solve", "", "", "z",
 // the rendering code below is unchanged.
 async function py(fnName, payload) {
   const status = document.getElementById('status');
-  if (!bridge && !pyFailed) status.textContent = 'starting the maths engine…';
+  // Whichever caller happens to be the first to invoke py() before boot
+  // finishes sets this message -- which might not be solve() (the
+  // examples list loads itself in the background as soon as the page
+  // opens, well before anyone has clicked Run). Only solve() clears it
+  // afterward, so if some other caller set it, it would otherwise sit
+  // there forever. py() is the one thing every caller shares, so it is
+  // the one place that can reliably clean up after itself once boot is
+  // done, no matter who triggered it.
+  const setBooting = !bridge && !pyFailed;
+  if (setBooting) status.textContent = 'starting the maths engine…';
   await pyReady;
+  if (setBooting && status.textContent === 'starting the maths engine…') {
+    status.textContent = '';
+  }
   if (pyFailed) return { ok: false, error: 'The maths engine is not available.' };
   const arg = (fnName === 'parse_book') ? payload : JSON.stringify(payload);
   const t0 = performance.now();
@@ -152,6 +164,29 @@ def build() -> str:
         label="offline-download card",
     )
 
+    # --- title/description: the server version's say "online", which is
+    #     wrong for this offline build -- match the wording already used
+    #     in manifest.webmanifest's own "name" field instead, so an
+    #     installed window's title bar (which some browsers/OSes
+    #     concatenate manifest name + document title for) doesn't show
+    #     two different, contradictory descriptions of the same app. ----
+    s = sub(
+        s,
+        "<title>Symbulator — symbolic circuit analysis online</title>",
+        "<title>Symbulator — symbolic circuit simulation</title>",
+        label="local title",
+    )
+    s = sub(
+        s,
+        'content="Symbulator: symbolic simulation of linear electrical '
+        'circuits (DC, AC, Laplace, transient) online, created by Roberto '
+        'Perez-Franco. Powered by Python and SymPy.">',
+        'content="Symbulator: symbolic simulation of linear electrical '
+        'circuits (DC, AC, Laplace, transient), created by Roberto '
+        'Perez-Franco. Powered by Python and SymPy.">',
+        label="local meta description",
+    )
+
     # --- head: PWA tags, local asset paths, the Pyodide runtime --------
     s = sub(
         s,
@@ -166,11 +201,13 @@ def build() -> str:
     )
 
     # --- header logo: server serves it from /static/, local keeps it at
-    #     the folder root (same convention as the favicon above) --------
+    #     the folder root (same convention as the favicon above). The logo
+    #     image (banner) and the icon image (favicon/app icon) are two
+    #     different files -- see logo.png vs icon.png in ASSETS. ---------
     s = sub(
         s,
-        '<img src="/static/icon.png" alt="Symbulator logo" class="header-logo">',
-        '<img src="icon.png" alt="Symbulator logo" class="header-logo">',
+        '<img src="/static/logo.png" alt="Symbulator logo" class="header-logo">',
+        '<img src="logo.png" alt="Symbulator logo" class="header-logo">',
         label="header logo path",
     )
 
