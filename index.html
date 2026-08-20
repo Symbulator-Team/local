@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Symbulator — symbolic circuit analysis online</title>
-<meta name="description" content="Symbulator: symbolic simulation of linear electrical circuits (DC, AC, Laplace, transient) online, created by Roberto Perez-Franco. Powered by Python and SymPy.">
+<title>Symbulator — symbolic circuit simulation</title>
+<meta name="description" content="Symbulator: symbolic simulation of linear electrical circuits (DC, AC, Laplace, transient), created by Roberto Perez-Franco. Powered by Python and SymPy.">
 <script>
 window.MathJax = { tex: { inlineMath: [['\\(', '\\)']] }, svg: { fontCache: 'global' } };
 </script>
@@ -251,7 +251,7 @@ window.MathJax = { tex: { inlineMath: [['\\(', '\\)']] }, svg: { fontCache: 'glo
      breathing room here -- Inputs is unaffected since .group-intro, not
      .card, is what follows it. */
   .group-h + .card { margin-top: .6rem; }
-  .group-intro { margin: 0 0 1.2rem; max-width: 68ch; }
+  .group-intro { margin: 0 0 1.2rem; }
   #evalOut, #solveqOut { margin-top: .9rem; display: none; }
   .disamb {
     background: var(--warn-bg); border: 1px solid #e9d8b4; border-radius: 10px;
@@ -311,7 +311,7 @@ window.MathJax = { tex: { inlineMath: [['\\(', '\\)']] }, svg: { fontCache: 'glo
     <img src="logo.png" alt="Symbulator logo" class="header-logo">
     <div>
       <h1>Symbulator <span class="tm">9</span></h1>
-      <p>The best symbolic simulator of linear circuits since 1999.</p>
+      <p>The best symbolic simulator of linear circuits, since 1999.</p>
     </div>
   </div>
 </header>
@@ -320,7 +320,7 @@ window.MathJax = { tex: { inlineMath: [['\\(', '\\)']] }, svg: { fontCache: 'glo
   <h2 class="group-h"><span class="bracket">[</span>   I N P U T S   <span class="bracket">]</span></h2>
   <p class="group-intro">
     <strong>Describe a linear circuit and specify the analysis type</strong> —
-    You can use an Input File. Unsure how to use? Learn
+    You can use an Input&nbsp;File. Unsure how? Learn
     <a href="https://learn.symbulator.com" target="_blank" rel="noopener">here</a>!
   </p>
 
@@ -356,7 +356,12 @@ window.MathJax = { tex: { inlineMath: [['\\(', '\\)']] }, svg: { fontCache: 'glo
         <tr><td>m</td><td>mutual inductance</td><td>name,L1,L2,M</td></tr>
         <tr><td>t</td><td>ideal transformer</td><td>name,n1,n2,N1,N2</td></tr>
         <tr><td>o</td><td>ideal op-amp</td><td>name,n+,n−,n_out</td></tr>
-        <tr><td>z y h g a b</td><td>two-port block</td><td>name,n1,n2</td></tr>
+        <tr><td>z</td><td>z-parameters (impedance) two-port block</td><td>name,n1,n2</td></tr>
+        <tr><td>y</td><td>y-parameters (admittance) two-port block</td><td>name,n1,n2</td></tr>
+        <tr><td>h</td><td>h-parameters (hybrid) two-port block</td><td>name,n1,n2</td></tr>
+        <tr><td>g</td><td>g-parameters (inverse hybrid) two-port block</td><td>name,n1,n2</td></tr>
+        <tr><td>a</td><td>a-parameters (ABCD / transmission) two-port block</td><td>name,n1,n2</td></tr>
+        <tr><td>b</td><td>b-parameters (inverse transmission) two-port block</td><td>name,n1,n2</td></tr>
       </table>
       <p class="hint">
         A value can be a number, a symbol (<code>r_load</code>,
@@ -641,7 +646,7 @@ c1,2,0,4.7e-6</pre>
   </div>
 
   <div class="run-row">
-    <button id="solveBtn">Run</button>
+    <button id="solveBtn">Run Symbulator</button>
     <span id="status"></span>
   </div>
 
@@ -1051,8 +1056,20 @@ _u.solve_ui("e1,1,0,1:r1,1,0,1", "dc", "", None, "solve", "", "", "z",
 // the rendering code below is unchanged.
 async function py(fnName, payload) {
   const status = document.getElementById('status');
-  if (!bridge && !pyFailed) status.textContent = 'starting the maths engine…';
+  // Whichever caller happens to be the first to invoke py() before boot
+  // finishes sets this message -- which might not be solve() (the
+  // examples list loads itself in the background as soon as the page
+  // opens, well before anyone has clicked Run). Only solve() clears it
+  // afterward, so if some other caller set it, it would otherwise sit
+  // there forever. py() is the one thing every caller shares, so it is
+  // the one place that can reliably clean up after itself once boot is
+  // done, no matter who triggered it.
+  const setBooting = !bridge && !pyFailed;
+  if (setBooting) status.textContent = 'starting the maths engine…';
   await pyReady;
+  if (setBooting && status.textContent === 'starting the maths engine…') {
+    status.textContent = '';
+  }
   if (pyFailed) return { ok: false, error: 'The maths engine is not available.' };
   const arg = (fnName === 'parse_book') ? payload : JSON.stringify(payload);
   const t0 = performance.now();
