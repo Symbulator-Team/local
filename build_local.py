@@ -42,18 +42,37 @@ def sub(text: str, old: str, new: str, *, count: int = 1, label: str = "") -> st
 
 
 def strip_between(text: str, start: str, end: str, *, label: str = "") -> str:
-    """Removes everything from `start` up to and including `end`, and
-    insists both markers were found exactly once, in order. Used to
-    drop the server-only "download the offline version" card, which
-    would be nonsensical inside the offline build itself."""
-    i = text.find(start)
-    j = text.find(end, i + len(start) if i != -1 else 0)
-    if i == -1 or j == -1:
+    """Removes every span from `start` up to and including `end` -- there
+    can be more than one such marked block in the template (e.g. the
+    "download the offline version" card, and separately the "no backend
+    here" notice), so this loops rather than assuming a single pair.
+    Insists at least one block was found, and that every start has a
+    matching end. Used to drop content that is nonsensical inside the
+    offline build itself, where there is always a working engine."""
+    out = []
+    pos = 0
+    count = 0
+    while True:
+        i = text.find(start, pos)
+        if i == -1:
+            out.append(text[pos:])
+            break
+        j = text.find(end, i + len(start))
+        if j == -1:
+            raise SystemExit(
+                f"build_local.py: {label or 'strip_between'} found a start "
+                f"marker with no matching end marker. The template has "
+                f"changed; fix this script."
+            )
+        out.append(text[pos:i])
+        pos = j + len(end)
+        count += 1
+    if count == 0:
         raise SystemExit(
             f"build_local.py: {label or 'strip_between'} markers not found. "
             f"The template has changed; fix this script."
         )
-    return text[:i] + text[j + len(end):]
+    return "".join(out)
 
 
 BOOT_JS = """
@@ -158,10 +177,13 @@ def build() -> str:
     direct Pyodide call, and register the service worker."""
     s = TEMPLATE.read_text()
 
-    # --- drop the server-only "download the offline version" card -----
+    # --- drop every server-only block: the "download the offline
+    #     version" card, and the "no backend here" notice -- both are
+    #     nonsensical inside the offline build itself, which always has
+    #     a working engine on board ---------------------------------------
     s = strip_between(
         s, "  <!-- server-only:", "  <!-- /server-only -->\n",
-        label="offline-download card",
+        label="server-only blocks",
     )
 
     # --- title/description: the server version's say "online", which is
@@ -381,7 +403,8 @@ def main() -> int:
     for probe in ("fetch('/api", "loadPyodide", "py('solve'", "sw.js",
                   "roundingState", "Symbulator <span", "solveqReal",
                   "py('export_book'", "addToFileBtn", "downloadFileBtn",
-                  "server-only", "Run it offline"):
+                  "server-only", "Run it offline", "id=\"hostNotice\"",
+                  "showHostNotice"):
         print(f"  {probe:<20} {built.count(probe)}")
     return 0
 
