@@ -155,14 +155,23 @@ def build() -> str:
     # --- head: PWA tags, local asset paths, the Pyodide runtime --------
     s = sub(
         s,
-        '<link rel="icon" href="/static/icon.svg" type="image/svg+xml">\n'
+        '<link rel="icon" href="/static/icon.png" type="image/png">\n'
         '<script defer src="/static/mathjax/tex-svg.js"></script>',
         '<link rel="manifest" href="manifest.webmanifest">\n'
-        '<meta name="theme-color" content="#123c33">\n'
-        '<link rel="icon" href="icon.svg" type="image/svg+xml">\n'
+        '<meta name="theme-color" content="#203864">\n'
+        '<link rel="icon" href="icon.png" type="image/png">\n'
         '<script defer src="static/mathjax/tex-svg.js"></script>\n'
         '<script src="vendor/pyodide.js"></script>',
         label="head assets",
+    )
+
+    # --- header logo: server serves it from /static/, local keeps it at
+    #     the folder root (same convention as the favicon above) --------
+    s = sub(
+        s,
+        '<img src="/static/icon.png" alt="Symbulator logo" class="header-logo">',
+        '<img src="icon.png" alt="Symbulator logo" class="header-logo">',
+        label="header logo path",
     )
 
     # --- the "starting up" notice --------------------------------------
@@ -173,10 +182,10 @@ def build() -> str:
 
     s = sub(
         s,
-        '<div class="wrap">',
+        '<div class="wrap header-flex">',
         '<div class="wrap"><div id="boot" class="bootbar">Starting the maths engine…\n'
         '  <span class="hint">you can start typing a circuit now</span></div></div>\n\n'
-        '<div class="wrap">',
+        '<div class="wrap header-flex">',
         count=1,
         label="first .wrap div",
     )
