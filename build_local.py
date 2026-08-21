@@ -157,6 +157,71 @@ if ('serviceWorker' in navigator) {
   });
 }
 </script>
+<script>
+// Offering installation from inside the page, because the browser's own
+// affordance is easy to miss and impossible to describe in one sentence:
+// desktop puts an icon in the address bar, Android hides it in a menu
+// whose wording changes between Chrome versions ("Install app",
+// "Install and create shortcut", "Add to Home Screen"), and iOS has no
+// install prompt at all. Where the browser lets us drive it, we show a
+// button and skip the explaining entirely.
+(function () {
+  var bar = document.getElementById('installbar');
+  var btn = document.getElementById('installbtn');
+  var txt = document.getElementById('installtext');
+  if (!bar) return;
+
+  function installed() {
+    return window.matchMedia('(display-mode: standalone)').matches ||
+           window.navigator.standalone === true;
+  }
+  var dismissed = false;
+  try {
+    dismissed = localStorage.getItem('symbulator-install-dismissed') === '1';
+  } catch (e) {}
+  if (installed() || dismissed) return;
+
+  var deferred = null;
+  // Chromium fires this only once its own install criteria are met, so
+  // the bar cannot appear on a page that could not actually be installed.
+  window.addEventListener('beforeinstallprompt', function (e) {
+    e.preventDefault();
+    deferred = e;
+    bar.classList.add('show');
+  });
+
+  btn.addEventListener('click', function () {
+    if (!deferred) return;
+    deferred.prompt();
+    deferred.userChoice.then(function () {
+      deferred = null;
+      bar.classList.remove('show');
+    });
+  });
+
+  document.getElementById('installno').addEventListener('click', function () {
+    bar.classList.remove('show');
+    try { localStorage.setItem('symbulator-install-dismissed', '1'); } catch (e) {}
+  });
+
+  window.addEventListener('appinstalled', function () {
+    bar.classList.remove('show');
+    try { localStorage.removeItem('symbulator-install-dismissed'); } catch (e) {}
+  });
+
+  // iOS/iPadOS Safari never fires beforeinstallprompt and exposes no way
+  // to trigger installation, so describing the Share menu is the only
+  // option left there.
+  var isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+              (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  if (isIOS) {
+    txt.textContent = 'Install Symbulator as an app: tap Share, then "Add to Home Screen". ' +
+                      'It then works offline, in its own window.';
+    btn.hidden = true;
+    bar.classList.add('show');
+  }
+})();
+</script>
 </body>"""
 
 BOOTBAR_CSS = """  .bootbar { background: #fff9ec; border: 1px solid #eadfc0; color: #6b5b34;
@@ -164,6 +229,20 @@ BOOTBAR_CSS = """  .bootbar { background: #fff9ec; border: 1px solid #eadfc0; co
              font-size: .88rem; }
   .bootbar.ready { display: none; }
   .bootbar.failed { background: var(--err-bg); border-color: #ecc8c8; color: var(--err-ink); }
+"""
+
+# Deliberately built from the page's own colour tokens rather than fixed
+# hex values, so the bar follows Dark Mode like everything else.
+INSTALLBAR_CSS = """  .installbar { background: var(--card); border: 1px solid var(--line);
+                color: var(--ink); border-radius: 8px; padding: .5rem .9rem;
+                margin: 1rem 0 -.4rem; font-size: .88rem; display: none;
+                align-items: center; gap: .6rem; flex-wrap: wrap; }
+  .installbar.show { display: flex; }
+  .installbar button { font: inherit; padding: .3rem .8rem; border-radius: 6px;
+                border: 1px solid var(--accent); background: var(--accent);
+                color: var(--accent-ink); cursor: pointer; }
+  .installbar button.dismiss { background: none; color: var(--muted);
+                border-color: transparent; text-decoration: underline; padding: .3rem .4rem; }
 """
 
 
@@ -245,13 +324,19 @@ def build() -> str:
     marker = "  .wrap { "
     if marker not in s:
         raise SystemExit("build_local.py: could not find the .wrap CSS rule.")
-    s = s.replace(marker, BOOTBAR_CSS + marker, 1)
+    s = s.replace(marker, BOOTBAR_CSS + INSTALLBAR_CSS + marker, 1)
 
     s = sub(
         s,
         '<div class="wrap header-flex">',
         '<div class="wrap"><div id="boot" class="bootbar">Starting the maths engine…\n'
         '  <span class="hint">you can start typing a circuit now</span></div></div>\n\n'
+        '<div class="wrap"><div id="installbar" class="installbar">\n'
+        '  <span id="installtext">Install Symbulator as an app — it then works offline,\n'
+        '  in its own window, with no need to visit this page.</span>\n'
+        '  <button type="button" id="installbtn">Install</button>\n'
+        '  <button type="button" class="dismiss" id="installno">Not now</button>\n'
+        '</div></div>\n\n'
         '<div class="wrap header-flex">',
         count=1,
         label="first .wrap div",
