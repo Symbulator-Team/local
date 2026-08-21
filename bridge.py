@@ -83,12 +83,16 @@ def solve(payload_json: str) -> str:
     # --- ambiguous bare suffixes: ask, then rewrite explicitly ---
     choices = {str(k): str(v) for k, v in (p.get("suffix_choices") or {}).items()
                if v in ("si", "var")}
-    desc_used = desc.replace(":", "\n") if imaginary_notes else None
     try:
         from symbulator.elements import (parse_circuit, ambiguous_in_elements,
                                          _VALUE_FIELD_IDX)
         from symbulator.si_prefix import bare_suffix_match, _BARE_SUFFIX_EXP
-        elements = parse_circuit(desc)
+        # expand_si=False: keep SI-prefix shorthand (4.7'M) as typed in
+        # these elements' fields -- they're what desc_used gets rebuilt
+        # from below, matching app.py's /api/solve. It's still expanded
+        # to a real number the normal way when solve_ui parses `desc`
+        # again for the actual solve.
+        elements = parse_circuit(desc, expand_si=False)
         ambiguous = ambiguous_in_elements(elements)
     except Exception as exc:
         return json.dumps({"ok": False, "error": ui._exc_text(exc)})
@@ -111,8 +115,13 @@ def solve(payload_json: str) -> str:
                 if m:
                     sep = "'" if choices[el.fields[idx].strip()] == "si" else "*"
                     el.fields[idx] = f"{m[0]}{sep}{m[1]}"
-        desc = ":".join(e.name + "," + ",".join(e.fields) for e in elements)
-        desc_used = desc.replace(":", "\n")
+
+    # Always echo the circuit back one element per line, same as app.py's
+    # /api/solve -- consistent every time you run, not just on the two
+    # occasions (imaginary-unit normalizing, an ambiguous suffix being
+    # resolved) that used to trigger it.
+    desc = ":".join(e.name + "," + ",".join(e.fields) for e in elements)
+    desc_used = desc.replace(":", "\n")
 
     res = ui.solve_ui(desc, domain, omega, variables or None, tool, n1, n2, kind,
                       equations, unknowns, conditions, _digits(p),
@@ -122,11 +131,14 @@ def solve(payload_json: str) -> str:
     # '5*i' to '5j'" is often the explanation for the error underneath.
     res["notes"] = imaginary_notes + list(res.get("notes") or [])
     if res.get("ok"):
+        # "approx"/"approx_forced" are left as solve_ui set them, not
+        # overwritten with the request's original value -- solve_ui may
+        # have switched exact to approximate itself, and the UI needs to
+        # see that, not what was originally asked for.
         res.update({"domain": domain, "tool": tool, "desc_used": desc_used,
                     "digits": _digits(p), "si": bool(p.get("si")),
                     "units": bool(p.get("units")),
-                    "use_rms": bool(p.get("use_rms")),
-                    "approx": bool(p.get("approx"))})
+                    "use_rms": bool(p.get("use_rms"))})
     return json.dumps(res)
 
 
@@ -269,10 +281,21 @@ def export_book(payload_json: str) -> str:
         circuit = {"name": str(raw.get("name") or "Circuit")[:circuitbook.MAX_NAME_LEN],
                    "desc": str(raw.get("desc") or "")}
         for f in ("domain", "omega", "vars", "tool", "n1", "n2", "kind", "unknowns",
-                  "plotkey", "plotmin", "plotmax", "plotpoints"):
+                  "plotkey", "plotmin", "plotmax", "plotpoints",
+                  "rounding", "evaluate", "solve_unknowns"):
             if raw.get(f):
                 circuit[f] = str(raw[f])
-        for f in ("equations", "conditions"):
+        # Settings booleans -- always carried over (even when False), since
+        # a saved circuit always has *some* Settings state, unlike the
+        # "if present" fields above. "units" defaults to True (unlike the
+        # other three): a circuit dict that never touched Settings at all
+        # (e.g. parsed straight from examples.sym, which doesn't spell out
+        # every default) means "show units", same as a fresh page load --
+        # bool(None) would wrongly read that silence as "off".
+        for f in ("si", "rms", "solve_real_only"):
+            circuit[f] = bool(raw.get(f))
+        circuit["units"] = bool(raw.get("units", True))
+        for f in ("equations", "conditions", "solve_equations", "solve_conditions"):
             items = raw.get(f)
             if isinstance(items, list):
                 items = [str(x).strip() for x in items if str(x).strip()]

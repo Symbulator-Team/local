@@ -10,7 +10,7 @@
  * Bump CACHE_VERSION whenever the app files change, so returning users
  * get the new build instead of the cached one.
  */
-const CACHE_VERSION = 'symbulator-v17';
+const CACHE_VERSION = 'symbulator-v19';
 
 const ASSETS = [
   './',
@@ -30,7 +30,7 @@ const ASSETS = [
   'vendor/pyodide-lock.json',
   'vendor/sympy-1.14.0-py3-none-any.whl',
   'vendor/mpmath-1.4.1-py3-none-any.whl',
-  'vendor/symbulator-0.4.3-py3-none-any.whl',
+  'vendor/symbulator-0.4.4-py3-none-any.whl',
 ];
 
 self.addEventListener('install', event => {
