@@ -212,11 +212,17 @@ def build() -> str:
     # --- head: PWA tags, local asset paths, the Pyodide runtime --------
     s = sub(
         s,
-        '<link rel="icon" href="/static/icon.png" type="image/png">\n'
+        '<link rel="icon" href="/static/favicon.ico" sizes="any">\n'
+        '<link rel="icon" href="/static/favicon-32x32.png" type="image/png" sizes="32x32">\n'
+        '<link rel="icon" href="/static/favicon-16x16.png" type="image/png" sizes="16x16">\n'
+        '<link rel="apple-touch-icon" href="/static/apple-touch-icon.png" sizes="180x180">\n'
         '<script defer src="/static/mathjax/tex-svg.js"></script>',
         '<link rel="manifest" href="manifest.webmanifest">\n'
         '<meta name="theme-color" content="#203864">\n'
-        '<link rel="icon" href="icon.png" type="image/png">\n'
+        '<link rel="icon" href="favicon.ico" sizes="any">\n'
+        '<link rel="icon" href="favicon-32x32.png" type="image/png" sizes="32x32">\n'
+        '<link rel="icon" href="favicon-16x16.png" type="image/png" sizes="16x16">\n'
+        '<link rel="apple-touch-icon" href="apple-touch-icon.png" sizes="180x180">\n'
         '<script defer src="static/mathjax/tex-svg.js"></script>\n'
         '<script src="vendor/pyodide.js"></script>',
         label="head assets",

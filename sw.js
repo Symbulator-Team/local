@@ -10,13 +10,19 @@
  * Bump CACHE_VERSION whenever the app files change, so returning users
  * get the new build instead of the cached one.
  */
-const CACHE_VERSION = 'symbulator-v19';
+const CACHE_VERSION = 'symbulator-v20';
 
 const ASSETS = [
   './',
   'index.html',
   'manifest.webmanifest',
-  'icon.png',
+  'favicon.ico',
+  'favicon-16x16.png',
+  'favicon-32x32.png',
+  'apple-touch-icon.png',
+  'icon-192.png',
+  'icon-512.png',
+  'icon-maskable-512.png',
   'logo.png',
   'examples.sym',
   'bridge.py',
