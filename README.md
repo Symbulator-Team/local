@@ -85,7 +85,7 @@ apart. If you change one, copy it to the other.
 ## Changing the interface
 
 There is only one interface, and it lives in the *server* project, at
-`../symbulator_web/templates/index.html`. This build's `index.html` is
+`../server/templates/index.html`. This build's `index.html` is
 produced from it:
 
 ```
