@@ -27,7 +27,7 @@ HERE = Path(__file__).resolve().parent
 TEMPLATE = HERE.parent / "server" / "templates" / "index.html"
 OUTPUT = HERE / "index.html"
 
-WHEEL = "symbulator-0.4.4-py3-none-any.whl"
+WHEEL = "symbulator-0.4.5-py3-none-any.whl"
 
 
 def sub(text: str, old: str, new: str, *, count: int = 1, label: str = "") -> str:

@@ -1327,7 +1327,7 @@ const pyReady = (async () => {
   try {
     pyodide = await loadPyodide({ indexURL: 'vendor/' });
     await pyodide.loadPackage(['sympy']);
-    await pyodide.loadPackage('vendor/symbulator-0.4.4-py3-none-any.whl');
+    await pyodide.loadPackage('vendor/symbulator-0.4.5-py3-none-any.whl');
     // symbulator_ui.py and circuitbook.py are shared verbatim with the
     // server build; bridge.py is this build's own glue module.
     for (const f of ['symbulator_ui.py', 'circuitbook.py', 'bridge.py']) {
