@@ -3,3 +3,7 @@ __pycache__/
 vendor/
 static/mathjax/
 .DS_Store
+
+# built by build_zip.py
+local.zip
+dist/

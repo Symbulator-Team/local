@@ -1,0 +1,13 @@
+# The ZIP ships these files straight to users, so their line endings are
+# not a matter of taste. start.sh and start.command are run by /bin/sh on
+# macOS and Linux; if git hands a Windows contributor a CRLF checkout and
+# that gets zipped, they fail with "bad interpreter: /bin/sh^M". Forcing
+# LF in the working tree on every platform makes that impossible.
+* text=auto eol=lf
+
+# Binary assets: never touch these.
+*.png  binary
+*.ico  binary
+*.whl  binary
+*.wasm binary
+*.zip  binary

@@ -175,7 +175,9 @@ def build() -> str:
     server-only card, swap in the PWA/offline asset tags, add the
     "starting up" boot notice, rewire every fetch('/api/...') call to a
     direct Pyodide call, and register the service worker."""
-    s = TEMPLATE.read_text()
+    # encoding is explicit: the template contains curly quotes and em
+    # dashes, and Windows would otherwise decode it as cp1252 and crash.
+    s = TEMPLATE.read_text(encoding="utf-8")
 
     # --- drop every server-only block: the "download the offline
     #     version" card, and the "no backend here" notice -- both are
@@ -397,14 +399,14 @@ def main() -> int:
 
     built = build()
     if args.check:
-        current = OUTPUT.read_text() if OUTPUT.exists() else ""
+        current = OUTPUT.read_text(encoding="utf-8") if OUTPUT.exists() else ""
         if current != built:
             print("index.html is STALE -- run build_local.py", file=sys.stderr)
             return 1
         print("index.html is up to date.")
         return 0
 
-    OUTPUT.write_text(built)
+    OUTPUT.write_text(built, encoding="utf-8", newline="")
     print(f"index.html written, {built.count(chr(10)) + 1} lines")
     for probe in ("fetch('/api", "loadPyodide", "py('solve'", "sw.js",
                   "roundingState", "Symbulator <span", "solveqReal",

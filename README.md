@@ -68,6 +68,10 @@ use the browser's Install option. That needs no Python at all.
 |---|---|
 | `index.html` | the entire interface, and the code that boots Python — **generated**, do not hand-edit |
 | `build_local.py` | regenerates `index.html` from the server version's template |
+| `build_zip.py` | assembles the downloadable ZIP, and verifies the icons, cache list and head links before writing it |
+| `CLAUDE.md` | how all three site variants fit together — read this first |
+| `README.txt` | the readme that ships **inside the ZIP**, for end users (this file is for developers) |
+| `start.bat`, `start.sh`, `start.command` | launchers shipped in the ZIP; they start `python -m http.server` and open a browser |
 | `bridge.py` | thin adapter: JSON in, JSON out |
 | `symbulator_ui.py` | **shared with the Flask build** — all solving, formatting, units, ordering |
 | `circuitbook.py` | the `[Name]` circuit-file format, also shared |
