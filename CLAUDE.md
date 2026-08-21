@@ -3,7 +3,42 @@
 Orientation for anyone (human or assistant) picking this up cold. It covers
 all three site variants, not just this repo.
 
+**This file is the canonical reference.** It is version-controlled, so it can be
+corrected in the same commit as whatever it describes. A rendered copy of this
+material exists as a shareable web page for people who would rather not clone
+anything — if the two ever disagree, this file wins.
+
 ---
+
+## Start here
+
+Five things that are true, load-bearing, and **not discoverable by reading the
+code**. Everything below is detail hanging off these.
+
+1. **install and local are the same build.** `install.symbulator.com` and the
+   downloadable ZIP are the same files. There is no separate "install" source
+   tree and no `install` repository. Change the local build and you have changed
+   both — and both need deploying, separately.
+
+2. **The interface is generated, not written.** It exists once, in the *server*
+   repo. `local/index.html` is produced from it by `build_local.py`. Editing it
+   by hand works right up until the next build silently discards your change.
+
+3. **Some text exists in only one variant.** Blocks wrapped in `server-only`
+   markers are deleted from the local build. This is why searching the local
+   build for copy that is plainly on the site can come up empty — and why the
+   install instructions were once invisible on the one build whose entire
+   purpose was installing.
+
+4. **You cannot build a release from the repos alone.** The Pyodide runtime,
+   the sympy and mpmath wheels, the Python stdlib and MathJax — about 19 MB —
+   are deliberately not in git. A release needs an extracted copy of a previous
+   ZIP to draw them from, passed as `--assets`.
+
+5. **A stale service worker hides everything you deploy.** `sw.js` is
+   cache-first. Without a `CACHE_VERSION` bump, returning visitors keep the old
+   build indefinitely, including the old manifest. Any fix that "didn't work" on
+   a device you have visited before is this, until proven otherwise.
 
 ## The three variants
 
@@ -138,6 +173,26 @@ Deploying the local build is **two jobs**, not one: the hosted copy at
 leaves them silently out of step.
 
 ---
+
+## Verifying a deploy
+
+"The command didn't error" is not verification. What actually catches problems:
+
+- **Server:** load the site and run a real solve. A version mismatch between the
+  app and the `symbulator` package only surfaces on an actual request — a clean
+  `git pull` and reload will not reveal it. `DEPLOY.md` says the same thing.
+- **ZIP:** compare the SHA256 of the published file against the local build.
+  Sizes can coincide; hashes do not.
+- **Install host:** compare each served file against the repo byte for byte. A
+  partial upload looks completely healthy from a browser.
+- **Installability:** only a real device settles it. Clear the site data first,
+  or the old service worker serves a cached page and you have tested nothing.
+
+Service workers and localhost: some embedded and sandboxed browsers refuse to
+register a service worker over plain `http://localhost`, failing with an
+unhelpful "unknown error when fetching the script" even though the file serves
+correctly. Before chasing that as a bug, serve a known-good build the same way —
+if it fails identically, the browser is the cause, not the build.
 
 ## Things that will bite you
 
