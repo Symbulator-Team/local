@@ -76,7 +76,7 @@ use the browser's Install option. That needs no Python at all.
 | `bridge.py` | thin adapter: JSON in, JSON out |
 | `symbulator_ui.py` | **shared with the Flask build** — all solving, formatting, units, ordering |
 | `circuitbook.py` | the `[Name]` circuit-file format, also shared |
-| `examples.sym` | the examples dropdown; edit freely, no restart needed |
+| `examples.cir` | the examples dropdown; edit freely, no restart needed |
 | `sw.js` | service worker: offline caching. Bump `CACHE_VERSION` when you change app files, or returning visitors keep the old build |
 | `manifest.webmanifest` | what makes it installable. Its `icons` must include a 192px **and** a 512px entry, or Chrome on Android will not offer to install |
 | `icon.png` | master artwork; the `favicon*`, `apple-touch-icon.png` and `icon-*.png` files are generated from it. Regenerate them if it changes |

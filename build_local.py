@@ -353,7 +353,7 @@ def build() -> str:
         s,
         """    const r = await fetch('/api/examples');
     const data = await r.json();""",
-        """    const text = await (await fetch('examples.sym')).text();
+        """    const text = await (await fetch('examples.cir')).text();
     const data = await py('parse_book', text);""",
         label="examples fetch",
     )

@@ -1544,7 +1544,7 @@ function showHostNotice() {
 
 async function loadExamples() {
   try {
-    const text = await (await fetch('examples.sym')).text();
+    const text = await (await fetch('examples.cir')).text();
     const data = await py('parse_book', text);
     builtIn = data.circuits || [];
     populatePicker(builtIn, 'Some examples you can try: ',

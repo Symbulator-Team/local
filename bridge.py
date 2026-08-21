@@ -258,7 +258,7 @@ def solve_equations(payload_json: str) -> str:
 def parse_book(text: str) -> str:
     """JS-callable counterpart of app.py's /api/examples and /api/upload:
     parse circuit-book text (see circuitbook.py) straight from the
-    browser, whether it's the bundled examples.sym or a file the user
+    browser, whether it's the bundled examples.cir or a file the user
     picked, with no server involved."""
     circuits, warnings = circuitbook.parse_book(text)
     return json.dumps({"ok": bool(circuits), "circuits": circuits,
@@ -289,7 +289,7 @@ def export_book(payload_json: str) -> str:
         # a saved circuit always has *some* Settings state, unlike the
         # "if present" fields above. "units" defaults to True (unlike the
         # other three): a circuit dict that never touched Settings at all
-        # (e.g. parsed straight from examples.sym, which doesn't spell out
+        # (e.g. parsed straight from examples.cir, which doesn't spell out
         # every default) means "show units", same as a fresh page load --
         # bool(None) would wrongly read that silence as "off".
         for f in ("si", "rms", "solve_real_only"):

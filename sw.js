@@ -10,7 +10,7 @@
  * Bump CACHE_VERSION whenever the app files change, so returning users
  * get the new build instead of the cached one.
  */
-const CACHE_VERSION = 'symbulator-v20';
+const CACHE_VERSION = 'symbulator-v21';
 
 const ASSETS = [
   './',
@@ -24,7 +24,7 @@ const ASSETS = [
   'icon-512.png',
   'icon-maskable-512.png',
   'logo.png',
-  'examples.sym',
+  'examples.cir',
   'bridge.py',
   'symbulator_ui.py',
   'circuitbook.py',
