@@ -12,7 +12,8 @@ Two consequences worth having:
   host that serves files will do, cPanel included.
 * **It works offline and installs.** A service worker caches everything
   on the first visit, so afterwards it runs with no internet, and the
-  browser offers "Install" to give it a desktop or home-screen icon.
+  page offers an Install bar to give it a desktop or home-screen icon
+  (see the install bar notes in CLAUDE.md).
 
 ## Putting it online
 

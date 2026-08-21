@@ -70,6 +70,29 @@ exists only in the server version.** The install instructions are the classic
 example: they live in a server-only card, so users of the install build never
 see them.
 
+### Local-only additions
+
+The reverse also happens: things that exist **only** in the local build.
+There are no markers for these — `build_local.py` injects them from
+constants, so the server template stays clean. Currently: the Pyodide boot
+code and boot bar (`BOOT_JS`, `BOOTBAR_CSS`), the service-worker
+registration (`SW_JS`), and the install bar (`INSTALLBAR_CSS` plus the
+markup in the "first .wrap div" substitution).
+
+The **install bar** is worth knowing about. It offers an Install button in
+the page, because the browser's own affordance is close to undescribable:
+desktop puts an icon in the address bar, Android hides it in a menu whose
+wording changes between Chrome versions, and iOS has no install prompt at
+all. Where the browser lets us drive it we show a button; only on iOS do we
+fall back to describing the Share menu. It listens for
+`beforeinstallprompt`, so it cannot appear on a page that could not really
+be installed, and it stays hidden once the app is installed or the user has
+dismissed it.
+
+Because install and local are the same build, the bar appears in the
+downloaded ZIP too, when it is served from `localhost`. That is intended —
+it makes installing from the ZIP one click instead of a hunt.
+
 ### The template and the build script are coupled
 
 `build_local.py` matches exact strings from the template and **asserts every

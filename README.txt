@@ -38,25 +38,31 @@ Option B -- do it by hand:
 INSTALL AS AN APP
 -------------------
 
-Once Symbulator 9 is open in your browser, you can install it as an
-app. On a computer, look for an "Install" icon in the address bar; if
-you don't see one, open the browser's menu and choose "Install
-Symbulator 9". Follow the prompt, and it opens like any other app from
-then on, with no internet needed and no more running start scripts.
-Once you've finished this first session, you can close that window --
-the installed app runs on its own from now on.
+Once Symbulator 9 is open in your browser, a bar appears at the top of
+the page offering to install it. Click "Install" and confirm. That is
+the whole process: it then opens like any other app, with no internet
+needed and no more running start scripts. Once you've finished this
+first session you can close that window -- the installed app runs on
+its own from now on.
+
+The bar only appears once your browser is satisfied the app can be
+installed, so give the page a moment. If you dismissed it with "Not
+now", or it never showed up, you can still install from the browser
+itself: on a computer, look for an "Install" icon in the address bar,
+or open the browser's menu and choose "Install Symbulator 9".
 
 Installing on a phone or tablet is a different route. This ZIP needs
-Python on a computer, so it is not a phone option at all. To install
-on a phone, visit https://install.symbulator.com instead and install
-from there. There is no install icon in the address bar on mobile --
-that is a desktop-only feature. In Chrome on Android, open the browser
-menu (the three dots, top right) and choose the install entry, which
-reads "Install app", "Install and create shortcut" or "Add to Home
-Screen" depending on the version. On iPhone and iPad, use Safari's
-Share button and choose "Add to Home Screen". If you don't see the
-entry yet, tap the page once and give it a few seconds -- browsers
-wait until you have actually used a page before offering to install it.
+Python on a computer, so it is not a phone option at all. To install on
+a phone, visit https://install.symbulator.com instead -- the same
+Install bar appears there. If it doesn't, use the browser's menu:
+there is no install icon in the address bar on mobile, that being a
+desktop-only feature. In Chrome on Android, open the menu (the three
+dots, top right) and choose the install entry, which reads "Install
+app", "Install and create shortcut" or "Add to Home Screen" depending
+on the version. On iPhone and iPad, use Safari's Share button and
+choose "Add to Home Screen". If you don't see the entry yet, tap the
+page once and give it a few seconds -- browsers wait until you have
+actually used a page before offering to install it.
 
 Once you've installed it as an app, you can delete the ZIP and the
 unzipped folder -- the installed app now runs entirely from your
