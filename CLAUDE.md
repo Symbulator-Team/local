@@ -31,9 +31,10 @@ code**. Everything below is detail hanging off these.
    purpose was installing.
 
 4. **You cannot build a release from the repos alone.** The Pyodide runtime,
-   the sympy and mpmath wheels, the Python stdlib and MathJax — about 19 MB —
-   are deliberately not in git. A release needs an extracted copy of a previous
-   ZIP to draw them from, passed as `--assets`.
+   the sympy, mpmath and numpy wheels, the Python stdlib and MathJax — about
+   22 MB — are deliberately not in git. A release needs an extracted copy of a
+   *recent* ZIP to draw them from, passed as `--assets`. See the note under
+   "Making a release" about numpy, which older ZIPs do not have.
 
 5. **A stale service worker hides everything you deploy.** `sw.js` is
    cache-first. Without a `CACHE_VERSION` bump, returning visitors keep the old
@@ -150,10 +151,18 @@ python3 build_zip.py --assets ../../local
 The ZIP is three things glued together:
 
 1. **This repo** — the app, the launchers, `README.txt`.
-2. **Upstream artefacts** — Pyodide runtime, sympy/mpmath wheels, Python
-   stdlib, MathJax. ~19 MB, too big for git, so they are **not in version
-   control**. `--assets` points at any extracted copy of a previous ZIP;
-   these files only change when Pyodide or MathJax is upgraded.
+2. **Upstream artefacts** — Pyodide runtime, sympy/mpmath/**numpy** wheels,
+   Python stdlib, MathJax. ~22 MB, too big for git, so they are **not in
+   version control**. `--assets` points at any extracted copy of a previous
+   ZIP; these files only change when Pyodide, MathJax or numpy is upgraded.
+
+   > **numpy joined the bundle in Aug 2026.** An `--assets` folder taken from
+   > a ZIP older than that will not contain it, and the build fails its own
+   > check (`sw.js` caches a file the ZIP has not got). Use a current ZIP, or
+   > copy the numpy wheel across. It is required because
+   > `symbulator.plotting` imports numpy lazily: without it the Plot card
+   > fails at the point of use with a bare `No module named 'numpy'` — which
+   > is how the offline build shipped until it was caught.
 3. **A `symbulator-local/` top-level folder** so unzipping is tidy.
 
 `build_zip.py` verifies what it built — every manifest icon, every file the

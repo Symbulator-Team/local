@@ -87,7 +87,11 @@ let pyodide = null, bridge = null, pyFailed = false;
 const pyReady = (async () => {
   try {
     pyodide = await loadPyodide({ indexURL: 'vendor/' });
-    await pyodide.loadPackage(['sympy']);
+    // numpy comes with the runtime and is loaded up front alongside
+    // sympy: symbulator.plotting imports it lazily, so without it the
+    // Plot card fails at the point of use with a raw "No module named
+    // 'numpy'" -- the two plot examples in examples.cir among them.
+    await pyodide.loadPackage(['sympy', 'numpy']);
     await pyodide.loadPackage('vendor/WHEEL_NAME');
     // symbulator_ui.py and circuitbook.py are shared verbatim with the
     // server build; bridge.py is this build's own glue module.
