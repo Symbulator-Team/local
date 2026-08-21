@@ -37,7 +37,7 @@ Two server details matter:
    this is automatic.
 
 Enabling gzip/deflate is worth it: the first visit transfers about
-12 MB compressed rather than 18 MB raw.
+17 MB compressed rather than 25 MB raw.
 
 ## Running it locally
 
