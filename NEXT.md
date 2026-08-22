@@ -3,6 +3,9 @@
 > **The three variants are deliberately out of step as of 22 Aug 2026.**
 > PythonAnywhere runs build `11:08 UTC` (#72 and #73 deployed);
 > install.symbulator.com and `local.zip` are still on `09:39 UTC`.
+> #71 (`/healthz` reporting the deployed build) is done and is waiting on the
+> same deploy.
+>
 > That is a choice, not a failed upload -- the offline pair simply has not
 > been reshipped for two front-end fixes. Whoever next builds the offline
 > pair closes the gap automatically, since both fixes are already in the
@@ -65,28 +68,6 @@ quoted in this session. Every build re-stamps, so the artefact and its hash
 change each time.
 
 ---
-
-## #71 — `/healthz` should report what is actually deployed
-
-**Accepted 22 Aug 2026.** Where: `server/app.py`, the `/healthz` route.
-
-It currently returns `{"ok": true}`, which confirms the process answers HTTP
-and nothing else. It should also report the **build stamp** from the footer
-and `symbulator.__version__`, so that "is the deployed process running what I
-pushed?" is one URL instead of an investigation.
-
-This is not hypothetical. On 22 Aug a deploy went out where `git pull` had
-updated the files, `git status` was clean, and the served page carried the new
-build stamp -- yet the API was still answering from the previous `app.py`,
-because the PythonAnywhere web app had never been reloaded. A browser hard
-refresh and a `git pull` both leave the running process untouched; only the
-Reload button on the Web tab restarts it. Diagnosing that took a dozen
-round trips of comparing the live site against the repo. A health endpoint
-reporting the stamp would have answered it in one request.
-
-Report the stamp the page itself shows, read the same way the page gets it,
-so the two cannot disagree -- an endpoint that reports a *different* stamp
-from the footer would be worse than none.
 
 ## #59 — Bracket typos quote the rewritten value, not what was typed
 
