@@ -9,6 +9,28 @@ so they can be referred to unambiguously later.
 
 ---
 
+## #73 — Stale "several solutions" picker (**built and pushed, not deployed**)
+
+**Found by Roberto, 22 Aug 2026.** Where: `server/templates/index.html`,
+`markStale()`.
+
+Solve a circuit with two roots, then pick a different entry from the circuit
+menu: the "2 solutions fit the circuit as described" line and its picker
+stayed on screen, now describing a circuit no longer in the form.
+
+The cause was where the reset lived, not what it did. `buildSolutionPicker({})`
+was called from exactly two places -- the start of a solve, and
+`clearResults()` -- so every *other* way of invalidating a solve left the
+picker behind. It now happens inside `markStale('solve')`, which every such
+path already goes through, including `applyCircuit()`, whose own comment
+states the rule: *loading a circuit rewrites every field and fires no events
+doing it, so nothing on screen describes these inputs any more*. The line and
+the menu are part of "nothing on screen".
+
+Verified: picker clears on loading another entry and on editing a field, and
+survives switching between solutions, which marks the solve fresh rather than
+stale.
+
 ## #72 — Clear-all button press nudge (**built and pushed, not deployed**)
 
 **Done in the repos on 22 Aug 2026; the three live sites do not have it.**
