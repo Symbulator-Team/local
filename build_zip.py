@@ -161,6 +161,46 @@ def verify(staged: dict[str, Path]) -> list[str]:
             if href not in staged:
                 problems.append(f"index.html links {href}, which is not in the ZIP")
 
+    # --- the worked example of the input-file format --------------------
+    # The "About input file (.cir) format" panel shows a sample file. It is
+    # hand-written prose, so nothing makes it follow the writer -- and it
+    # silently went stale once already, when the blank-line spacing changed
+    # and rms stopped being written outside AC. Rebuild it from format_book
+    # and compare: what the panel teaches has to be what the app produces.
+    if html is not None:
+        try:
+            sys.path.insert(0, str(HERE))
+            import circuitbook
+        except ImportError:
+            circuitbook = None
+        if circuitbook is None:
+            problems.append("could not import circuitbook to check the format example")
+        else:
+            page = html.decode("utf-8")
+            start = page.find('<pre style="background:var(--code-bg)')
+            if start == -1:
+                problems.append("could not find the file-format example in index.html")
+            else:
+                shown = page[page.index(">", start) + 1:page.index("</pre>", start)]
+                book = [
+                    {"name": "Problem 1 — divider",
+                     "desc": "e1,1,0,20\nr1,1,2,5'k\nr2,2,0,15'k",
+                     "domain": "dc", "rounding": "exact", "si": False,
+                     "units": True, "rms": False},
+                    {"name": "Problem 2 — RC transient",
+                     "desc": "e1,1,0,10/s\nr1,1,2,2200\nc1,2,0,4.7e-6",
+                     "domain": "tr", "vars": "v_2", "rounding": "exact",
+                     "si": False, "units": True, "rms": False},
+                ]
+                # drop format_book's own file header; the panel opens with a
+                # line teaching the comment syntax instead
+                body = circuitbook.format_book(book).split("\n", 2)[2]
+                want = "# comments start with a hash\n\n" + body
+                if shown.strip() != want.strip():
+                    problems.append(
+                        "the file-format example in index.html no longer matches what "
+                        "format_book writes -- regenerate it")
+
     return problems
 
 
