@@ -55,6 +55,7 @@ EXCLUDE_NAMES = {
     "build_local.py",
     "build_zip.py",
     "CLAUDE.md",
+    "NEXT.md",           # deferred-work list; developer-facing
     ".gitignore",
     ".gitattributes",
     "local.zip",

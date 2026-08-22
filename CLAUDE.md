@@ -8,6 +8,10 @@ corrected in the same commit as whatever it describes. A rendered copy of this
 material exists as a shareable web page for people who would rather not clone
 anything — if the two ever disagree, this file wins.
 
+Accepted-but-deferred work is in [NEXT.md](NEXT.md) -- fold it into the next
+release that has a reason to happen, rather than deploying three sites for it
+on its own.
+
 ---
 
 ## Start here
