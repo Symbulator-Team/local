@@ -10,7 +10,9 @@
 > rather than trusting that hash if anything else lands first; every build
 > re-stamps.
 >
-> Everything below is already live on the server.
+> Everything below is already live on the server, except the downloaded
+> results carrying every solution (added 22 Aug, evening) -- that is
+> committed and pushed but not yet on any site.
 
 ---
 
