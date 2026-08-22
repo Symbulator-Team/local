@@ -1,5 +1,13 @@
 # Next build — accepted but not yet done
 
+> **The three variants are deliberately out of step as of 22 Aug 2026.**
+> PythonAnywhere runs build `11:08 UTC` (#72 and #73 deployed);
+> install.symbulator.com and `local.zip` are still on `09:39 UTC`.
+> That is a choice, not a failed upload -- the offline pair simply has not
+> been reshipped for two front-end fixes. Whoever next builds the offline
+> pair closes the gap automatically, since both fixes are already in the
+> template. The footer stamp is how you tell which is which.
+
 Small things deliberately deferred, each because doing it on its own would
 cost a PyPI publish and a three-site deploy for no user-visible gain. Fold
 them into the next release that has a real reason to happen.
@@ -9,7 +17,7 @@ so they can be referred to unambiguously later.
 
 ---
 
-## #73 — Stale "several solutions" picker (**built and pushed, not deployed**)
+## #73 — Stale "several solutions" picker (**deployed to the server only**)
 
 **Found by Roberto, 22 Aug 2026.** Where: `server/templates/index.html`,
 `markStale()`.
@@ -31,7 +39,7 @@ Verified: picker clears on loading another entry and on editing a field, and
 survives switching between solutions, which marks the solve fresh rather than
 stale.
 
-## #72 — Clear-all button press nudge (**built and pushed, not deployed**)
+## #72 — Clear-all button press nudge (**deployed to the server only**)
 
 **Done in the repos on 22 Aug 2026; the three live sites do not have it.**
 Where: `server/templates/index.html`, commit `e4b95d7`; regenerated in
