@@ -384,10 +384,10 @@ def build() -> str:
         s,
         """    const r = await fetch('/api/export', {
       method: 'POST', headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({ circuits: picker })
+      body: JSON.stringify({ circuits: openFile.entries })
     });
     const data = await r.json();""",
-        """    const data = await py('export_book', { circuits: picker });""",
+        """    const data = await py('export_book', { circuits: openFile.entries });""",
         label="export fetch",
     )
 
