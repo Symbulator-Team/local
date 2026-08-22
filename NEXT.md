@@ -1,19 +1,19 @@
 # Next build — accepted but not yet done
 
 > **Ready to deploy, 22 Aug 2026, late evening.** Build
-> `2026-08-22 12:47 UTC`, pushed: server `daab771`, local `d41df8c`.
+> `2026-08-22 12:55 UTC`.
 > Nothing is live yet -- PythonAnywhere is on `12:25`, install and the ZIP
 > on `09:39`.
 >
-> 1. **PythonAnywhere**: `git pull` (expect `daab771`), green Reload, then
->    `/healthz` -- both stamps should read `12:47 UTC`.
+> 1. **PythonAnywhere**: `git pull`, green Reload, then `/healthz` --
+>    both stamps should read `12:55 UTC`.
 > 2. **install.symbulator.com**: four files from `repos/local/` --
 >    `index.html`, `sw.js`, `circuitbook.py`, `examples.cir`. Nothing to
 >    delete. `sw.js` carries cache `v26`; skipping it leaves returning
 >    visitors on the old build.
 > 3. **symbulator.com/9/local.zip**: `repos/local/local.zip`,
->    17,427,621 bytes, sha256
->    `46459cc0f2104e0b5260d7ddc7ffee4fa4bf5871c6fb93bf565ff0c0a8b8140f`.
+>    17,427,629 bytes, sha256
+>    `706d83c42af9e67a8ef10e1722d7b0db28c5873d1ef8754c2b6e8db21880bdff`.
 >
 > Do not rebuild before uploading, or the hash and the four-file list above
 > stop matching -- every build re-stamps. If a rebuild does happen, ask for
