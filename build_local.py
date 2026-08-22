@@ -13,21 +13,55 @@ Doing this by hand is how the two front ends drift apart, so it is a
 script. Every substitution asserts that it matched -- a silent no-op is
 what once shipped a build with no service worker.
 
-    python3 build_local.py            # writes ./index.html
+Building also stamps the current UTC time into the footer of both the
+template and the generated page, so every release says when it was cut.
+--check does not stamp: it only compares.
+
+    python3 build_local.py            # stamps, then writes ./index.html
     python3 build_local.py --check    # exit 1 if ./index.html is stale
 """
 
 from __future__ import annotations
 
 import argparse
+import re
 import sys
+from datetime import datetime, timezone
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 TEMPLATE = HERE.parent / "server" / "templates" / "index.html"
 OUTPUT = HERE / "index.html"
 
-WHEEL = "symbulator-0.4.5-py3-none-any.whl"
+WHEEL = "symbulator-0.4.6-py3-none-any.whl"
+
+# The build stamp in the page footer, the last line of the interface.
+# It lives in the template, so the server page and the offline build cut
+# from it at the same moment carry the same one -- which is the whole
+# point of it: it is what tells you which build a site is actually
+# running, when three of them are deployed separately and any one of
+# them can silently be a version behind.
+STAMP_RE = re.compile(r"(Symbulator 9 version )\d{4}-\d{2}-\d{2} \d{2}:\d{2} UTC")
+
+
+def stamp_template() -> str:
+    """Write the current UTC time into the template's footer; return it.
+
+    This is the one place the build writes back to its own source, and it
+    is deliberate: the stamp describes the release, not the interface, and
+    the template is what both variants are cut from. --check must never
+    call this -- it compares the generated file against the template byte
+    for byte, and a stamp read off the clock would make every check fail
+    with nothing actually wrong."""
+    now = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
+    text = TEMPLATE.read_text(encoding="utf-8")
+    text, found = STAMP_RE.subn(lambda m: m.group(1) + now, text)
+    if found != 1:
+        raise SystemExit(f"build_local.py: expected exactly one build stamp "
+                         f"in {TEMPLATE.name}, found {found}. The footer line "
+                         f"changed shape -- fix STAMP_RE to match it.")
+    TEMPLATE.write_text(text, encoding="utf-8", newline="")
+    return now
 
 
 def sub(text: str, old: str, new: str, *, count: int = 1, label: str = "") -> str:
@@ -486,8 +520,8 @@ def main() -> int:
                     help="verify index.html is up to date instead of writing it")
     args = ap.parse_args()
 
-    built = build()
     if args.check:
+        built = build()
         current = OUTPUT.read_text(encoding="utf-8") if OUTPUT.exists() else ""
         if current != built:
             print("index.html is STALE -- run build_local.py", file=sys.stderr)
@@ -495,8 +529,12 @@ def main() -> int:
         print("index.html is up to date.")
         return 0
 
+    # Stamp first, then build, so the generated page carries the same
+    # build time as the template it came from.
+    stamp = stamp_template()
+    built = build()
     OUTPUT.write_text(built, encoding="utf-8", newline="")
-    print(f"index.html written, {built.count(chr(10)) + 1} lines")
+    print(f"index.html written, {built.count(chr(10)) + 1} lines, build {stamp}")
     for probe in ("fetch('/api", "loadPyodide", "py('solve'", "sw.js",
                   "roundingState", "Symbulator <span", "solveqReal",
                   "py('export_book'", "addToFileBtn", "downloadFileBtn",

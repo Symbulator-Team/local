@@ -90,6 +90,24 @@ python3 build_local.py --check    # exit 1 if index.html is stale
 **Never hand-edit `local/index.html`.** It is generated. Edit the server
 template and re-run the script.
 
+### The build stamp
+
+The last line of the interface reads `Symbulator 9 version 2026-08-22 09:25
+UTC`. `build_local.py` writes the current UTC time there on every real build --
+into the **template**, not just the generated page, so the server variant and
+the offline build cut from it at the same moment agree. That is what it is for:
+three sites are deployed separately, any one of them can silently be a version
+behind, and the footer is how you tell without guessing.
+
+`--check` never stamps. It compares the generated file against the template
+byte for byte, and a stamp read off the clock would make every check fail with
+nothing actually wrong.
+
+**A server-only deploy will not re-stamp.** If you change the template and push
+it without running `build_local.py`, the live server page keeps the previous
+build time. Run the build anyway -- it costs a second, and it is also what
+tells you the template and the offline build still agree.
+
 ### Server-only blocks
 
 Chunks of the template that make no sense offline — the "download the offline
@@ -137,6 +155,27 @@ loudly rather than silently dropping the icons or the service worker. That is
 deliberate — an earlier silent no-op once shipped a build with no service
 worker at all. If a build fails with "matched 0 times, expected 1", the
 template changed and the script needs the same change.
+
+### An answer may be several answers
+
+From solver 0.4.6 a circuit can come back with **more than one solution**. An
+expert-mode equation on a power is quadratic in its unknown, so `p_r1 = 0.025`
+on a symbolic source is satisfied by `e = 5` and by `e = -5` alike. The solver
+returns every root (`Result.solutions`, ranked so the physically likely one
+leads); `symbulator_ui.solve_ui` formats each one and ships them as a
+`solutions` array, with the top-level `nodes`/`elements`/`extras`/`values`
+mirroring the first; the page renders `solutions[0]`, announces the choice
+under the Run button and offers a picker under the Outputs heading.
+
+Two consequences worth knowing:
+
+- **Switching solutions never re-solves.** Every root is formatted once, when
+  the circuit is run, and the picker only redraws. That is deliberate: a solve
+  costs seconds in the Pyodide builds, and a menu that stalls is not a menu.
+- **The Flask route enumerates its response fields by hand** (`app.py`), so a
+  new key added in `symbulator_ui` reaches the local build automatically -- the
+  Pyodide bridge serialises the whole dict -- but is silently dropped by the
+  server variant until it is listed there too.
 
 ---
 
