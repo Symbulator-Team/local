@@ -112,6 +112,15 @@ it without running `build_local.py`, the live server page keeps the previous
 build time. Run the build anyway -- it costs a second, and it is also what
 tells you the template and the offline build still agree.
 
+**And the reverse: a local build dirties the *server* repo.** The stamp is
+written into the template, which lives in `server/`, so `build_local.py` always
+leaves a one-line change there. Commit and push **both** repos after a build.
+Forgetting caught us on 22 Aug: the offline pair was built and pushed, the
+server repo kept the change uncommitted, and PythonAnywhere pulled a commit
+whose stamp was a build behind -- with nothing wrong at either end, which is
+the confusing part. If a pull gives you an older stamp than you expect, check
+`git status` in `server/` before looking anywhere else.
+
 ### Server-only blocks
 
 Chunks of the template that make no sense offline — the "download the offline
