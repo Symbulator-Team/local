@@ -1,22 +1,16 @@
 # Next build — accepted but not yet done
 
-> **The three variants are deliberately out of step as of 22 Aug 2026.**
-> PythonAnywhere runs build `11:08 UTC` (#72 and #73 deployed);
-> install.symbulator.com and `local.zip` are still on `09:39 UTC`.
-> #71 (`/healthz` reporting the deployed build) is done and is waiting on the
-> same deploy.
+> **The offline pair is behind the server, as of 22 Aug 2026.**
+> PythonAnywhere runs build `11:53 UTC`; install.symbulator.com and
+> `local.zip` are still on `09:39 UTC`. The build for them is made and
+> pushed -- `repos/local/local.zip`, sha256 `4c766674...`, cache `v26` --
+> it simply has not been uploaded yet. Two jobs remain: the four changed
+> files (`index.html`, `sw.js`, `circuitbook.py`, `examples.cir`) to the
+> install host, and the ZIP to `symbulator.com/9/local.zip`. Rebuild
+> rather than trusting that hash if anything else lands first; every build
+> re-stamps.
 >
-> That is a choice, not a failed upload -- the offline pair simply has not
-> been reshipped for two front-end fixes. Whoever next builds the offline
-> pair closes the gap automatically, since both fixes are already in the
-> template. The footer stamp is how you tell which is which.
-
-Small things deliberately deferred, each because doing it on its own would
-cost a PyPI publish and a three-site deploy for no user-visible gain. Fold
-them into the next release that has a real reason to happen.
-
-Numbers are the running identifiers from the session that raised them, kept
-so they can be referred to unambiguously later.
+> Everything below is already live on the server.
 
 ---
 
