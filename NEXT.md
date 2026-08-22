@@ -9,6 +9,33 @@ so they can be referred to unambiguously later.
 
 ---
 
+## #72 — Clear-all button press nudge (**built and pushed, not deployed**)
+
+**Done in the repos on 22 Aug 2026; the three live sites do not have it.**
+Where: `server/templates/index.html`, commit `e4b95d7`; regenerated in
+`local/index.html`, commit `2560acd`.
+
+The button beside the Inputs heading is centred with a transform, and every
+button on the site gets a 1px press nudge that is also a transform. A second
+transform replaces the first rather than adding to it, and `:active` is the
+more specific selector, so pressing the button discarded its centring and it
+fell 20px -- half its own 37px height, plus the nudge -- gliding down and back
+because `transform` is transitioned. Fixed by carrying both offsets together
+as `translateY(calc(-50% + 1px))`, with the narrow-screen branch reset to the
+plain nudge since the button is not centred there.
+
+Deliberately not deployed: it is cosmetic, and shipping it costs a full
+three-site round. **Fold it into the next deploy**, most likely the one that
+carries #71. Until then the live sites run build `2026-08-22 09:39 UTC` while
+the repos are ahead of them -- which the footer stamp will show honestly, and
+is exactly what it is for.
+
+Note for whoever does that deploy: rebuild rather than reusing any ZIP hash
+quoted in this session. Every build re-stamps, so the artefact and its hash
+change each time.
+
+---
+
 ## #71 — `/healthz` should report what is actually deployed
 
 **Accepted 22 Aug 2026.** Where: `server/app.py`, the `/healthz` route.
