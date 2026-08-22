@@ -281,7 +281,7 @@ def export_book(payload_json: str) -> str:
         circuit = {"name": str(raw.get("name") or "Circuit")[:circuitbook.MAX_NAME_LEN],
                    "desc": str(raw.get("desc") or "")}
         for f in ("domain", "omega", "vars", "tool", "n1", "n2", "kind", "unknowns",
-                  "plotkey", "plotmin", "plotmax", "plotpoints",
+                  "note", "plottool", "plotkey", "plotmin", "plotmax", "plotpoints",
                   "rounding", "evaluate", "solve_unknowns"):
             if raw.get(f):
                 circuit[f] = str(raw[f])
