@@ -261,7 +261,16 @@ def parse_book(text: str) -> str:
     browser, whether it's the bundled examples.cir or a file the user
     picked, with no server involved."""
     circuits, warnings = circuitbook.parse_book(text)
-    return json.dumps({"ok": bool(circuits), "circuits": circuits,
+    if not circuits:
+        # The server sends an `error` when nothing parses, and the page shows
+        # it. Without one here the offline build fell back to a generic
+        # "could not read that file" and dropped the warnings that say what
+        # was actually wrong -- the same failure, explained less well.
+        return json.dumps({
+            "ok": False, "circuits": [], "warnings": warnings,
+            "error": "No entries found in that file. Each entry needs a "
+                     "[Name] heading followed by its circuit lines."})
+    return json.dumps({"ok": True, "circuits": circuits,
                        "warnings": warnings})
 
 
