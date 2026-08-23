@@ -1,19 +1,19 @@
 # Next build — accepted but not yet done
 
-> **Ready to deploy, 23 Aug 2026.** Build `2026-08-23 08:54 UTC`, solver
-> 0.5.0, cache `v28`. The app now takes its banner from the shared source
-> (#75) instead of restating it, and `build_local.py` refuses to build if
-> the inlined copy drifts.
+> **Ready to deploy, 23 Aug 2026.** Build `2026-08-23 09:13 UTC`, solver
+> 0.5.0, cache **v29**.
 >
-> The sites are already on solver 0.5.0 and the Schematic card; this build
-> changes the banner only.
+> The 08:54 build shipped without a cache bump, so install.symbulator.com
+> served the right files to new visitors while every returning one kept
+> the 08:24 page. v29 is what fixes that; do not skip `sw.js`.
 >
-> 1. PythonAnywhere: pull, green Reload, then `/healthz` -- both stamps
->    `2026-08-23 08:54 UTC`. No pip step: the solver has not moved.
+> 1. PythonAnywhere: pull, green Reload, then
+>    `https://symbulator.pythonanywhere.com/healthz` -- both stamps
+>    `2026-08-23 09:13 UTC`. No pip step: the solver has not moved.
 > 2. install.symbulator.com: `index.html` and `sw.js` from
 >    `C:\Users\perez\Claude Code\Symbulator\repos\local\`.
-> 3. `symbulator.com/9/local.zip`: 17,443,118 bytes, sha256
->    `d866a852e56bbc27e634dbb367ae1d04bacc85dbd108ff19b07e47e119bf81bc`.
+> 3. `symbulator.com/9/local.zip`: 17,443,117 bytes, sha256
+>    `98148d688628dd7adb047fe16baea23567c80ccf94320cedc18eb141f2d79c15`.
 >
 > Every build re-stamps, so these figures hold only until the next one.
 
