@@ -284,6 +284,59 @@ INSTALLBAR_CSS = """  .installbar { background: var(--card); border: 1px solid v
 """
 
 
+# The banner lockup is shared with symbulator.com and
+# learn.symbulator.com, whose tree holds the single source. The template
+# carries a verbatim copy between markers, because a build has to be
+# self-contained -- the offline ZIP cannot fetch a stylesheet from another
+# repository. A copy nothing compares is a copy that drifts: it drifted
+# twice in one day while three files each stated the lockup, so the copy
+# is checked here instead.
+#
+# The docs tree is not required to build. When it is absent this warns and
+# carries on, so `repos/` alone still produces a release; when it is present
+# and disagrees, the build stops.
+BANNER_SRC = (HERE.parent.parent.parent / "Sym Docum" / "Documentation"
+              / "design" / "banner.css")
+BANNER_BEGIN = "/* ==== BEGIN banner.css ===="
+BANNER_END = "/* ==== END banner.css ====================================== */"
+
+
+def _trim(text: str) -> str:
+    """Both sides compared without leading or trailing blank lines: the
+    inlined copy inevitably picks up the indentation sitting before its
+    closing marker, which is not a difference in the CSS."""
+    lines = [ln.rstrip() for ln in text.splitlines()]
+    while lines and not lines[0]:
+        lines.pop(0)
+    while lines and not lines[-1]:
+        lines.pop()
+    return "\n".join(lines)
+
+
+def check_banner(template_text: str) -> None:
+    """Stop the build if the inlined banner has drifted from its source."""
+    if not BANNER_SRC.is_file():
+        print(f"build_local.py: note -- {BANNER_SRC.name} not found at "
+              f"{BANNER_SRC}; the banner copy could not be checked.")
+        return
+    start = template_text.find(BANNER_BEGIN)
+    end = template_text.find(BANNER_END)
+    if start == -1 or end == -1:
+        raise SystemExit("build_local.py: the banner markers are missing from "
+                         "the template. Restore them, or the shared lockup "
+                         "stops being checked.")
+    inlined = template_text[template_text.index("*/", start) + 2:end]
+    want = "\n".join(("  " + ln).rstrip() for ln in
+                     BANNER_SRC.read_text(encoding="utf-8").splitlines())
+    if _trim(inlined) != _trim(want):
+        raise SystemExit(
+            "build_local.py: the banner block in templates/index.html no "
+            f"longer matches {BANNER_SRC}.\n"
+            "  The lockup is shared with symbulator.com and "
+            "learn.symbulator.com; edit the source, then paste it back "
+            "between the markers.")
+
+
 def build() -> str:
     """Read the server template and return the transformed local-version
     HTML as a string (the caller decides whether to write it to disk or
@@ -295,6 +348,7 @@ def build() -> str:
     # encoding is explicit: the template contains curly quotes and em
     # dashes, and Windows would otherwise decode it as cp1252 and crash.
     s = TEMPLATE.read_text(encoding="utf-8")
+    check_banner(s)
 
     # --- drop every server-only block: the "download the offline
     #     version" card, and the "no backend here" notice -- both are
@@ -366,7 +420,7 @@ def build() -> str:
 
     s = sub(
         s,
-        '<div class="wrap header-flex">',
+        '<div class="topbar-inner">',
         '<div class="wrap"><div id="boot" class="bootbar">Starting the maths engine…\n'
         '  <span class="hint">you can start typing a circuit now</span></div></div>\n\n'
         '<div class="wrap"><div id="installbar" class="installbar">\n'
@@ -375,7 +429,7 @@ def build() -> str:
         '  <button type="button" id="installbtn">Install</button>\n'
         '  <button type="button" class="dismiss" id="installno">Not now</button>\n'
         '</div></div>\n\n'
-        '<div class="wrap header-flex">',
+        '<div class="topbar-inner">',
         count=1,
         label="first .wrap div",
     )
