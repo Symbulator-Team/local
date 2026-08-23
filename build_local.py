@@ -33,7 +33,7 @@ HERE = Path(__file__).resolve().parent
 TEMPLATE = HERE.parent / "server" / "templates" / "index.html"
 OUTPUT = HERE / "index.html"
 
-WHEEL = "symbulator-0.4.6-py3-none-any.whl"
+WHEEL = "symbulator-0.5.0-py3-none-any.whl"
 
 # The build stamp in the page footer, the last line of the interface.
 # It lives in the template, so the server page and the offline build cut
@@ -435,6 +435,17 @@ def build() -> str:
     const data = await r.json();""",
         """    const data = await py('solve', body);""",
         label="solve fetch",
+    )
+
+    s = sub(
+        s,
+        """    const r = await fetch('/api/schematic', {
+      method: 'POST', headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ desc: desc })
+    });
+    const data = await r.json();""",
+        """    const data = await py('schematic', { desc: desc });""",
+        label="schematic fetch",
     )
 
     s = sub(

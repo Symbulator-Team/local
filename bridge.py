@@ -220,6 +220,14 @@ def plot(payload_json: str) -> str:
     return json.dumps(res)
 
 
+def schematic(payload_json: str) -> str:
+    """Draw the circuit as an SVG, without solving it. Called from JS the
+    same way as the others; the whole dict is serialised, so a key added
+    in symbulator_ui arrives here without this file changing."""
+    p = json.loads(payload_json)
+    return json.dumps(ui.schematic_ui(str(p.get("desc") or "")))
+
+
 def evaluate(payload_json: str) -> str:
     """JS-callable counterpart of app.py's /api/evaluate: substitute the
     posted values into `expr` and format the result, with no server
