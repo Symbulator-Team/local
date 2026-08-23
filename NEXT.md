@@ -1,21 +1,76 @@
 # Next build — accepted but not yet done
 
-> **Ready to deploy, 23 Aug 2026.** Build `2026-08-23 09:25 UTC`, solver
+> **Deployed and verified, 23 Aug 2026.** Build `2026-08-23 09:25 UTC`, solver
 > 0.5.0, cache **v30**. The Schematic card is gone; drawing is now a link
-> under the circuit box, where the thing it draws is.
+> under the circuit box, where the thing it draws is. All five sites are on
+> this build; nothing here is waiting to go out.
 >
-> 1. PythonAnywhere: pull, green Reload, then
->    `https://symbulator.pythonanywhere.com/healthz` -- both stamps
->    `2026-08-23 09:25 UTC`. No pip step: the solver has not moved.
-> 2. install.symbulator.com: `index.html` and `sw.js` from
->    `C:\Users\perez\Claude Code\Symbulator\repos\local\`.
-> 3. `symbulator.com/9/local.zip`: 17,443,084 bytes, sha256
->    `63731f0a36c5909e87a33fa4098f548bb1e7f67d1553df9b0b82e9c085fb1e27`.
+> Commits live: `repos/server` `bb0659d`, `repos/local` `2402041`,
+> `repos/solver` `13c42aa`. All three clean and level with origin.
+>
+> Measured, not eyeballed:
+>
+> 1. `https://symbulator.pythonanywhere.com/healthz` -- `build` and
+>    `build_on_disk` both `2026-08-23 09:25 UTC`, `needs_reload: false`,
+>    `solver: 0.5.0`.
+> 2. `https://install.symbulator.com/` -- footer reads
+>    `Symbulator 9 version 2026-08-23 09:25 UTC`, and the page shows the
+>    Schematic link under the circuit box rather than the old card.
+> 3. `https://symbulator.com/9/local.zip` -- downloaded: 17,443,084 bytes,
+>    sha256 `63731f0a36c5909e87a33fa4098f548bb1e7f67d1553df9b0b82e9c085fb1e27`,
+>    byte-identical to
+>    `C:\Users\perez\Claude Code\Symbulator\repos\local\local.zip`.
+> 4. `banner.css` served by `learn.symbulator.com` and by `symbulator.com`
+>    both hash to the same 5,991 bytes as
+>    `C:\Users\perez\Claude Code\Sym Docum\Documentation\design\banner.css`;
+>    `py build_local.py --check` passes, which is the app's copy checked
+>    against that same file.
 >
 > Every build re-stamps, so these figures hold only until the next one.
 
 ---
 
+
+## #75 — The lockup exists once, not once per tree (**done, deployed everywhere**)
+
+**Done 23 Aug 2026.** Where: `server/templates/index.html` (commit `8585e70`),
+`local/build_local.py` (`check_banner`).
+
+`Sym Docum\Documentation\design\banner.css` is now the only place the lockup is
+stated. The app's header was renamed to the shared class names -- `.topbar`
+wrapping `.topbar-inner`, `.header-flex` to `.header-brand`, `header h1` to
+`.brand-name`, `header p` to `.brand-sub` -- and the file is inlined verbatim
+into the template between `BEGIN/END banner.css` markers. Inlined rather than
+linked because the offline ZIP cannot fetch a stylesheet from another tree.
+
+The guard is the part that works. `check_banner()` in `build_local.py` compares
+the inlined block against the source and stops the build if they differ, naming
+the fix; it warns and carries on when `Sym Docum` is absent, so `repos/` alone
+still produces a release. The app's own controls stay in the app, layered on top
+exactly as the version picker is on `learn` and the nav links on the landing
+page.
+
+Left open, deliberately: the app's build now reads a file from a tree that is
+**not under version control**. Moving `banner.css` into `repos/local` and having
+the docs' `build.py` read it from there would invert that dependency. Worth
+doing when `Sym Docum` becomes a repo; nothing breaks meanwhile.
+
+## #74 — The app and the two websites were different shapes (**done, deployed everywhere**)
+
+**Settled 23 Aug 2026, by the app adopting two bands.** The websites had been
+changed to a two-band header -- `.topbar` carrying the lockup alone with no
+keyline, `.subbar` beneath it carrying every control in a lighter navy
+(`#2a4576`) and the 3px sky keyline closing the pair -- hours after the app had
+been brought into line with the older single-band design. The app followed the
+websites, which were the reference it had been asked to match, rather than the
+websites reverting.
+
+Verified at 1280 wide, the same numbers on all five sites: lockup band 148px,
+controls ribbon 62px, both containers 1152, both left edges 64.
+
+The drift itself is the lesson, and #75 is the answer to it: this happened
+twice in one day, in both directions, while every session involved was being
+careful, because three files each stated the lockup and nothing compared them.
 
 ## #73 — Stale "several solutions" picker (**done, deployed everywhere**)
 
@@ -41,8 +96,8 @@ stale.
 
 ## #72 — Clear-all button press nudge (**done, deployed everywhere**)
 
-**Done in the repos on 22 Aug 2026; the three live sites do not have it.**
-Where: `server/templates/index.html`, commit `e4b95d7`; regenerated in
+**Done 22 Aug 2026, deployed 23 Aug in the `09:25 UTC` build.** Where:
+`server/templates/index.html`, commit `e4b95d7`; regenerated in
 `local/index.html`, commit `2560acd`.
 
 The button beside the Inputs heading is centred with a transform, and every
@@ -54,15 +109,11 @@ because `transform` is transitioned. Fixed by carrying both offsets together
 as `translateY(calc(-50% + 1px))`, with the narrow-screen branch reset to the
 plain nudge since the button is not centred there.
 
-Deliberately not deployed: it is cosmetic, and shipping it costs a full
-three-site round. **Fold it into the next deploy**, most likely the one that
-carries #71. Until then the live sites run build `2026-08-22 09:39 UTC` while
-the repos are ahead of them -- which the footer stamp will show honestly, and
-is exactly what it is for.
-
-Note for whoever does that deploy: rebuild rather than reusing any ZIP hash
-quoted in this session. Every build re-stamps, so the artefact and its hash
-change each time.
+It was held back at the time as cosmetic, on the grounds that shipping it alone
+costs a full three-site round, and folded into the next deploy that had a reason
+to happen. Verified live: `translateY(calc(-50% + 1px))` is present in the page
+served by `https://install.symbulator.com/` as well as in
+`C:\Users\perez\Claude Code\Symbulator\repos\local\index.html`.
 
 ---
 
