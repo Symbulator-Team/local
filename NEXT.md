@@ -1,19 +1,19 @@
 # Next build — accepted but not yet done
 
 > **Ready to deploy, 23 Aug 2026, just after midnight.** Build
-> `2026-08-23 00:33 UTC`.
+> `2026-08-23 02:45 UTC`.
 > Nothing is live yet -- PythonAnywhere is on `12:25`, install and the ZIP
 > on `09:39`.
 >
 > 1. **PythonAnywhere**: `git pull`, green Reload, then `/healthz` --
->    both stamps should read `2026-08-23 00:33 UTC`.
+>    both stamps should read `2026-08-23 02:45 UTC`.
 > 2. **install.symbulator.com**: four files from `repos/local/` --
 >    `index.html`, `sw.js`, `circuitbook.py`, `examples.cir`. Nothing to
 >    delete. `sw.js` carries cache `v26`; skipping it leaves returning
 >    visitors on the old build.
 > 3. **symbulator.com/9/local.zip**: `repos/local/local.zip`,
->    17,427,637 bytes, sha256
->    `6ccee00f2b397de103f03235ab7e9b8bc09e12253e3ef4f1f343f9b1d616656e`.
+>    17,427,592 bytes, sha256
+>    `bbab42a5018369e604c008d3b2fa0f5d497cf322371bf534822a19025a61269a`.
 >
 > Do not rebuild before uploading, or the hash and the four-file list above
 > stop matching -- every build re-stamps. If a rebuild does happen, ask for
@@ -25,26 +25,6 @@
 
 ---
 
-## #80 — Copy change waiting for the next build
-
-**Accepted 23 Aug 2026.** Where: `server/templates/index.html`, around line
-1151, in the server-only "download the offline version" card.
-
-Change:
-
-> If you'd rather not install from a zipped file -- for example, to install a
-> local copy on your mobile phone -- visit
-
-to:
-
-> To install a local copy on your mobile phone or computer directly from a
-> browser, visit
-
-Not applied at the time it was asked for: a deploy was in progress, and
-editing the template would have re-stamped the build being uploaded. Apply it
-with the next build rather than on its own.
-
----
 
 ## #73 — Stale "several solutions" picker (**deployed to the server only**)
 
