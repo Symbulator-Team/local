@@ -1,22 +1,19 @@
 # Next build — accepted but not yet done
 
-> **Ready to deploy, 23 Aug 2026.** Build `2026-08-23 08:24 UTC`, solver
-> **0.5.0**, cache `v28`. Adds the Schematic card, and brings the app's
-> banner into line with symbulator.com and learn.symbulator.com.
+> **Ready to deploy, 23 Aug 2026.** Build `2026-08-23 08:54 UTC`, solver
+> 0.5.0, cache `v28`. The app now takes its banner from the shared source
+> (#75) instead of restating it, and `build_local.py` refuses to build if
+> the inlined copy drifts.
 >
-> **PyPI first.** `repos/server/requirements.txt` floors symbulator at
-> 0.5.0, so the server variant cannot draw until the package is published.
-> The offline builds bundle the wheel and are not affected.
+> The sites are already on solver 0.5.0 and the Schematic card; this build
+> changes the banner only.
 >
-> 1. Publish `repos/solver/dist/symbulator-0.5.0-py3-none-any.whl` and
->    `.tar.gz`; both pass `twine check`.
-> 2. PythonAnywhere: pull, `pip install --upgrade symbulator`, confirm
->    0.5.0, green Reload, then `/healthz`.
-> 3. install.symbulator.com: `index.html`, `sw.js`, `symbulator_ui.py`,
->    `bridge.py`, and the new `vendor/symbulator-0.5.0-py3-none-any.whl`;
->    delete `vendor/symbulator-0.4.6-py3-none-any.whl`.
-> 4. `symbulator.com/9/local.zip`: 17,441,955 bytes, sha256
->    `ddafbc13809b911936c21d6860ed909a04c5b5e28fd4dc709f12bf87e3185cc6`.
+> 1. PythonAnywhere: pull, green Reload, then `/healthz` -- both stamps
+>    `2026-08-23 08:54 UTC`. No pip step: the solver has not moved.
+> 2. install.symbulator.com: `index.html` and `sw.js` from
+>    `C:\Users\perez\Claude Code\Symbulator\repos\local\`.
+> 3. `symbulator.com/9/local.zip`: 17,443,118 bytes, sha256
+>    `d866a852e56bbc27e634dbb367ae1d04bacc85dbd108ff19b07e47e119bf81bc`.
 >
 > Every build re-stamps, so these figures hold only until the next one.
 
