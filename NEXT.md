@@ -1,32 +1,21 @@
 # Next build — accepted but not yet done
 
-> **Ready to deploy, 23 Aug 2026, just after midnight.** Build
-> `2026-08-23 02:45 UTC`.
-> Nothing is live yet -- PythonAnywhere is on `12:25`, install and the ZIP
-> on `09:39`.
+> **All three variants are in step at build `2026-08-23 02:45 UTC`**, as of
+> 23 Aug 2026: PythonAnywhere reloaded and reporting it from `/healthz`,
+> install.symbulator.com byte-verified file by file, and the published ZIP
+> byte-identical to `repos/local/local.zip`. Nothing below is waiting on a
+> deploy.
 >
-> 1. **PythonAnywhere**: `git pull`, green Reload, then `/healthz` --
->    both stamps should read `2026-08-23 02:45 UTC`.
-> 2. **install.symbulator.com**: four files from `repos/local/` --
->    `index.html`, `sw.js`, `circuitbook.py`, `examples.cir`. Nothing to
->    delete. `sw.js` carries cache `v26`; skipping it leaves returning
->    visitors on the old build.
-> 3. **symbulator.com/9/local.zip**: `repos/local/local.zip`,
->    17,427,592 bytes, sha256
->    `bbab42a5018369e604c008d3b2fa0f5d497cf322371bf534822a19025a61269a`.
->
-> Do not rebuild before uploading, or the hash and the four-file list above
-> stop matching -- every build re-stamps. If a rebuild does happen, ask for
-> a fresh list rather than trusting this one.
->
-> This build was tested in the extracted ZIP under Pyodide, not only on the
-> server variant: example switching, the clear guard, the solutions picker,
-> switching solutions, and the download carrying every solution.
+> When the next one comes: `/healthz` on the server, a byte comparison of
+> the changed files on the install host, and a download-and-hash of the
+> published ZIP. `DEPLOY.md` has the server steps; `CLAUDE.md` has the rest.
+> Every build re-stamps, so quote a hash only from the build you are about
+> to upload.
 
 ---
 
 
-## #73 — Stale "several solutions" picker (**deployed to the server only**)
+## #73 — Stale "several solutions" picker (**done, deployed everywhere**)
 
 **Found by Roberto, 22 Aug 2026.** Where: `server/templates/index.html`,
 `markStale()`.
@@ -48,7 +37,7 @@ Verified: picker clears on loading another entry and on editing a field, and
 survives switching between solutions, which marks the solve fresh rather than
 stale.
 
-## #72 — Clear-all button press nudge (**deployed to the server only**)
+## #72 — Clear-all button press nudge (**done, deployed everywhere**)
 
 **Done in the repos on 22 Aug 2026; the three live sites do not have it.**
 Where: `server/templates/index.html`, commit `e4b95d7`; regenerated in
@@ -77,8 +66,9 @@ change each time.
 
 ## #59 — Bracket typos quote the rewritten value, not what was typed
 
-**Noted, not accepted.** Where: `solver/symbulator/si_prefix.py`, around
-`expand_shorthand` and `check_expression_syntax`.
+**Accepted 23 Aug 2026, for the next solver release.** Where:
+`solver/symbulator/si_prefix.py`, around `expand_shorthand` and
+`check_expression_syntax`.
 
 `[a,b]` (parallel impedance) is rewritten to `pr(a,b)` and SI prefixes are
 expanded *before* the value is parsed, so an error message quotes the
@@ -93,4 +83,6 @@ students are meant to use: the error is about internals rather than about
 their circuit. The fix is to carry the original text alongside the rewritten
 one and quote the original.
 
-Roberto's view (22 Aug): not a problem worth a release of its own.
+Not worth a release of its own -- fold it into whatever next takes the
+solver to a new version, which means a version bump, a PyPI publish and
+a rebundled wheel in the offline builds.
