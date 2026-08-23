@@ -1,16 +1,18 @@
 # Next build — accepted but not yet done
 
-> **All three variants are in step at build `2026-08-23 02:45 UTC`**, as of
-> 23 Aug 2026: PythonAnywhere reloaded and reporting it from `/healthz`,
-> install.symbulator.com byte-verified file by file, and the published ZIP
-> byte-identical to `repos/local/local.zip`. Nothing below is waiting on a
-> deploy.
+> **Ready to deploy, 23 Aug 2026.** Build `2026-08-23 04:57 UTC`, cache
+> `v27`. The three sites are on `02:45`; this build shrinks the banner to
+> match symbulator.com.
 >
-> When the next one comes: `/healthz` on the server, a byte comparison of
-> the changed files on the install host, and a download-and-hash of the
-> published ZIP. `DEPLOY.md` has the server steps; `CLAUDE.md` has the rest.
-> Every build re-stamps, so quote a hash only from the build you are about
-> to upload.
+> 1. **PythonAnywhere**: `git pull`, `git log -1 --oneline`, green Reload,
+>    then `/healthz` -- both stamps `2026-08-23 04:57 UTC`.
+> 2. **install.symbulator.com**: `index.html` and `sw.js` from
+>    `repos/local/`. Only those two changed; `sw.js` carries the `v27`
+>    bump, without which returning visitors keep the old banner.
+> 3. **symbulator.com/9/local.zip**: 17,427,774 bytes, sha256
+>    `844d63b2dfe18b409e8b9c6c0997538635e4a1f0b565e72cc1ae70ade4aad854`.
+>
+> Every build re-stamps, so these figures hold only until the next one.
 
 ---
 
