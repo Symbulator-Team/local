@@ -418,9 +418,18 @@ def build() -> str:
         raise SystemExit("build_local.py: could not find the .wrap CSS rule.")
     s = s.replace(marker, BOOTBAR_CSS + INSTALLBAR_CSS + marker, 1)
 
+    # Both bars go BELOW the banner, not inside it.
+    #
+    # They used to be injected ahead of <div class="topbar-inner">, which put
+    # them inside <header class="topbar"> -- so the offline build's lockup
+    # band measured 198px while symbulator.com and learn.symbulator.com
+    # measured 149. Same CSS, same markup, different height, because this
+    # build alone had two extra elements in the band. Below <main> they sit
+    # in the content column, aligned with the cards, and the identity band is
+    # identical on all three properties again.
     s = sub(
         s,
-        '<div class="topbar-inner">',
+        '<main class="wrap">',
         '<div class="wrap"><div id="boot" class="bootbar">Starting the maths engine…\n'
         '  <span class="hint">you can start typing a circuit now</span></div></div>\n\n'
         '<div class="wrap"><div id="installbar" class="installbar">\n'
@@ -429,9 +438,9 @@ def build() -> str:
         '  <button type="button" id="installbtn">Install</button>\n'
         '  <button type="button" class="dismiss" id="installno">Not now</button>\n'
         '</div></div>\n\n'
-        '<div class="topbar-inner">',
+        '<main class="wrap">',
         count=1,
-        label="first .wrap div",
+        label="the boot and install bars, above <main>",
     )
 
     # --- the boot code, injected ahead of the app's own script ---------

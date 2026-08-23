@@ -55,7 +55,7 @@ Left open, deliberately: the app's build now reads a file from a tree that is
 the docs' `build.py` read it from there would invert that dependency. Worth
 doing when `Sym Docum` becomes a repo; nothing breaks meanwhile.
 
-## #74 — The app and the two websites were different shapes (**done, deployed everywhere**)
+## #74 — The app and the two websites are different shapes (**reopened**)
 
 **Settled 23 Aug 2026, by the app adopting two bands.** The websites had been
 changed to a two-band header -- `.topbar` carrying the lockup alone with no
@@ -65,12 +65,32 @@ been brought into line with the older single-band design. The app followed the
 websites, which were the reference it had been asked to match, rather than the
 websites reverting.
 
-Verified at 1280 wide, the same numbers on all five sites: lockup band 148px,
-controls ribbon 62px, both containers 1152, both left edges 64.
+**Reopened 23 Aug 2026: the app took the file, not the shape.** Measured in a
+browser at 1280 wide, the same viewport for all three properties:
 
-The drift itself is the lesson, and #75 is the answer to it: this happened
-twice in one day, in both directions, while every session involved was being
-careful, because three files each stated the lockup and nothing compared them.
+| | symbulator.com | learn.symbulator.com | the app |
+|---|---|---|---|
+| `.topbar` | 149 | 149 | 149 |
+| `.subbar` | 62 | 62 | **absent** |
+| where the controls sit | subbar, left edge | subbar, left edge | **inside the lockup band, right** |
+| keyline | on `.subbar` | on `.subbar` | on `.topbar`, via `:last-child` |
+
+The lockup band itself matches to the pixel, which is what `check_banner()`
+guards and why this passed unnoticed: the shared file styles `.subbar`, and the
+app has no element with that class. `banner.css` even anticipates it -- the
+`.topbar:last-child` rule that gives the app its keyline exists for a header
+with no ribbon.
+
+What is left to do is markup, not CSS: wrap the app's theme toggle in
+`<div class="subbar"><div class="subbar-inner">`, in
+`repos/server/templates/index.html`. The keyline then moves to the subbar on its
+own, because `:last-child` stops matching.
+
+The drift itself is the lesson, and #75 is the answer to it -- but only for the
+part a byte comparison can see. This happened twice in one day, in both
+directions, while every session involved was being careful, because three files
+each stated the lockup and nothing compared them. A file check is not a shape
+check.
 
 ## #73 — Stale "several solutions" picker (**done, deployed everywhere**)
 
