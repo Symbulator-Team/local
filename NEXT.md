@@ -1,19 +1,16 @@
 # Next build — accepted but not yet done
 
-> **Ready to deploy, 23 Aug 2026.** Build `2026-08-23 09:13 UTC`, solver
-> 0.5.0, cache **v29**.
->
-> The 08:54 build shipped without a cache bump, so install.symbulator.com
-> served the right files to new visitors while every returning one kept
-> the 08:24 page. v29 is what fixes that; do not skip `sw.js`.
+> **Ready to deploy, 23 Aug 2026.** Build `2026-08-23 09:25 UTC`, solver
+> 0.5.0, cache **v30**. The Schematic card is gone; drawing is now a link
+> under the circuit box, where the thing it draws is.
 >
 > 1. PythonAnywhere: pull, green Reload, then
 >    `https://symbulator.pythonanywhere.com/healthz` -- both stamps
->    `2026-08-23 09:13 UTC`. No pip step: the solver has not moved.
+>    `2026-08-23 09:25 UTC`. No pip step: the solver has not moved.
 > 2. install.symbulator.com: `index.html` and `sw.js` from
 >    `C:\Users\perez\Claude Code\Symbulator\repos\local\`.
-> 3. `symbulator.com/9/local.zip`: 17,443,117 bytes, sha256
->    `98148d688628dd7adb047fe16baea23567c80ccf94320cedc18eb141f2d79c15`.
+> 3. `symbulator.com/9/local.zip`: 17,443,084 bytes, sha256
+>    `63731f0a36c5909e87a33fa4098f548bb1e7f67d1553df9b0b82e9c085fb1e27`.
 >
 > Every build re-stamps, so these figures hold only until the next one.
 
