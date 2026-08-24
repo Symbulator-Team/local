@@ -31,52 +31,55 @@
 ---
 
 
-## #77 — TR reads its sources in the s-domain; the calculators read time
+## #77 — TR read its sources in the s-domain (**done, deployed**)
 
-**Open, and it makes transient answers silently wrong.**
+**Settled 25 Aug 2026, in solver 0.5.5.** It was a port omission, not a
+design choice, and the primary source proves it.
 
-The 2023 site states the rule plainly, in the frequency-domain lesson:
+`tr()` called `fd()` and inverse-transformed the answers, but passed the
+source values through untouched -- so they were read as s-domain
+expressions. Every transient answer was one integration short: a plain
+`12` gave the impulse response where the step response was meant,
+plausible enough to pass a glance.
 
-> The value of sources E and J, when used as input for an FD simulation, are
-> assumed to be in the s-domain. In contrast, when they are given as input for
-> a TR simulation, they are assumed to be in the domain of time.
+The evidence, in the order it got firmer:
 
-Symbulator 9's `tr()` does not do the second half. It calls `fd()` and inverse-
-transforms the *answers*; the source value is passed through untouched, so it
-is read as an s-domain expression. Measured:
+1. Version 7's `.tig` is a plain zip; raw ASCII showed `s	2s` beside a
+   `tool="tr"` test. Suggestive, and the technique is low-confidence.
+2. Version 8's documentation agreed -- but Roberto pointed out it is an
+   unfinished clone of version 7's and not evidence of intent.
+3. `PROJECT_HISTORY.md`, bundled in `symbulator-project.skill`, recorded
+   the omission at the time: the port skipped the forward transform
+   "rather than auto-detecting and transforming time-domain expressions
+   **the way the original did**", because the `lf\laplace` library was
+   not in the source dump.
+4. Version 8's actual source, decoded with `tnstools` (3DES in counter
+   mode -- which is why the payload is not block-aligned, the detail that
+   made it look like something other than encryption). `symbv8s5`:
 
-| Circuit | Version 9 | By hand |
-|---|---|---|
-| `j,0,1,1:c,1,0,2,0` | `1/2` | `t/2` |
-| `j,0,1,t:c,1,0,2,0` | `t/2` | `t**2/4` |
-| `e1,1,0,12:r,1,2,2:c,2,0,1,0` | `6*exp(-t/2)` | `12 - 12*exp(-t/2)` |
+       If betatool="tr" and inString("ej",kind) Then
+         value depends on t     -> t2s(value)
+         value is a constant    -> value/s
+         refers to another answer -> left alone
 
-Every one of those is the impulse response where a step response was wanted --
-one integration short, and plausible enough to pass a glance.
+0.5.5 restores exactly that. A controlled source is left alone because
+its value is a relation, not a waveform; a value already written in `s`
+is left alone too, which is what keeps every existing version 9
+description working.
 
-Wrapping the value in `t2s(...)` fixes each of them, and gives the textbook
-answer exactly. `j,0,1,t2s(t)` is `t**2/4`. So the machinery is all there; what
-is missing is `tr()` doing it.
+Verified before shipping: all twelve bundled examples answered
+byte-identically under published 0.5.4 and the new build, and six
+transient circuits now match answers derived by hand -- including AS7's
+Example 16.1, whose answer is in print in both calculator versions.
 
-**Two ways out, and it is a judgement call rather than an obvious fix.**
+Two things fell out of it. 0.5.3 had bound `t` in the parsing namespace to
+`Symbol("t", positive=True)`, and SymPy evaluates `DiracDelta` of a
+strictly positive argument to **zero** -- so impulse sources had been
+silently erased. And 0.5.6 added the `{...}` shorthand, `symbv8si`'s
+FD-only marker for a source written in time.
 
-*Transform in `tr()`.* Matches the calculators, matches the 2023 documentation,
-and makes a version 7 circuit description work unchanged in version 9 -- which
-was the whole point of teaching the parser `u(t)` in 0.5.1. It changes the
-meaning of every existing version 9 TR call, including the app's own bundled
-example (`e1,1,0,5/s`, which would then be wrong), and anything anyone has
-written against the current behaviour.
-
-*Leave it and document `t2s(...)`.* Nothing existing breaks, `fd()` and `tr()`
-stay consistent with each other, and the conversion is explicit where a reader
-can see it. But a version 7 description then reads unchanged and answers
-differently, which is the worst of the three outcomes for someone working from
-the older book -- and 0.5.1's `u(t)` shorthand makes that trap easier to fall
-into, not harder.
-
-Chapter 12 documents the rule as it stands. Chapter 6 does not yet, and its
-transient panels still carry time-domain values, so **its answers are wrong
-until this is settled**. That is the reason chapter 6 is not finished.
+The decoded version 8 source is worth keeping: it turns "what did the
+original do?" from inference into a grep.
 
 ---
 
