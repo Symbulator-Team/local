@@ -240,6 +240,19 @@ def evaluate(payload_json: str) -> str:
                                      bool(p.get("si")), bool(p.get("approx"))))
 
 
+def mini_tool(payload_json: str) -> str:
+    """JS-callable counterpart of app.py's /api/minitool: run one of the
+    small version 7 helpers against the solved answers. Kept deliberately
+    thin, like the others here -- every check that matters lives in
+    symbulator_ui, so the offline build and the server cannot disagree
+    about what an argument may contain."""
+    p = json.loads(payload_json)
+    tool = str(p.get("tool", "")).strip()
+    args = [str(a or "").strip() for a in (p.get("args") or [])]
+    return json.dumps(ui.mini_tool_ui(tool, args, p.get("values") or {},
+                                      _digits(p) or 4))
+
+
 def solve_equations(payload_json: str) -> str:
     """JS-callable counterpart of app.py's /api/solveq: solve user-
     supplied equations against known values, with no server round-trip."""

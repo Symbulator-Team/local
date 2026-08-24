@@ -524,6 +524,20 @@ def build() -> str:
 
     s = sub(
         s,
+        """  const r = await fetch('/api/minitool', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({ tool: tool, args: args, values: last.values,
+                           ...roundingState() })
+  });
+  return await r.json();""",
+        """  return await py('mini_tool', { tool: tool, args: args,
+    values: last.values, ...roundingState() });""",
+        label="mini-tool fetch",
+    )
+
+    s = sub(
+        s,
         """    const r = await fetch('/api/evaluate', {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
