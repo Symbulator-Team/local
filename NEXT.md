@@ -31,6 +31,55 @@
 ---
 
 
+## #77 — TR reads its sources in the s-domain; the calculators read time
+
+**Open, and it makes transient answers silently wrong.**
+
+The 2023 site states the rule plainly, in the frequency-domain lesson:
+
+> The value of sources E and J, when used as input for an FD simulation, are
+> assumed to be in the s-domain. In contrast, when they are given as input for
+> a TR simulation, they are assumed to be in the domain of time.
+
+Symbulator 9's `tr()` does not do the second half. It calls `fd()` and inverse-
+transforms the *answers*; the source value is passed through untouched, so it
+is read as an s-domain expression. Measured:
+
+| Circuit | Version 9 | By hand |
+|---|---|---|
+| `j,0,1,1:c,1,0,2,0` | `1/2` | `t/2` |
+| `j,0,1,t:c,1,0,2,0` | `t/2` | `t**2/4` |
+| `e1,1,0,12:r,1,2,2:c,2,0,1,0` | `6*exp(-t/2)` | `12 - 12*exp(-t/2)` |
+
+Every one of those is the impulse response where a step response was wanted --
+one integration short, and plausible enough to pass a glance.
+
+Wrapping the value in `t2s(...)` fixes each of them, and gives the textbook
+answer exactly. `j,0,1,t2s(t)` is `t**2/4`. So the machinery is all there; what
+is missing is `tr()` doing it.
+
+**Two ways out, and it is a judgement call rather than an obvious fix.**
+
+*Transform in `tr()`.* Matches the calculators, matches the 2023 documentation,
+and makes a version 7 circuit description work unchanged in version 9 -- which
+was the whole point of teaching the parser `u(t)` in 0.5.1. It changes the
+meaning of every existing version 9 TR call, including the app's own bundled
+example (`e1,1,0,5/s`, which would then be wrong), and anything anyone has
+written against the current behaviour.
+
+*Leave it and document `t2s(...)`.* Nothing existing breaks, `fd()` and `tr()`
+stay consistent with each other, and the conversion is explicit where a reader
+can see it. But a version 7 description then reads unchanged and answers
+differently, which is the worst of the three outcomes for someone working from
+the older book -- and 0.5.1's `u(t)` shorthand makes that trap easier to fall
+into, not harder.
+
+Chapter 12 documents the rule as it stands. Chapter 6 does not yet, and its
+transient panels still carry time-domain values, so **its answers are wrong
+until this is settled**. That is the reason chapter 6 is not finished.
+
+---
+
 ## #75 — The lockup exists once, not once per tree (**done, deployed everywhere**)
 
 **Done 23 Aug 2026.** Where: `server/templates/index.html` (commit `8585e70`),
