@@ -126,7 +126,8 @@ def solve(payload_json: str) -> str:
     res = ui.solve_ui(desc, domain, omega, variables or None, tool, n1, n2, kind,
                       equations, unknowns, conditions, _digits(p),
                       bool(p.get("si")), bool(p.get("units")),
-                      bool(p.get("use_rms")), bool(p.get("approx")))
+                      bool(p.get("use_rms")), bool(p.get("approx")),
+                      bool(p.get("polar")))
     # Attach the notes either way: when the solve fails, "normalised
     # '5*i' to '5j'" is often the explanation for the error underneath.
     res["notes"] = imaginary_notes + list(res.get("notes") or [])
@@ -138,7 +139,8 @@ def solve(payload_json: str) -> str:
         res.update({"domain": domain, "tool": tool, "desc_used": desc_used,
                     "digits": _digits(p), "si": bool(p.get("si")),
                     "units": bool(p.get("units")),
-                    "use_rms": bool(p.get("use_rms"))})
+                    "use_rms": bool(p.get("use_rms")),
+                    "polar": bool(p.get("polar"))})
     return json.dumps(res)
 
 
