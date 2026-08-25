@@ -33,7 +33,7 @@ HERE = Path(__file__).resolve().parent
 TEMPLATE = HERE.parent / "server" / "templates" / "index.html"
 OUTPUT = HERE / "index.html"
 
-WHEEL = "symbulator-0.5.10-py3-none-any.whl"
+WHEEL = "symbulator-0.5.11-py3-none-any.whl"
 
 # The build stamp in the page footer, the last line of the interface.
 # It lives in the template, so the server page and the offline build cut
@@ -541,12 +541,16 @@ def build() -> str:
         """    const r = await fetch('/api/evaluate', {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
+      // The domain rides with the values: `{...}` converts from time into
+      // s, so it means something only when the answers are in s.
       body: JSON.stringify({ expr: $('evalExpr').value, values: last.values,
+                             domain: last.domain || '',
                              ...roundingState(), si: $('siUnits').checked })
     });
     const data = await r.json();""",
         """    const data = await py('evaluate', {
       expr: $('evalExpr').value, values: last.values,
+      domain: last.domain || '',
       ...roundingState(), si: $('siUnits').checked });""",
         label="evaluate fetch",
     )
@@ -561,6 +565,7 @@ def build() -> str:
         unknowns: $('solveqUnks').value,
         conditions: $('solveqConds').value,
         values: last.values,
+        domain: last.domain || '',
         ...roundingState(),
         si: $('siUnits').checked,
         units: $('showUnits').checked,
@@ -573,6 +578,7 @@ def build() -> str:
       unknowns: $('solveqUnks').value,
       conditions: $('solveqConds').value,
       values: last.values,
+      domain: last.domain || '',
       ...roundingState(),
       si: $('siUnits').checked,
       units: $('showUnits').checked,
