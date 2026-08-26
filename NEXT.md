@@ -38,6 +38,136 @@
 ---
 
 
+## Found building the tutorial's example input files, 26 Aug 2026
+
+Written up from the documentation side; the documentation findings from the
+same pass are in `Sym Docum/Documentation/NEXT_DOCS.md`.
+
+---
+
+## #105 — A symbolic value sharing a name with a SymPy function breaks Evaluate
+
+`rf` is a natural name for a feedback resistor and Lesson 5 uses it four
+times. It is also `sympy.rf`, the rising factorial. **Solving is
+unaffected** -- the answers are right and display correctly, `vo =
+-rf*vi/r1` as the book has it -- but asking **Evaluate** for anything then
+fails:
+
+    vo  ->  bad operand type for unary -: 'FunctionClass'
+
+One line causes it. `symbulator_ui.py:1930` re-parses each answer string
+with bare `sp.sympify`, which sees all of SymPy's namespace rather than the
+small allowed one:
+
+    by_norm[key] = _canonical_time(sp.sympify(_without_unit(vstr)))
+
+Same weakness as the `re = 12000` failure fixed earlier that day, in a
+different code path: that fix rewrote the *names the user types*, this is
+about the *values already solved*. `safe_sympify`, already imported in that
+module, uses the restricted namespace and would read `rf` as an ordinary
+symbol.
+
+Others in the same trap: `im`, `beta`, `gamma`, `zeta`, `N`, `S`, `O`, `E`.
+`re` and `im` are deliberately in the allowed namespace and safe by another
+route.
+
+**Not changed** -- it is in the parsing path and worth a look first.
+
+---
+
+## #107 — Thevenin of an op-amp output fails outright where the calculator gave half
+
+Lesson 5, Bo2's Drill Exercise 3.11. The chapter describes a partial
+success: the script "found the Thévenin voltage, but could not find the
+Norton current", leaving you holding `vth`. Version 9 refuses the whole
+run:
+
+    Could not solve the system of equations. If you used exact numeric
+    values, try again using symbolic values only.
+
+The reason is sound -- an ideal op amp has zero output resistance, so the
+short-circuit round divides by zero -- but version 9 gives up on both
+rounds where the calculator kept the first.
+
+A plain solve gets there: the Thevenin voltage of an unloaded output is the
+open-circuit node voltage, and `v3` comes back as `vs*(r1 + r2)/r1`, the
+book's answer exactly. The example entry does that.
+
+**Two ways to settle it:** have `th()` report the Thevenin voltage when only
+the Norton round fails, which matches the calculator and the chapter; or
+change the chapter. The first is the better behaviour -- half an answer
+beats none, and the failure is a known, explainable one.
+
+---
+
+## #110 — "Limit the results to save time" empties the results
+
+Lesson 6 tells a version 9 reader to tick it and list `vc`. Do that and
+**Results** comes back completely empty -- no error, no note, for a circuit
+that solves fine without the tick.
+
+The box is passed to the solver untranslated, and the solver filters on its
+*internal* names:
+
+    tr(desc)                      -> i_c, i_r, v_1
+    tr(desc, variables=['i_c'])   -> i_c            works
+    tr(desc, variables=['v_c'])   -> (empty)
+    tr(desc, variables=['vc'])    -> (empty)
+
+`vc` is what **Results** shows and what the chapter says to type. `v_c` is
+the canonical spelling everywhere else. Neither is a solver variable: a
+capacitor's voltage drop is derived in the UI layer afterwards, so it
+cannot be filtered on at all.
+
+**And in DC the field does nothing** -- `dc()` has no `variables` argument,
+so whatever is typed is ignored and every answer comes back. Silently.
+
+**Suggested fix:** translate the typed names the way the Evaluate and Solve
+cards already do, and report the ones that cannot be filtered rather than
+returning an empty page.
+
+The two Lesson 6 entries that would have used it leave it off.
+
+---
+
+## #112 — The polar-phasor setting was not saved with a circuit — fixed
+
+The front end saved it (`polar: $('polarPhasors').checked`) and restored it,
+but `circuitbook.py` had no `polar` key, so it was dropped on the way into
+the file and every reload came back rectangular with nothing to say why.
+`rms`, the other AC-only display setting beside it, was handled correctly.
+
+**Fixed**, mirroring `rms`: the key in `_KEYS`, `polar` in `_BOOL_FIELDS`,
+and the value written whenever the analysis is AC.
+
+Lessons 7, 9 and 10 depend on it -- their chapters quote nearly every
+answer as an amplitude and an angle.
+
+---
+
+## #114 — The two-port tool is refused in FD, where Lesson 13 asks for it
+
+Lesson 13's AS7's Example 19.7 and Practice Problem 19.7 both say to choose
+*g — inverse hybrid* **in FD**, "since the question asks for functions of
+s". The app answers:
+
+    Thevenin / impedance / two-port tools work in DC or AC only.
+
+The restriction is deliberate -- `app.py` checks the domain before the tool
+runs -- but the chapter was written as though FD were allowed.
+
+**There is a clean way round**, and it gives the printed answers exactly:
+the s-domain is what an impedance already speaks, so write the inductor as
+`s` and the capacitor as `1/s` and solve in DC. Both problems then match.
+The two entries do that.
+
+**Two ways to settle it:** let the equivalent tools run in FD, which is
+where they would be most useful for this kind of question; or change the two
+problems to describe the elements as s-domain impedances, which Lesson 12
+already teaches.
+
+---
+
 ## #97 — The two shared modules are copied by the build now, not by hand
 
 **Done 26 Aug 2026, not yet in a release.** `symbulator_ui.py` and
