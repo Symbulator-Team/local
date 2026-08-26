@@ -22,6 +22,58 @@
    "title": "Circuits for Lesson 4 of the Tutorial (Part 2)"
   },
   {
+   "name": "Lesson_05a.cir",
+   "title": "Circuits for Lesson 5 of the Tutorial (Part 1)"
+  },
+  {
+   "name": "Lesson_05b.cir",
+   "title": "Circuits for Lesson 5 of the Tutorial (Part 2)"
+  },
+  {
+   "name": "Lesson_06a.cir",
+   "title": "Circuits for Lesson 6 of the Tutorial (Part 1)"
+  },
+  {
+   "name": "Lesson_06b.cir",
+   "title": "Circuits for Lesson 6 of the Tutorial (Part 2)"
+  },
+  {
+   "name": "Lesson_06c.cir",
+   "title": "Circuits for Lesson 6 of the Tutorial (Part 3)"
+  },
+  {
+   "name": "Lesson_06d.cir",
+   "title": "Circuits for Lesson 6 of the Tutorial (Part 4)"
+  },
+  {
+   "name": "Lesson_07.cir",
+   "title": "Circuits for Lesson 7 of the Tutorial"
+  },
+  {
+   "name": "Lesson_08.cir",
+   "title": "Circuits for Lesson 8 of the Tutorial"
+  },
+  {
+   "name": "Lesson_09.cir",
+   "title": "Circuits for Lesson 9 of the Tutorial"
+  },
+  {
+   "name": "Lesson_10.cir",
+   "title": "Circuits for Lesson 10 of the Tutorial"
+  },
+  {
+   "name": "Lesson_11.cir",
+   "title": "Circuits for Lesson 11 of the Tutorial"
+  },
+  {
+   "name": "Lesson_12.cir",
+   "title": "Circuits for Lesson 12 of the Tutorial"
+  },
+  {
+   "name": "Lesson_13.cir",
+   "title": "Circuits for Lesson 13 of the Tutorial"
+  },
+  {
    "name": "Showcase.cir",
    "title": "A sample of what Symbulator can do"
   }
