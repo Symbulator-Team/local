@@ -46,6 +46,11 @@ import tempfile
 import zipfile
 from pathlib import Path
 
+# For WHEEL, so the ZIP and the page it ships agree on which Symbulator
+# wheel this build is. Safe to import: build_local guards its own main.
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import build_local  # noqa: E402
+
 HERE = Path(__file__).resolve().parent
 ROOT_IN_ZIP = "symbulator-local"
 
@@ -204,6 +209,25 @@ def verify(staged: dict[str, Path]) -> list[str]:
                     problems.append(
                         "the file-format example in index.html no longer matches what "
                         "format_book writes -- regenerate it")
+
+    # --- exactly one symbulator wheel, and the right one ---------------
+    #
+    # The other checks all ask whether a promised file is present. This one
+    # asks whether an unpromised file is absent, which nothing did before,
+    # and the gap was silently cumulative: --assets points at an extracted
+    # copy of a *previous* ZIP, so every release left its wheel behind
+    # there and the next ZIP shipped both. The app loads the one it names,
+    # so nothing broke -- it just carried a second, older Symbulator that
+    # anyone opening the archive would have to work out the status of.
+    wheels = sorted(rel for rel in staged
+                    if rel.startswith("vendor/symbulator-")
+                    and rel.endswith(".whl"))
+    want = f"vendor/{build_local.WHEEL}"
+    if wheels != [want]:
+        problems.append(
+            f"the archive should carry exactly one Symbulator wheel, {want}, "
+            f"but has {', '.join(w.split('/')[-1] for w in wheels) or 'none'} "
+            f"-- an old one is probably sitting in the --assets folder")
 
     return problems
 
