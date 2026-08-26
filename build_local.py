@@ -717,6 +717,7 @@ def build() -> str:
       // s, so it means something only when the answers are in s.
       body: JSON.stringify({ expr: $('evalExpr').value, values: last.values,
                              conditions: $('evalConds').value,
+                             defines: linesOf($('defines').value),
                              domain: last.domain || '',
                              ...roundingState(), si: $('siUnits').checked })
     });
@@ -724,6 +725,7 @@ def build() -> str:
         """    const data = await py('evaluate', {
       expr: $('evalExpr').value, values: last.values,
       conditions: $('evalConds').value,
+      defines: linesOf($('defines').value),
       domain: last.domain || '',
       ...roundingState(), si: $('siUnits').checked });""",
         label="evaluate fetch",
@@ -738,6 +740,7 @@ def build() -> str:
         equations: $('solveqEqs').value,
         unknowns: $('solveqUnks').value,
         conditions: $('solveqConds').value,
+        defines: linesOf($('defines').value),
         values: last.values,
         domain: last.domain || '',
         ...roundingState(),
@@ -751,6 +754,7 @@ def build() -> str:
       equations: $('solveqEqs').value,
       unknowns: $('solveqUnks').value,
       conditions: $('solveqConds').value,
+      defines: linesOf($('defines').value),
       values: last.values,
       domain: last.domain || '',
       ...roundingState(),

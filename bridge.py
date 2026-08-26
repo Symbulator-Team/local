@@ -64,6 +64,20 @@ def solve(payload_json: str) -> str:
     unknowns = [u.strip() for u in
                 ui.re.split(r"[,\s]+", str(p.get("unknowns") or "")) if u.strip()]
 
+    # The Define field, expanded before anything reads the text -- and
+    # before the ambiguous-suffix check below, so a definition that brings
+    # in a bare "1k" is questioned exactly as an inline one would be.
+    defines, define_err = ui.parse_defines(lines("defines"))
+    if define_err:
+        return json.dumps({"ok": False, "error": define_err})
+    define_notices = []
+    if defines:
+        define_notices = ui.define_shadow_notices(defines, desc)
+        desc = ui.expand_defines_in_desc(desc, defines)
+        equations = [ui.expand_defines(e, defines) for e in equations]
+        conditions = [ui.expand_defines(c, defines) for c in conditions]
+        unknowns = [ui.expand_defines(u, defines) for u in unknowns]
+
     err = ui._validate(desc, domain, omega, variables or None)
     if not err:
         err = ui._validate_extras(equations, unknowns, conditions)
@@ -130,7 +144,8 @@ def solve(payload_json: str) -> str:
                       bool(p.get("polar")))
     # Attach the notes either way: when the solve fails, "normalised
     # '5*i' to '5j'" is often the explanation for the error underneath.
-    res["notes"] = imaginary_notes + list(res.get("notes") or [])
+    res["notes"] = (define_notices + imaginary_notes
+                    + list(res.get("notes") or []))
     if res.get("ok"):
         # "approx"/"approx_forced" are left as solve_ui set them, not
         # overwritten with the request's original value -- solve_ui may
@@ -238,6 +253,9 @@ def evaluate(payload_json: str) -> str:
     expr = str(p.get("expr", "")).strip()
     if not expr:
         return json.dumps({"ok": False, "error": "Enter an expression to evaluate."})
+    defines, define_err = ui.parse_defines(p.get("defines") or "")
+    if define_err:
+        return json.dumps({"ok": False, "error": define_err})
     # The Conditions box (#96). The server splits and guards it in app.py;
     # here symbulator_ui does the reading, and the guards that matter are
     # its own -- there is no untrusted caller on this side of the wire.
@@ -247,6 +265,9 @@ def evaluate(payload_json: str) -> str:
     else:
         conditions = [ln.strip() for ln in str(raw_conds).splitlines()
                       if ln.strip()]
+    if defines:
+        expr = ui.expand_defines(expr, defines)
+        conditions = [ui.expand_defines(c, defines) for c in conditions]
     return json.dumps(ui.evaluate_ui(expr, p.get("values") or {}, _digits(p),
                                      bool(p.get("si")), bool(p.get("approx")),
                                      str(p.get("domain", "")).strip().lower(),
@@ -283,6 +304,13 @@ def solve_equations(payload_json: str) -> str:
                   if isinstance(raw_conds, list)
                   else [ln.strip() for ln in ui.re.split(r"[\r\n]+", str(raw_conds)) if ln.strip()])
     conditions = ui._expand_and(conditions)
+    defines, define_err = ui.parse_defines(p.get("defines") or "")
+    if define_err:
+        return json.dumps({"ok": False, "error": define_err})
+    if defines:
+        equations = [ui.expand_defines(e, defines) for e in equations]
+        conditions = [ui.expand_defines(c, defines) for c in conditions]
+        unknowns = [ui.expand_defines(u, defines) for u in unknowns]
     return json.dumps(ui.solveq_ui(equations, unknowns, p.get("values") or {},
                                    _digits(p), bool(p.get("si")),
                                    bool(p.get("approx")), bool(p.get("units")),
