@@ -14,6 +14,14 @@
    "title": "Circuits for Lesson 3 of the Tutorial"
   },
   {
+   "name": "Lesson_04a.cir",
+   "title": "Circuits for Lesson 4 of the Tutorial (Part 1)"
+  },
+  {
+   "name": "Lesson_04b.cir",
+   "title": "Circuits for Lesson 4 of the Tutorial (Part 2)"
+  },
+  {
    "name": "Showcase.cir",
    "title": "A sample of what Symbulator can do"
   }
