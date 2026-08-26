@@ -475,6 +475,70 @@ def sync_shared() -> list:
     return moved
 
 
+_SCRIPT_OPEN = re.compile(r"<script(?![^>]*\bsrc=)[^>]*>")
+
+
+def _inline_scripts(text: str):
+    """(first line number, body) for each inline <script> in `text`."""
+    out = []
+    for m in _SCRIPT_OPEN.finditer(text):
+        end = text.find("</script>", m.end())
+        if end == -1:
+            continue
+        out.append((text.count("\n", 0, m.end()) + 1, text[m.end():end]))
+    return out
+
+
+def check_js(text: str, where: str) -> None:
+    """Stop the build on a string literal left open at end of line.
+
+    Not a parser -- a scanner for one specific, and specifically nasty,
+    mistake: a newline inside '...' or "...". JavaScript does not allow it,
+    the whole script then fails to parse, and every listener after it is
+    never attached. The page still renders, so it looks fine until you
+    click something.
+
+    Template literals may legitimately span lines and are tracked so they
+    do not raise a false alarm.
+    """
+    for first_line, body in _inline_scripts(text):
+        quote = None          # "'", '"' or "`" when inside one
+        block = False         # inside a /* ... */
+        for offset, line in enumerate(body.split("\n")):
+            i = 0
+            while i < len(line):
+                ch = line[i]
+                nxt = line[i + 1] if i + 1 < len(line) else ""
+                if block:
+                    if ch == "*" and nxt == "/":
+                        block = False
+                        i += 1
+                elif quote:
+                    if ch == "\\":
+                        i += 1
+                    elif ch == quote:
+                        quote = None
+                elif ch == "/" and nxt == "/":
+                    break                       # rest of the line is comment
+                elif ch == "/" and nxt == "*":
+                    block = True
+                    i += 1
+                elif ch in "'\"`":
+                    quote = ch
+                i += 1
+            if quote in ("'", '"'):
+                n = first_line + offset
+                raise SystemExit(
+                    f"build_local.py: unterminated {quote} string at "
+                    f"{where}:{n}\n"
+                    f"  {line.strip()[:78]}\n"
+                    "  A newline inside a string literal is a SyntaxError, "
+                    "and the browser then parses none of the script -- the "
+                    "page renders and nothing works. Usually an escaping "
+                    "slip in a script that edited this file: write a "
+                    "backslash-n, not a real line break.")
+
+
 def check_banner(template_text: str) -> None:
     """Stop the build if the inlined banner has drifted from its source."""
     if not BANNER_SRC.is_file():
@@ -793,7 +857,9 @@ def main() -> int:
     args = ap.parse_args()
 
     if args.check:
+        check_js(TEMPLATE.read_text(encoding="utf-8"), TEMPLATE.name)
         built = build()
+        check_js(built, OUTPUT.name)
         current = OUTPUT.read_text(encoding="utf-8") if OUTPUT.exists() else ""
         stale = [name for name, _ in stale_shared()]
         examples = stale_examples()
@@ -816,6 +882,7 @@ def main() -> int:
     # build time as the template it came from.
     stamp = stamp_template()
     built = build()
+    check_js(built, OUTPUT.name)
     OUTPUT.write_text(built, encoding="utf-8", newline="")
     print(f"index.html written, {built.count(chr(10)) + 1} lines, build {stamp}")
     moved = [f"copied {n} from ../server" for n in sync_shared()]
