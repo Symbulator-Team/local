@@ -2,7 +2,8 @@
 
 > **Deployed and verified, 26 Aug 2026.** Build `2026-08-26 07:37 UTC`, solver
 > 0.5.11, cache **v59**. It carries #94, #95 and #96 -- the Conditions box on
-> Evaluate, and the two silent binding bugs behind it.
+> Evaluate, and the two silent binding bugs behind it. **All five sites are on
+> this build.**
 >
 > Commits live: `repos/server` `b487416`, `repos/local` `afbb6aa`,
 > `repos/solver` `13c42aa` (untouched). All three clean and level with origin.
@@ -16,11 +17,14 @@
 >    `abe82885dec8ea58f6d024eb32977fa8aa5e1cd1d54592cd5fff59708737111b`,
 >    byte-identical to `repos/local/local.zip`, and the copy inside carries
 >    the same stamp, the same cache version and the same field.
-> 3. `https://symbulator.pythonanywhere.com/` -- the Conditions box is there,
->    `.2v1` returns -2 and 3 rather than an expression in `v1`, and `v2` with
->    `V = 10` returns 5. **But `/healthz` reads `2026-08-26 05:35 UTC`**: it
->    pulled before the re-stamp commit, so it runs the same code under an
->    older stamp. A pull and a Reload aligns it.
+> 3. `https://symbulator.pythonanywhere.com/healthz` -- `build` and
+>    `build_on_disk` both `2026-08-26 07:37 UTC`, `needs_reload: false`,
+>    `solver: 0.5.11`. Pulled and reloaded by Roberto. Behaviour checked
+>    rather than the stamp alone: the Conditions box is on the page,
+>    `.2v1` gives -2, 3, -8 and -0.5 -- the answers HK5's Drill Problem
+>    1-13 prints -- and `vc` with `t = to` gives `V - V*exp(-to/(c*r))`,
+>    which is the calculator's `vc|t=to` working in version 9 for the
+>    first time.
 > 4. `banner.css` served by `symbulator.com` and by `learn.symbulator.com`
 >    both hash to the same 11,149 bytes as the one source,
 >    `C:\Users\perez\Claude Code\Sym Docum\Documentation\design\banner.css`.
