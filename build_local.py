@@ -51,6 +51,23 @@ OUTPUT = HERE / "index.html"
 # this build's own glue, with no server counterpart.
 SHARED = ("symbulator_ui.py", "circuitbook.py")
 
+# The built-in examples: a folder of input files, each carrying its own
+# title. Same story as the modules above -- one source, in the server tree,
+# copied here by the build.
+#
+# The manifest is the part that is not just a copy. On the server the folder
+# is listed live, so a file can be dropped in without a rebuild. The offline
+# build has no server and a fetch cannot enumerate a directory, so it reads
+# examples.json instead. Both ends answer the same shape and the interface
+# cannot tell them apart -- but only as long as the manifest matches the
+# folder, which is what --check is for.
+EXAMPLES_SRC = SERVER / "examples"
+EXAMPLES_OUT = HERE / "examples"
+MANIFEST = "examples.json"
+SW = HERE / "sw.js"
+SW_BEGIN = "  // ==== BEGIN examples ==== written by build_local.py; do not edit"
+SW_END = "  // ==== END examples ===="
+
 WHEEL = "symbulator-0.5.11-py3-none-any.whl"
 
 # The build stamp in the page footer, the last line of the interface.
@@ -142,7 +159,7 @@ const pyReady = (async () => {
     // numpy comes with the runtime and is loaded up front alongside
     // sympy: symbulator.plotting imports it lazily, so without it the
     // Plot card fails at the point of use with a raw "No module named
-    // 'numpy'" -- the two plot examples in examples.cir among them.
+    // 'numpy'" -- the two plot examples in the supplied set among them.
     await pyodide.loadPackage(['sympy', 'numpy']);
     await pyodide.loadPackage('vendor/WHEEL_NAME');
     // symbulator_ui.py and circuitbook.py are shared verbatim with the
@@ -331,6 +348,104 @@ def _trim(text: str) -> str:
     return "\n".join(lines)
 
 
+def example_manifest() -> str:
+    """The manifest the offline build reads, as it should be right now."""
+    import json
+    import sys
+
+    # circuitbook from the *server*, deliberately: it is the source of the
+    # format, and the copy in this repository may be the one this run is
+    # about to replace.
+    sys.path.insert(0, str(SERVER))
+    import circuitbook                                        # noqa: E402
+
+    files = []
+    for path in sorted(EXAMPLES_SRC.glob("*.cir")):
+        _circuits, _warnings, title = circuitbook.parse_book(
+            path.read_text(encoding="utf-8"))
+        files.append({"name": path.name, "title": title or path.name})
+    return json.dumps({"ok": True, "files": files}, indent=1) + "\n"
+
+
+def sw_example_lines() -> str:
+    """The examples, as the service worker's cache list wants them.
+
+    The offline build caches by name -- it cannot discover a folder any
+    more than a fetch can -- so this block is generated. Adding a lesson
+    should not mean remembering to edit a service worker, and a file that
+    is shipped but never cached is a file that vanishes offline."""
+    names = [MANIFEST] + [p.name for p in sorted(EXAMPLES_SRC.glob("*.cir"))]
+    return "\n".join(f"  'examples/{n}'," for n in names)
+
+
+def sw_text() -> str:
+    """sw.js as it should be, with the generated block filled in."""
+    current = SW.read_text(encoding="utf-8")
+    start = current.find(SW_BEGIN)
+    end = current.find(SW_END)
+    if start == -1 or end == -1:
+        raise SystemExit("build_local.py: the examples markers are missing "
+                         "from sw.js. Restore them, or the offline build "
+                         "stops caching the examples and loses them.")
+    head = current[:start + len(SW_BEGIN)]
+    tail = current[end:]
+    return head + "\n" + sw_example_lines() + "\n" + tail
+
+
+def stale_examples() -> list:
+    """What in the examples folder is out of date: file names, and the
+    manifest if it has drifted."""
+    out = []
+    if not EXAMPLES_SRC.is_dir():
+        raise SystemExit(f"build_local.py: {EXAMPLES_SRC} is missing. The "
+                         f"built-in examples live there.")
+    for src in sorted(EXAMPLES_SRC.glob("*.cir")):
+        here = EXAMPLES_OUT / src.name
+        if not here.is_file() or here.read_bytes() != src.read_bytes():
+            out.append(src.name)
+    # A file deleted from the source has to go from here too, or the
+    # manifest and the folder disagree about what exists.
+    wanted = {p.name for p in EXAMPLES_SRC.glob("*.cir")}
+    if EXAMPLES_OUT.is_dir():
+        for here in sorted(EXAMPLES_OUT.glob("*.cir")):
+            if here.name not in wanted:
+                out.append(here.name + " (no longer in the source)")
+    manifest = EXAMPLES_OUT / MANIFEST
+    if not manifest.is_file() or manifest.read_text(
+            encoding="utf-8") != example_manifest():
+        out.append(MANIFEST)
+    if SW.read_text(encoding="utf-8") != sw_text():
+        out.append("sw.js cache list")
+    return out
+
+
+def sync_examples() -> list:
+    """Copy the examples across and write the manifest. Returns what moved."""
+    moved = []
+    EXAMPLES_OUT.mkdir(exist_ok=True)
+    wanted = {p.name for p in EXAMPLES_SRC.glob("*.cir")}
+    for here in sorted(EXAMPLES_OUT.glob("*.cir")):
+        if here.name not in wanted:
+            here.unlink()
+            moved.append("removed " + here.name)
+    for src in sorted(EXAMPLES_SRC.glob("*.cir")):
+        here = EXAMPLES_OUT / src.name
+        data = src.read_bytes()
+        if not here.is_file() or here.read_bytes() != data:
+            here.write_bytes(data)
+            moved.append(src.name)
+    manifest = EXAMPLES_OUT / MANIFEST
+    text = example_manifest()
+    if not manifest.is_file() or manifest.read_text(encoding="utf-8") != text:
+        manifest.write_text(text, encoding="utf-8", newline="")
+        moved.append(MANIFEST)
+    want = sw_text()
+    if SW.read_text(encoding="utf-8") != want:
+        SW.write_text(want, encoding="utf-8", newline="")
+        moved.append("sw.js cache list")
+    return moved
+
+
 def stale_shared() -> list:
     """(name, wanted bytes) for each shared module that is out of date.
 
@@ -501,9 +616,17 @@ def build() -> str:
         s,
         """    const r = await fetch('/api/examples');
     const data = await r.json();""",
-        """    const text = await (await fetch('examples.cir')).text();
+        """    const data = await (await fetch('examples/examples.json')).json();""",
+        label="examples list fetch",
+    )
+
+    s = sub(
+        s,
+        """    const r = await fetch('/api/examples?file=' + encodeURIComponent(name));
+    const data = await r.json();""",
+        """    const text = await (await fetch('examples/' + name)).text();
     const data = await py('parse_book', text);""",
-        label="examples fetch",
+        label="one example fetch",
     )
 
     s = sub(
@@ -528,10 +651,12 @@ def build() -> str:
         s,
         """    const r = await fetch('/api/export', {
       method: 'POST', headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({ circuits: openFile.entries })
+      body: JSON.stringify({ circuits: openFile.entries,
+                             title: openFile.title || '' })
     });
     const data = await r.json();""",
-        """    const data = await py('export_book', { circuits: openFile.entries });""",
+        """    const data = await py('export_book', { circuits: openFile.entries,
+                                          title: openFile.title || '' });""",
         label="export fetch",
     )
 
@@ -667,16 +792,20 @@ def main() -> int:
         built = build()
         current = OUTPUT.read_text(encoding="utf-8") if OUTPUT.exists() else ""
         stale = [name for name, _ in stale_shared()]
-        if current != built or stale:
+        examples = stale_examples()
+        if current != built or stale or examples:
             for name in stale:
                 print(f"{name} is STALE -- it differs from "
                       f"{SERVER / name}", file=sys.stderr)
+            for name in examples:
+                print(f"examples/{name} is STALE -- run build_local.py",
+                      file=sys.stderr)
             if current != built:
                 print("index.html is STALE", file=sys.stderr)
             print("run build_local.py", file=sys.stderr)
             return 1
         print("index.html is up to date, and so are "
-              + " and ".join(SHARED) + ".")
+              + " and ".join(SHARED) + " and the examples folder.")
         return 0
 
     # Stamp first, then build, so the generated page carries the same
@@ -685,11 +814,12 @@ def main() -> int:
     built = build()
     OUTPUT.write_text(built, encoding="utf-8", newline="")
     print(f"index.html written, {built.count(chr(10)) + 1} lines, build {stamp}")
-    moved = sync_shared()
-    for name in moved:
-        print(f"  copied {name} from ../server")
+    moved = [f"copied {n} from ../server" for n in sync_shared()]
+    moved += [f"examples: {n}" for n in sync_examples()]
+    for line in moved:
+        print("  " + line)
     if not moved:
-        print(f"  {' and '.join(SHARED)} already current")
+        print("  the shared modules and the examples are already current")
     for probe in ("fetch('/api", "loadPyodide", "py('solve'", "sw.js",
                   "roundingState", "Symbulator <span", "solveqReal",
                   "py('export_book'", "addToFileBtn", "downloadFileBtn",

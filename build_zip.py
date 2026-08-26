@@ -194,8 +194,11 @@ def verify(staged: dict[str, Path]) -> list[str]:
                      "si": False, "units": True, "rms": False},
                 ]
                 # drop format_book's own file header; the panel opens with a
-                # line teaching the comment syntax instead
-                body = circuitbook.format_book(book).split("\n", 2)[2]
+                # line teaching the comment syntax instead. A file's title
+                # is part of what format_book writes now, so it is part of
+                # what this compares.
+                body = circuitbook.format_book(
+                    book, "A couple of problems").split("\n", 2)[2]
                 want = "# comments start with a hash\n\n" + body
                 if shown.strip() != want.strip():
                     problems.append(

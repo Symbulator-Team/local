@@ -24,7 +24,13 @@ const ASSETS = [
   'icon-512.png',
   'icon-maskable-512.png',
   'logo.png',
-  'examples.cir',
+  // ==== BEGIN examples ==== written by build_local.py; do not edit
+  'examples/examples.json',
+  'examples/Lesson_01.cir',
+  'examples/Lesson_02.cir',
+  'examples/Lesson_03.cir',
+  'examples/Showcase.cir',
+  // ==== END examples ====
   'bridge.py',
   'symbulator_ui.py',
   'circuitbook.py',
