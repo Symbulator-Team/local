@@ -160,8 +160,14 @@ used to, since a raise now falls through to the probe.
 
 Lesson 5's example entry runs the Thévenin tool now instead of working
 around it with a plain solve, and version 9's half of the chapter passage
-was rewritten to show `req = 0` as an answer rather than assert it. Versions
-7 and 8 keep their wording untouched, pending Roberto's calculator test.
+was rewritten to show `req = 0` as an answer rather than assert it.
+
+**Versions 7 and 8 keep their wording, by Roberto's decision on 27 Aug
+2026.** The rat he smelled — the chapter asserting a Thévenin resistance of
+0Ω without ever evaluating it — is real, but it is a fair account of what
+the calculator did: it reported the Thevenin voltage and could not find the
+Norton current. Only version 9 goes further, and only version 9 says so.
+Closed.
 
 ---
 
