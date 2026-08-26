@@ -1,15 +1,16 @@
 #!/usr/bin/env python3
 """
-Regenerate the local version's index.html from the server version's
-template.
+Regenerate the local version from the server version.
 
-There is exactly one interface, written once, in
-../server/templates/index.html. The local version is that same
-page with the network taken out: every `fetch('/api/...')` becomes a
-direct call into Python running in the tab, plus the boot code, the PWA
-tags and the service-worker registration.
+Two things come across. **index.html**: there is exactly one interface,
+written once, in ../server/templates/index.html, and the local version is
+that same page with the network taken out -- every `fetch('/api/...')`
+becomes a direct call into Python running in the tab, plus the boot code,
+the PWA tags and the service-worker registration. And **the shared
+modules**, symbulator_ui.py and circuitbook.py, which are one file each and
+are simply copied.
 
-Doing this by hand is how the two front ends drift apart, so it is a
+Doing either by hand is how the two front ends drift apart, so it is a
 script. Every substitution asserts that it matched -- a silent no-op is
 what once shipped a build with no service worker.
 
@@ -30,8 +31,25 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
-TEMPLATE = HERE.parent / "server" / "templates" / "index.html"
+SERVER = HERE.parent / "server"
+TEMPLATE = SERVER / "templates" / "index.html"
 OUTPUT = HERE / "index.html"
+
+# The two modules that are one file each, shared verbatim with the server.
+#
+# They used to be copied across by hand, which is to say they were copied
+# across when somebody remembered: the git history is a run of server
+# commits each followed by a separate "Carry the ... into the offline build",
+# and stage_install_site.py exists because the three support files
+# "sat a full day out of date while every deploy reported success".
+#
+# Nothing compared them, so nothing could say when they had drifted -- the
+# same shape as the banner two functions down, and the same answer, except
+# that here the copy can simply be made rather than checked: this script
+# already generates index.html into this repository from the server's
+# template, and these are no different. bridge.py is not among them; it is
+# this build's own glue, with no server counterpart.
+SHARED = ("symbulator_ui.py", "circuitbook.py")
 
 WHEEL = "symbulator-0.5.11-py3-none-any.whl"
 
@@ -311,6 +329,35 @@ def _trim(text: str) -> str:
     while lines and not lines[-1]:
         lines.pop()
     return "\n".join(lines)
+
+
+def stale_shared() -> list:
+    """(name, wanted bytes) for each shared module that is out of date.
+
+    Compared as bytes, since that is what has to match: these files are
+    fetched verbatim by the offline build at boot, and served verbatim from
+    install.symbulator.com."""
+    out = []
+    for name in SHARED:
+        src = SERVER / name
+        if not src.is_file():
+            raise SystemExit(f"build_local.py: {src} is missing. The offline "
+                             f"build shares that file with the server and "
+                             f"cannot be cut without it.")
+        want = src.read_bytes()
+        here = HERE / name
+        if not here.is_file() or here.read_bytes() != want:
+            out.append((name, want))
+    return out
+
+
+def sync_shared() -> list:
+    """Copy the shared modules across. Returns the names that moved."""
+    moved = []
+    for name, want in stale_shared():
+        (HERE / name).write_bytes(want)
+        moved.append(name)
+    return moved
 
 
 def check_banner(template_text: str) -> None:
@@ -619,10 +666,17 @@ def main() -> int:
     if args.check:
         built = build()
         current = OUTPUT.read_text(encoding="utf-8") if OUTPUT.exists() else ""
-        if current != built:
-            print("index.html is STALE -- run build_local.py", file=sys.stderr)
+        stale = [name for name, _ in stale_shared()]
+        if current != built or stale:
+            for name in stale:
+                print(f"{name} is STALE -- it differs from "
+                      f"{SERVER / name}", file=sys.stderr)
+            if current != built:
+                print("index.html is STALE", file=sys.stderr)
+            print("run build_local.py", file=sys.stderr)
             return 1
-        print("index.html is up to date.")
+        print("index.html is up to date, and so are "
+              + " and ".join(SHARED) + ".")
         return 0
 
     # Stamp first, then build, so the generated page carries the same
@@ -631,6 +685,11 @@ def main() -> int:
     built = build()
     OUTPUT.write_text(built, encoding="utf-8", newline="")
     print(f"index.html written, {built.count(chr(10)) + 1} lines, build {stamp}")
+    moved = sync_shared()
+    for name in moved:
+        print(f"  copied {name} from ../server")
+    if not moved:
+        print(f"  {' and '.join(SHARED)} already current")
     for probe in ("fetch('/api", "loadPyodide", "py('solve'", "sw.js",
                   "roundingState", "Symbulator <span", "solveqReal",
                   "py('export_book'", "addToFileBtn", "downloadFileBtn",

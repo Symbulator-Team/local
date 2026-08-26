@@ -227,13 +227,15 @@ def main() -> int:
               f"Point --assets at an extracted copy of a previous ZIP.", file=sys.stderr)
         return 1
 
-    # index.html is generated; shipping a stale one silently ships a
-    # different interface from the one in the server template.
+    # index.html and the two shared modules are all generated or copied
+    # from the server tree; shipping a stale one silently ships a different
+    # interface, or different code behind it, from the server's. The check
+    # names which, so this only has to say where to fix it.
     if not args.skip_check:
         result = subprocess.run([sys.executable, str(HERE / "build_local.py"), "--check"])
         if result.returncode != 0:
-            print("build_zip.py: index.html is stale -- run build_local.py first.",
-                  file=sys.stderr)
+            print("build_zip.py: the build is stale (see above) -- "
+                  "run build_local.py first.", file=sys.stderr)
             return 1
 
     # Assets first, repo second: the repo wins any overlap, so a wheel

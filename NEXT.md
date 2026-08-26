@@ -34,6 +34,41 @@
 ---
 
 
+## #97 — The two shared modules are copied by the build now, not by hand
+
+**Done 26 Aug 2026, not yet in a release.** `symbulator_ui.py` and
+`circuitbook.py` are one file each, shared verbatim between the server and
+the offline build. Nothing copied them and nothing compared them: the copy
+happened when somebody remembered.
+
+The history says so plainly -- a run of server commits each followed by a
+separate "Carry the ... into the offline build" -- and
+`stage_install_site.py` exists because those files once
+"sat a full day out of date while every deploy reported success". Checked
+for a mechanism before adding one: no git hooks, no CI, no workflows, no
+scheduled task, and the only two mentions of the filenames anywhere are a
+docstring and a line inside the *generated* JavaScript listing what the
+offline page fetches at boot.
+
+Same shape as the banner, and the same answer -- except that here the copy
+can be *made* rather than checked, because `build_local.py` already
+generates `index.html` into this repository from the server's template and
+these are no different. So:
+
+* `build_local.py` copies them on every build and reports which moved.
+* `build_local.py --check` fails and names the file if either has drifted.
+* `build_zip.py` already gated on that check, so the ZIP is covered for
+  free; only its message needed widening, since the cause may now be a
+  module rather than the page.
+
+Verified both directions: drift introduced deliberately makes `--check`
+exit 1 naming `circuitbook.py`, and the sync restores it byte-identical to
+both the server's copy and its own previous state.
+
+`bridge.py` is deliberately not among them -- it is the offline build's own
+glue, with no server counterpart.
+
+
 ## #96 — A Conditions field on the Evaluate card (**done, deployed**)
 
 **Accepted and built 26 Aug 2026.** Roberto's request: give **Evaluate** a
