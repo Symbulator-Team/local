@@ -82,8 +82,9 @@ def solve(payload_json: str) -> str:
     if not err:
         err = ui._validate_extras(equations, unknowns, conditions)
     if not err and tool != "solve":
-        if domain not in ("dc", "ac"):
-            err = "Thevenin / impedance / two-port tools work in DC or AC only."
+        if domain not in ("dc", "ac", "fd"):
+            err = ("Thevenin / impedance / two-port tools work in DC, AC "
+                   "or FD -- not in the time domain.")
         elif not (n1 and n2):
             err = "Give the two port nodes (n1 and n2) for this tool."
     if err:

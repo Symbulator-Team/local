@@ -45,37 +45,57 @@ same pass are in `Sym Docum/Documentation/NEXT_DOCS.md`.
 
 ---
 
-## #105 — A symbolic value sharing a name with a SymPy function breaks Evaluate
+## #105 — A symbolic value sharing a name with a SymPy function broke Evaluate — fixed
 
 `rf` is a natural name for a feedback resistor and Lesson 5 uses it four
-times. It is also `sympy.rf`, the rising factorial. **Solving is
-unaffected** -- the answers are right and display correctly, `vo =
+times. It is also `sympy.rf`, the rising factorial. Solving was never
+affected -- the answers were right and displayed correctly, `vo =
 -rf*vi/r1` as the book has it -- but asking **Evaluate** for anything then
-fails:
+failed:
 
     vo  ->  bad operand type for unary -: 'FunctionClass'
 
-One line causes it. `symbulator_ui.py:1930` re-parses each answer string
-with bare `sp.sympify`, which sees all of SymPy's namespace rather than the
-small allowed one:
+One line did it. `_alias_mapping` re-parsed each solved answer with bare
+`sp.sympify`, which reads against the whole of SymPy, so any answer
+carrying such a name came back as the function rather than the symbol.
+`im`, `beta`, `gamma`, `zeta`, `N`, `S`, `O` and `E` were all in the same
+trap -- `beta` and `re1` appear together in Lesson 4's TR5 Exercise 4-7.
 
-    by_norm[key] = _canonical_time(sp.sympify(_without_unit(vstr)))
+**Fixed the same way `re = 12000` was**, one layer further in: a new
+`_parse_answer()` reads answers through `safe_sympify`, which uses the
+small allowed namespace, so every other identifier stays an ordinary
+symbol. That fix rewrote *the names a reader types*; this one covers *the
+values already solved*.
 
-Same weakness as the `re = 12000` failure fixed earlier that day, in a
-different code path: that fix rewrote the *names the user types*, this is
-about the *values already solved*. `safe_sympify`, already imported in that
-module, uses the restricted namespace and would read `rf` as an ordinary
-symbol.
+The imaginary unit is handled by hand rather than by `safe_sympify`'s
+domain flag, and that detail matters. These strings are SymPy's own output,
+not anything a reader typed, and SymPy always prints the unit as a capital
+`I` -- so a lowercase `i` here is a circuit symbol and nothing else. Lesson
+6's impulse problem, whose source amplitude is called `i`, is exactly the
+case the domain flag would have got wrong: it would have turned the
+amplitude into the square root of minus one.
 
-Others in the same trap: `im`, `beta`, `gamma`, `zeta`, `N`, `S`, `O`, `E`.
-`re` and `im` are deliberately in the allowed namespace and safe by another
-route.
+Measured after the change:
 
-**Not changed** -- it is in the parsing path and worth a look first.
+| | |
+|---|---|
+| `vo` on the rf circuit | `-rf*vi/r1` |
+| `vo/vi` | `-rf/r1` |
+| `rji` with `beta` and `re1` | `re1*(beta + 1)` |
+| `rei` with Greek mu and `rf` | `rf*(mu + 1)` |
+| AC complex power, `-pe` | `7650/61` |
+| TR with an amplitude called `i` | `i*exp(-t/(c*r))/c`, still a symbol |
+| FD `s2t(vo)` round trip | unchanged |
+
+All eighteen lesson files re-verified against the answers their chapters
+print, with nothing outstanding.
+
+`expand(vo)` still fails on these circuits, but for the unrelated reason in
+#104: there is no `expand` in the evaluator's namespace at all.
 
 ---
 
-## #107 — Thevenin of an op-amp output fails outright where the calculator gave half
+## #107 — Thevenin of an op-amp output failed outright where the calculator gave half — fixed
 
 Lesson 5, Bo2's Drill Exercise 3.11. The chapter describes a partial
 success: the script "found the Thévenin voltage, but could not find the
@@ -93,40 +113,111 @@ A plain solve gets there: the Thevenin voltage of an unloaded output is the
 open-circuit node voltage, and `v3` comes back as `vs*(r1 + r2)/r1`, the
 book's answer exactly. The example entry does that.
 
-**Two ways to settle it:** have `th()` report the Thevenin voltage when only
-the Norton round fails, which matches the calculator and the chapter; or
-change the chapter. The first is the better behaviour -- half an answer
-beats none, and the failure is a known, explainable one.
+**Settled by measuring the short rather than assuming it** (solver 0.5.13,
+27 Aug 2026). Roberto's proposal was to report `vth` and say the second
+round failed, guessing that the Norton current runs away. It does — and it
+can be shown rather than guessed, which gives the whole answer instead of
+half.
+
+A short is a resistance of zero. So when the short-circuit round will not
+solve, `th()` now puts a resistance `x_test` across the terminals instead
+and takes the current's limit as `x_test` falls to zero:
+
+    open circuit  ->  v_3 = vs*(r1 + r2)/r1
+    short         ->  no solution
+    resistance x  ->  i = vs*(r1 + r2)/(r1*x),  |i| -> oo as x -> 0+
+
+Unbounded means `ino` is infinite and `req` is 0, reported as results. The
+same routine returns 17.6 on an ordinary divider whose short happens to be
+awkward, so it is a generalisation of the old path rather than a special
+case bolted beside it. `TheveninResult.note` says which happened and is
+empty on an ordinary run.
+
+Two things worth remembering about it:
+
+The infinity test is `has(oo, zoo)`, not `is_infinite`. With a symbolic
+source the limit comes back as `oo*sign(Abs(vs*(r1 + r2)/r1))`, whose
+`is_infinite` is `None` — and that symbolic case is the one the whole
+change exists for.
+
+The probe's symbol is matched **by name** out of the expression's
+`free_symbols`. A SymPy symbol carries its assumptions in its identity, so
+`Symbol("x_test", positive=True)` is a different symbol from the plain one
+the parser builds, and a limit taken in the wrong one silently finds
+nothing to do.
+
+Only if the limit cannot settle it either does the call still fail, and the
+message now carries the open-circuit voltage, so the half that was found is
+never thrown away.
+
+**What this does not touch.** Bo2's Example 3.11 and Drill Exercise 3.13 in
+Lesson 4, the two "tricky" problems the chapter *teaches* as failures, fail
+in the **first** round, before any of this. Both still print exactly the
+refusal the chapter quotes, and `req = (9x-35)/(4(x-3))` is unchanged. The
+one caveat is in `th()`'s docstring: an expert equation that pins an element
+value from a measurement no longer even accidentally trips the refusal it
+used to, since a raise now falls through to the probe.
+
+Lesson 5's example entry runs the Thévenin tool now instead of working
+around it with a plain solve, and version 9's half of the chapter passage
+was rewritten to show `req = 0` as an answer rather than assert it. Versions
+7 and 8 keep their wording untouched, pending Roberto's calculator test.
 
 ---
 
-## #110 — "Limit the results to save time" empties the results
+## #110 — "Limit the results to save time" emptied the results — fixed
 
-Lesson 6 tells a version 9 reader to tick it and list `vc`. Do that and
-**Results** comes back completely empty -- no error, no note, for a circuit
-that solves fine without the tick.
+Lesson 6 tells a version 9 reader to tick it and list `vc`. Doing that gave
+a completely empty **Results** -- no error, no note, for a circuit that
+solves fine without the tick.
 
-The box is passed to the solver untranslated, and the solver filters on its
-*internal* names:
+**Two faults, and the silent one did the damage.**
 
-    tr(desc)                      -> i_c, i_r, v_1
-    tr(desc, variables=['i_c'])   -> i_c            works
-    tr(desc, variables=['v_c'])   -> (empty)
-    tr(desc, variables=['vc'])    -> (empty)
+`tr()` inverse-Laplaces only the keys it is handed and skips anything it
+does not recognise without a word (`laplace.py:346`). So a name it could
+not provide produced a blank page rather than a complaint.
 
-`vc` is what **Results** shows and what the chapter says to type. `v_c` is
-the canonical spelling everywhere else. Neither is a solver variable: a
-capacitor's voltage drop is derived in the UI layer afterwards, so it
-cannot be filtered on at all.
+And one of the names the documentation asks for it can *never* provide. A
+transient solve answers in element currents and node voltages only:
 
-**And in DC the field does nothing** -- `dc()` has no `variables` argument,
-so whatever is typed is ignored and every answer comes back. Silently.
+    tr(desc)  ->  i_c, i_r, v_1
 
-**Suggested fix:** translate the typed names the way the Evaluate and Solve
-cards already do, and report the ones that cannot be filtered rather than
-returning an empty page.
+An element's voltage drop is derived afterwards, in the front end, from the
+two node voltages it spans -- so `v_c` is not a solver key at all, and no
+spelling of it could have worked.
 
-The two Lesson 6 entries that would have used it leave it off.
+**Both fixed in `symbulator_ui.py`,** which is where the knowledge lives,
+rather than in the solver -- that would have meant a release to PyPI for
+something the front end can settle on its own. `_wanted_solver_keys()`
+translates the casual spelling the way Evaluate and Solve already do, turns
+a request for an element's voltage drop into the node voltages it is built
+from (inverse Laplace is linear, so transforming those and subtracting
+gives the same answer for the same work), and hands back anything left
+over. `solve_ui` refuses those by name instead of asking for them, so the
+solver's silent skip is now unreachable from the interface.
+
+Measured after the change, on Lesson 6's Drill Exercise 5.11 circuit:
+
+| asked for | got |
+|---|---|
+| `vc` | `v_c` — the exact expression the unlimited solve gives |
+| `v_c` | the same |
+| `il` | `i_l` |
+| `v_1` | `v_1`, and `v_r3`/`v_r6` derived from it |
+| `p_r3` | refused: there are no powers in TR |
+| a typo | refused, naming it |
+
+**The feature earns its keep.** On Professor Boulet's problem, the heaviest
+in the tutorial: 14.5 s for all fourteen answers, 10.2 s for the two the
+question asks about. The two Lesson 6 entries that had to give it up use it
+again.
+
+**One correction to the original write-up.** It said the field does nothing
+in DC. That is true of the API -- `dc()` has no `variables` argument -- but
+not something a reader can reach: `index.html:1775` already shows the field
+only when the analysis is TR *and* the tool is Solve circuit, which is
+exactly where Roberto intended it. The interface was right; the write-up
+was not.
 
 ---
 
@@ -145,26 +236,70 @@ answer as an amplitude and an angle.
 
 ---
 
-## #114 — The two-port tool is refused in FD, where Lesson 13 asks for it
+## #114 — The equivalent tools refused FD — fixed
 
-Lesson 13's AS7's Example 19.7 and Practice Problem 19.7 both say to choose
-*g — inverse hybrid* **in FD**, "since the question asks for functions of
-s". The app answers:
+Lesson 13's AS7 Example 19.7 and Practice Problem 19.7 both say to choose
+*g — inverse hybrid* in **FD**, and both were refused:
 
     Thevenin / impedance / two-port tools work in DC or AC only.
 
-The restriction is deliberate -- `app.py` checks the domain before the tool
-runs -- but the chapter was written as though FD were allowed.
+**The solver never had that restriction.** `er()` answers plainly when asked
+for a domain it does not know -- *"domain must be 'dc', 'ac', or 'fd'"* --
+and `port()` in FD returns exactly the four parameters the chapter prints.
+All three tools take all three domains, as they were designed to. The
+front end was simply stricter than the design, in three places:
 
-**There is a clean way round**, and it gives the printed answers exactly:
-the s-domain is what an impedance already speaks, so write the inductor as
-`s` and the capacitor as `1/s` and solve in DC. Both problems then match.
-The two entries do that.
+  - `app.py`, the domain check before the tool runs
+  - `bridge.py`, the same check for the offline build
+  - `index.html`, which disabled *fd* and *tr* in the analysis menu
+    whenever an equivalent was chosen
 
-**Two ways to settle it:** let the equivalent tools run in FD, which is
-where they would be most useful for this kind of question; or change the two
-problems to describe the elements as s-domain impedances, which Lesson 12
-already teaches.
+All three now allow DC, AC and FD, and refuse only the time domain -- which
+the solver refuses too, and rightly: an equivalent is a statement about a
+circuit at a frequency, and TR is the one analysis with no such thing.
+
+Lesson 13's two entries use FD as the chapter says, and both give the
+printed answers. The s-domain-impedance workaround they carried is gone.
+
+---
+
+## #115 — The Plot and Bode cards could not plot an element's voltage drop — fixed
+
+Found while checking the two Lesson 6 plot entries, which did not work.
+
+`time_samples()` and `bode_samples()` each ask the solver for one key and
+read it straight back, so they could plot what the solver answers in --
+element currents and node voltages -- and nothing else. An element's
+voltage drop is derived afterwards, in the front end, from the two nodes it
+spans. So neither `vc` nor `v_c` could be plotted, and Lesson 6 asks for
+both: Bo2's Example 6.5 says to plot `vc`, and Bo2's Example 6.6 is a plot
+of `vl` -- the inductor swinging to nearly four thousand volts, which is
+the whole point of that problem.
+
+It also left the app inconsistent with itself, once #110 was fixed:
+**Settings** accepted `vc` and the **Plot** card did not.
+
+**Fixed the same way #110 was:** the request is expanded into the node
+voltages it is built from and the subtraction done afterwards. Sound
+because both transforms are linear -- the difference of the transforms is
+the transform of the difference -- so the curve is identical to what a
+direct transform would give, for the same work. It lives in
+`symbulator_ui.py` rather than the solver, since the derived name is this
+layer's invention and the solver has no reason to know it.
+
+Measured after the change:
+
+| | |
+|---|---|
+| `vc`, `v_c`, `v_3` on Example 6.5 | all plot, all peak 0.4379 -- the same curve by three names |
+| `vl` on Example 6.6 | **3990.6 V at t = 1.57 ms** |
+| `vc1` vs `v_2` on the Bode RC | identical, -0.02 dB to -55.96 dB |
+| a misspelling | still refused, naming it |
+
+The chapter's own words for Example 6.6 are *"around t = 1.57 ms, the
+voltage drop across the inductor is 3991 volts"* -- an answer that was
+unreachable in version 9 until now. Both Lesson 6 entries plot what the
+chapter plots.
 
 ---
 
