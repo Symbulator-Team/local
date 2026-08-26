@@ -23,7 +23,7 @@
 >    older stamp. A pull and a Reload aligns it.
 > 4. `banner.css` served by `symbulator.com` and by `learn.symbulator.com`
 >    both hash to the same 11,149 bytes as the one source,
->    `C:\\Users\\perez\\Claude Code\\Sym Docum\\Documentation\\design\\banner.css`.
+>    `C:\Users\perez\Claude Code\Sym Docum\Documentation\design\banner.css`.
 >    symbulator.com had been serving an older copy until this deploy.
 > 5. The banner measured in a browser at 1280 wide on the app and on learn:
 >    `.topbar` 149, `.subbar` 62, same keyline, controls in the subbar.
