@@ -1,37 +1,40 @@
 # Next build — accepted but not yet done
 
-> **Deployed and verified, 23 Aug 2026.** Build `2026-08-23 09:25 UTC`, solver
-> 0.5.0, cache **v30**. The Schematic card is gone; drawing is now a link
-> under the circuit box, where the thing it draws is. All five sites are on
-> this build; nothing here is waiting to go out.
+> **Deployed and verified, 26 Aug 2026.** Build `2026-08-26 07:37 UTC`, solver
+> 0.5.11, cache **v59**. It carries #94, #95 and #96 -- the Conditions box on
+> Evaluate, and the two silent binding bugs behind it.
 >
-> Commits live: `repos/server` `bb0659d`, `repos/local` `2402041`,
-> `repos/solver` `13c42aa`. All three clean and level with origin.
+> Commits live: `repos/server` `b487416`, `repos/local` `afbb6aa`,
+> `repos/solver` `13c42aa` (untouched). All three clean and level with origin.
 >
 > Measured, not eyeballed:
 >
-> 1. `https://symbulator.pythonanywhere.com/healthz` -- `build` and
->    `build_on_disk` both `2026-08-23 09:25 UTC`, `needs_reload: false`,
->    `solver: 0.5.0`.
-> 2. `https://install.symbulator.com/` -- footer reads
->    `Symbulator 9 version 2026-08-23 09:25 UTC`, and the page shows the
->    Schematic link under the circuit box rather than the old card.
-> 3. `https://symbulator.com/9/local.zip` -- downloaded: 17,443,084 bytes,
->    sha256 `63731f0a36c5909e87a33fa4098f548bb1e7f67d1553df9b0b82e9c085fb1e27`,
->    byte-identical to
->    `C:\Users\perez\Claude Code\Symbulator\repos\local\local.zip`.
-> 4. `banner.css` served by `learn.symbulator.com` and by `symbulator.com`
->    both hash to the same 5,991 bytes as
->    `C:\Users\perez\Claude Code\Sym Docum\Documentation\design\banner.css`;
->    `py build_local.py --check` passes, which is the app's copy checked
->    against that same file.
+> 1. `https://install.symbulator.com/` -- footer reads
+>    `Symbulator 9 version 2026-08-26 07:37 UTC`, `sw.js` reads
+>    `symbulator-v59`, and the page carries `id="evalConds"`.
+> 2. `https://symbulator.com/9/local.zip` -- 17,484,844 bytes, sha256
+>    `abe82885dec8ea58f6d024eb32977fa8aa5e1cd1d54592cd5fff59708737111b`,
+>    byte-identical to `repos/local/local.zip`, and the copy inside carries
+>    the same stamp, the same cache version and the same field.
+> 3. `https://symbulator.pythonanywhere.com/` -- the Conditions box is there,
+>    `.2v1` returns -2 and 3 rather than an expression in `v1`, and `v2` with
+>    `V = 10` returns 5. **But `/healthz` reads `2026-08-26 05:35 UTC`**: it
+>    pulled before the re-stamp commit, so it runs the same code under an
+>    older stamp. A pull and a Reload aligns it.
+> 4. `banner.css` served by `symbulator.com` and by `learn.symbulator.com`
+>    both hash to the same 11,149 bytes as the one source,
+>    `C:\\Users\\perez\\Claude Code\\Sym Docum\\Documentation\\design\\banner.css`.
+>    symbulator.com had been serving an older copy until this deploy.
+> 5. The banner measured in a browser at 1280 wide on the app and on learn:
+>    `.topbar` 149, `.subbar` 62, same keyline, controls in the subbar.
+>    That is #74, finally closed.
 >
 > Every build re-stamps, so these figures hold only until the next one.
 
 ---
 
 
-## #96 — A Conditions field on the Evaluate card (**done, not deployed**)
+## #96 — A Conditions field on the Evaluate card (**done, deployed**)
 
 **Accepted and built 26 Aug 2026.** Roberto's request: give **Evaluate** a
 *Conditions* field, like **Solve** already has. It does the two things he
@@ -84,7 +87,7 @@ rewrites the new fetch, and `index.html` is regenerated and `--check` clean.
 becomes writable once it is live, and not before.
 
 
-## #95 — There is no version 9 way to say `vc|t=to` (**done, not deployed**)
+## #95 — There is no version 9 way to say `vc|t=to` (**done, deployed**)
 
 **Fixed 26 Aug 2026.** `t = to` now works in the Solve card as well as in
 Evaluate's new Conditions box.
@@ -120,7 +123,7 @@ of a strictly positive argument evaluates to 0 and every impulse vanished.
 Worth correcting there.
 
 
-## #94 — A number glued to an answer name silently unbinds it (**done, not deployed**)
+## #94 — A number glued to an answer name silently unbinds it (**done, deployed**)
 
 **Fixed 26 Aug 2026.** `.2v1` and `3ir1` now bind, with no `*` and no
 underscore, which is how both 2023 pages are written.
@@ -229,7 +232,7 @@ Left open, deliberately: the app's build now reads a file from a tree that is
 the docs' `build.py` read it from there would invert that dependency. Worth
 doing when `Sym Docum` becomes a repo; nothing breaks meanwhile.
 
-## #74 — The app and the two websites are different shapes (**reopened**)
+## #74 — The app and the two websites are different shapes (**done, deployed**)
 
 **Settled 23 Aug 2026, by the app adopting two bands.** The websites had been
 changed to a two-band header -- `.topbar` carrying the lockup alone with no
@@ -255,10 +258,24 @@ app has no element with that class. `banner.css` even anticipates it -- the
 `.topbar:last-child` rule that gives the app its keyline exists for a header
 with no ribbon.
 
-What is left to do is markup, not CSS: wrap the app's theme toggle in
+What was left to do was markup, not CSS: wrap the app's theme toggle in
 `<div class="subbar"><div class="subbar-inner">`, in
 `repos/server/templates/index.html`. The keyline then moves to the subbar on its
 own, because `:last-child` stops matching.
+
+**Closed 26 Aug 2026.** The markup is in and live, and this time measured
+rather than read -- the item's own point being that a file check is not a
+shape check. Both at 1280 wide, in a browser, against the deployed sites:
+
+| | install.symbulator.com | learn.symbulator.com |
+|---|---|---|
+| `.topbar` height | 149 | 149 |
+| `.topbar` bottom border | none | none |
+| `.subbar` height | 62 | 62 |
+| `.subbar` keyline | 3px `rgb(142,199,245)` | 3px `rgb(142,199,245)` |
+| controls in the subbar | yes | yes |
+
+Which is the table above with the "absent" filled in.
 
 The drift itself is the lesson, and #75 is the answer to it -- but only for the
 part a byte comparison can see. This happened twice in one day, in both
