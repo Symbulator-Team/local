@@ -544,12 +544,14 @@ def build() -> str:
       // The domain rides with the values: `{...}` converts from time into
       // s, so it means something only when the answers are in s.
       body: JSON.stringify({ expr: $('evalExpr').value, values: last.values,
+                             conditions: $('evalConds').value,
                              domain: last.domain || '',
                              ...roundingState(), si: $('siUnits').checked })
     });
     const data = await r.json();""",
         """    const data = await py('evaluate', {
       expr: $('evalExpr').value, values: last.values,
+      conditions: $('evalConds').value,
       domain: last.domain || '',
       ...roundingState(), si: $('siUnits').checked });""",
         label="evaluate fetch",

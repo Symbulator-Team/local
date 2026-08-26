@@ -238,9 +238,19 @@ def evaluate(payload_json: str) -> str:
     expr = str(p.get("expr", "")).strip()
     if not expr:
         return json.dumps({"ok": False, "error": "Enter an expression to evaluate."})
+    # The Conditions box (#96). The server splits and guards it in app.py;
+    # here symbulator_ui does the reading, and the guards that matter are
+    # its own -- there is no untrusted caller on this side of the wire.
+    raw_conds = p.get("conditions") or ""
+    if isinstance(raw_conds, list):
+        conditions = [str(x).strip() for x in raw_conds if str(x).strip()]
+    else:
+        conditions = [ln.strip() for ln in str(raw_conds).splitlines()
+                      if ln.strip()]
     return json.dumps(ui.evaluate_ui(expr, p.get("values") or {}, _digits(p),
                                      bool(p.get("si")), bool(p.get("approx")),
-                                     str(p.get("domain", "")).strip().lower()))
+                                     str(p.get("domain", "")).strip().lower(),
+                                     conditions))
 
 
 def mini_tool(payload_json: str) -> str:
@@ -329,7 +339,8 @@ def export_book(payload_json: str) -> str:
         for f in ("si", "rms", "solve_real_only"):
             circuit[f] = bool(raw.get(f))
         circuit["units"] = bool(raw.get("units", True))
-        for f in ("equations", "conditions", "solve_equations", "solve_conditions"):
+        for f in ("equations", "conditions", "evaluate_conditions",
+                  "solve_equations", "solve_conditions"):
             items = raw.get(f)
             if isinstance(items, list):
                 items = [str(x).strip() for x in items if str(x).strip()]

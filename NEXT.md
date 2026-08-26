@@ -31,6 +31,128 @@
 ---
 
 
+## #96 — A Conditions field on the Evaluate card (**done, not deployed**)
+
+**Accepted and built 26 Aug 2026.** Roberto's request: give **Evaluate** a
+*Conditions* field, like **Solve** already has. It does the two things he
+chose:
+
+* `t = to` is a **substitution**, applied before the expression is
+  evaluated -- the calculator's `vc|t=to`, which is what the box is mostly
+  for. Verified in the browser against a real solve: `vc` with `t = to`
+  reads `V - V*exp(-to/(c*r))`.
+* `pr1 > 0` is an **assumption**, translated into the predicate `refine()`
+  wants. That translation is the whole trick: `refine(sqrt(x**2), x > 0)`
+  hands the expression straight back, while `refine(sqrt(x**2),
+  Q.positive(x))` gives `x`. Verified both ways round -- `x > 0` gives `x`,
+  `x < 0` gives `-x`, neither gives `sqrt(x**2)`.
+
+An equality with anything but a single name on the left is refused, with a
+message pointing at the Solve card, rather than quietly ignored: Evaluate
+substitutes and formats, it does not solve.
+
+Where it went, beyond the field itself:
+
+* **The input file.** `evaluate_conditions`, one per line, in
+  `circuitbook.py`'s `_MULTI` and in the writer beside `evaluate:`; the
+  `inputsSnapshot()` / `applyCircuit()` pair; and the key list in the page's
+  own Input File help. Named for its card, like `solve_conditions`, so it
+  cannot collide with a circuit's Expert Mode `conditions` -- round-tripped
+  through `format_book`/`parse_book` and confirmed the three stay apart.
+* **The domain-sensitive inputs.** It posts `domain` with the rest, as
+  Evaluate and Solve equations already did, so `{...}` keeps meaning what it
+  means in FD and nothing else.
+* `STALE_ON_CHANGE`, so editing it retires a fresh Evaluate result --
+  checked in the browser, the button drops out of `is-current` on the first
+  keystroke. The post-solve enable pass. "Clear all inputs". And the
+  downloaded report, which now prints the conditions under the expression
+  and only while both fields still hold what produced the result.
+
+Guarded like the Solve card's box, not like an expression: `_ALLOWED` has no
+`=`, `<` or `>` in it, so it was the wrong guard and rejected every
+condition on the first try. `_ALLOWED_COND`, `_MAX_SOLVE_EQS`,
+`MAX_EXTRA_LEN` and `_expand_and` are what the Solve card uses, and now what
+this uses.
+
+The offline build has it too: `bridge.py` reads the box, `build_local.py`
+rewrites the new fetch, and `index.html` is regenerated and `--check` clean.
+
+**Not deployed.** The chain when it goes: `build_local.py` →
+`build_zip.py --assets ../../local` → `stage_install_site.py` →
+`deploy_symbulator.py install` and `zip`, plus a `CACHE_VERSION` bump in
+`sw.js`. PythonAnywhere is Roberto's to reload. The documentation's #89
+becomes writable once it is live, and not before.
+
+
+## #95 — There is no version 9 way to say `vc|t=to` (**done, not deployed**)
+
+**Fixed 26 Aug 2026.** `t = to` now works in the Solve card as well as in
+Evaluate's new Conditions box.
+
+**The first diagnosis was backwards and is worth recording as such.** The
+note said a typed `t` was a plain `Symbol("t")` while the answers carried
+the nonnegative one. The opposite is true: `_allowed_namespace` has bound
+`t` to `symbulator.laplace.t` all along, so every box on the page has always
+parsed `t` correctly. It is the **answers** that lose it. A solved answer
+crosses to the browser as a string and is read back by `_alias_mapping` with
+bare `sp.sympify`, which knows nothing of that namespace and makes a plain
+`Symbol("t")`. Different symbol, `subs()` does nothing, nothing says so.
+
+Two lines, once it was aimed at the right side:
+
+* `_alias_mapping` canonicalises `t` as it re-reads each answer.
+* `solveq_ui` built its unknowns as `sp.Symbol(u)`, so an unknown named `t`
+  was a third, plain `t` that appeared in none of the equations and left the
+  system unsolved. It canonicalises them too.
+
+And `real_only` no longer re-declares a symbol that already carries an
+assumption implying real -- doing so threw the nonnegative away and put the
+mismatch back for exactly the circuits that needed it.
+
+Measured after: `t = to` gives `x = V - V*exp(-to/(c*r))`, `t = 0` gives 0,
+both with and without "real solutions only"; leaving `t` free is unchanged;
+and the Solve card's own conditions still filter roots, `w**2 = 4` with
+`w > 0` still coming back as just `2`.
+
+The docs' `README.md` says this trap is about `Symbol("t", positive=True)`.
+It is `nonnegative` -- laplace changed it deliberately, because DiracDelta
+of a strictly positive argument evaluates to 0 and every impulse vanished.
+Worth correcting there.
+
+
+## #94 — A number glued to an answer name silently unbinds it (**done, not deployed**)
+
+**Fixed 26 Aug 2026.** `.2v1` and `3ir1` now bind, with no `*` and no
+underscore, which is how both 2023 pages are written.
+
+Implied multiplication was never the problem: `3t`, `2(a+b)`, `2e^(-2t)` and
+`2ir1` were all read as products already. The problem was that
+`_alias_pattern` refused to rewrite `v1` into `v_1` with a digit against it,
+and ran before `si_prefix` made the multiplication explicit -- so by the time
+the `*` arrived, `v1` was an ordinary symbol. The circuit then solved, in
+terms of a variable the reader thought was a node voltage, and nothing
+anywhere said so. With a current-controlled source it was worse:
+`e,2,3,3ir1` in a two-port answered
+`a11 = -30.0*x_test1/(3.0*ir1 - 20.0*x_test1)`, leaking the tool's own
+internal probe names onto the page.
+
+The pattern now consumes an optional number in front of the name and emits
+the multiplication itself. Consumed rather than merely allowed, so the guard
+still holds inside a name: in `x2v1` neither the number nor the name can
+start, and nothing matches, which is right. Scientific notation is safe for
+a different reason -- an alias is a quantity letter plus an element name,
+and `e3` is not one.
+
+Measured after: `.2v1`, `0.2v1`, `2v1`, `.2*v1` and `0.2v_1` all resolve;
+HK5's Drill Problem 1-13 gives -2, 3, -8 and -0.5 from the panel as the
+2023 page writes it. `.2 v1`, with a space, is still refused, unchanged.
+
+**Still worth having:** nothing catches this class automatically. The docs'
+`tools/check_v9_panels.py` asks only whether a panel is *read*, and these
+were read perfectly. A check that a solved panel's answers carry no
+unexpected free symbols would sit well beside it.
+
+
 ## #77 — TR read its sources in the s-domain (**done, deployed**)
 
 **Settled 25 Aug 2026, in solver 0.5.5.** It was a port omission, not a
