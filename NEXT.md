@@ -96,6 +96,68 @@ Cache **v68**, build `2026-08-27 05:36 UTC`.
 
 ---
 
+## #125 — The Run button carries its own status — done, rides the pending batch
+
+**27 Aug 2026, Roberto's idea, shaped together.** "Run Symbulator" →
+"Solving…" (disabled) while busy → "Solved!" until any input
+invalidates the answers, at which point the freshness tracker reverts
+the label — the button honestly reflects whether there is something
+new to run. Error text stays in the line beside it ("No solution
+found." and the error card), because a button cannot hold a sentence
+and stay a button; the redundant "Solving…"/"Solved!" in that line are
+gone. Verified in the browser: all four states, including the revert
+on an edited description and the error path.
+
+---
+
+## #124 — TR and FD reach the Numerical Solver — done, rides the pending batch
+
+**27 Aug 2026, Roberto's two ideas.** The Explore numerically card now
+comes on for all four domains; each crosses in the shape that survives:
+
+- **FD** hands over its stamped system — it is algebraic in s — in
+  complex mode, with `s` arriving as a **Known** complex variable
+  (j by default). Move `s` around the plane and re-solve: verified in
+  the page, s = j·1000 on the 1 kΩ / 1 µF divider gives
+  500 − j500 mV, the corner exactly.
+- **TR**'s system is differential and cannot cross, so its *answers*
+  cross instead — one equation per solved expression, `t` arriving
+  **Known** at 0. Set `t` and read every waveform at that instant
+  (verified: 503.415 mV at t = 0.7 for 1 − e^−t), or flip an answer
+  Known and `t` Unknown and the sheet finds when the waveform gets
+  there (verified: t = ln 2 for v2 = 0.5). Answers containing
+  delta(t) are left out by name in a `#` comment the sheet shows but
+  does not parse.
+
+Under the hood: the payload contract grew an optional `known` field
+({"t": 0.0} real, {"s": [0.0, 1.0]} complex) the page applies after
+the arrive-Unknown results; the sheet's DC parser learned `u(...)`,
+the unit step with u(0) = 1, joined to the namespace only when the
+text actually calls it, so a plain variable named `u` still works;
+and a bare `s` no longer gets a guessed VA unit — a lone `s` is the
+Laplace variable, never an apparent power.
+
+Two findings along the way, both fixed or flagged:
+
+- **MINPACK's hybr reports "did not converge" on systems it solved
+  exactly** — a linear or explicit system lands in one Newton step and
+  the trust-region bookkeeping sees ten iterations of no improvement
+  on a residual that is already zero. TR handovers are all explicit
+  assignments and hit this every time. The sheet now judges success by
+  the residual itself when the flag disagrees.
+- **Solver-level observation, not fixed here:** with symbulator 0.5.14
+  a TR answer whose true value is an impulse comes back as its
+  s-domain constant (`tr("e,1,0,delta(t):r1,1,0,1")` reports
+  `v_1 = 1`, not `delta(t)`), and the app's Results card shows the
+  same today. The payload's delta skip therefore cannot fire yet; it
+  stays as the belt for when the solver starts saying delta.
+
+Server-hosted page plus shared payload builder; the offline builds
+pick the payload up through `symbulator_ui` and hand it to the same
+hosted page, so nothing offline-specific changed beyond the template.
+
+---
+
 ## #123 — Two new plot types — done, awaiting deploy (needs an offline rebuild)
 
 **27 Aug 2026, Roberto's request, resolving the documentation review's
