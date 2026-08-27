@@ -179,7 +179,7 @@ def solve(payload_json: str) -> str:
     return json.dumps(res)
 
 
-_VALID_PLOT_TOOLS = {"time", "bode"}
+_VALID_PLOT_TOOLS = {"time", "bode", "bode_tf", "sweep"}
 _MAX_RANGE = 1e15
 
 
@@ -197,11 +197,12 @@ def _clean_range(raw, lo_default, hi_default):
 
 def plot(payload_json: str) -> str:
     """JS-callable counterpart of app.py's /api/plot: samples a circuit
-    for the "Plot vs. time" / "Bode plot" tools, with no server
-    round-trip. Needs NumPy (see symbulator.plotting's module docstring
-    for why it's not vendored by default) -- until a NumPy wheel is
-    added to vendor/, this returns a friendly error rather than solving,
-    same as it would for any other missing package."""
+    (or a typed transfer function, or a DC answer against a symbolic
+    value) for the Plot card's tools, with no server round-trip. Needs
+    NumPy (see symbulator.plotting's module docstring for why it's not
+    vendored by default) -- until a NumPy wheel is added to vendor/,
+    this returns a friendly error rather than solving, same as it would
+    for any other missing package."""
     p = json.loads(payload_json)
     desc = str(p.get("desc", "")).strip()
     desc = ui.re.sub(r"[\r\n]+", ":", desc)
@@ -224,16 +225,37 @@ def plot(payload_json: str) -> str:
     extra_unknowns = [u.strip() for u in
                       ui.re.split(r"[,\s]+", str(p.get("unknowns") or "")) if u.strip()]
 
+    # Same defines expansion the server route does -- until 27 Aug 2026
+    # this function skipped it, so an offline plot of a circuit that
+    # leaned on the Define box failed on symbols the solve had accepted.
+    defines, define_err = ui.parse_defines(lines("defines"))
+    if define_err:
+        return json.dumps({"ok": False, "error": define_err})
+    if defines:
+        desc = ui.expand_defines_in_desc(desc, defines)
+        extra_equations = [ui.expand_defines(e, defines) for e in extra_equations]
+        extra_conditions = [ui.expand_defines(c, defines) for c in extra_conditions]
+        extra_unknowns = [ui.expand_defines(u, defines) for u in extra_unknowns]
+
+    xname = str(p.get("xname", "")).strip()
     err = None
-    if not desc:
-        err = "Please enter a circuit description."
-    elif tool not in _VALID_PLOT_TOOLS:
+    if tool not in _VALID_PLOT_TOOLS:
         err = "Unknown plot tool."
+    elif tool == "bode_tf":
+        # No circuit involved: `key` carries the transfer function itself.
+        if not key:
+            err = "Give a transfer function of s, e.g. 100/(s^2 + 10*s + 100)."
+        elif len(key) > 500 or not ui._ALLOWED.match(key) or "__" in key:
+            err = "Transfer function contains invalid characters."
+    elif not desc:
+        err = "Please enter a circuit description."
     elif not key or not ui._VARNAME.match(key):
         err = "Give a variable to plot, e.g. v_2 or i_r1."
-    elif not (2 <= n <= MAX_PLOT_POINTS):
+    elif tool == "sweep" and (not xname or not ui._VARNAME.match(xname)):
+        err = "Give a variable to sweep along the x-axis, e.g. rx."
+    if not err and not (2 <= n <= MAX_PLOT_POINTS):
         err = f"Number of points must be between 2 and {MAX_PLOT_POINTS}."
-    if not err:
+    if not err and tool != "bode_tf":
         err = ui._validate_extras(extra_equations, extra_unknowns, extra_conditions)
     if err:
         return json.dumps({"ok": False, "error": err})
@@ -244,14 +266,23 @@ def plot(payload_json: str) -> str:
             return json.dumps({"ok": False, "error": rng_err})
         res = ui.plot_time_ui(desc, key, t_min, t_max, n,
                               extra_equations, extra_unknowns, extra_conditions)
+    elif tool == "sweep":
+        x_min, x_max, rng_err = _clean_range(p, 0.0, 1.0)
+        if rng_err:
+            return json.dumps({"ok": False, "error": rng_err})
+        res = ui.sweep_ui(desc, key, xname, x_min, x_max, n,
+                          extra_equations, extra_unknowns, extra_conditions)
     else:
         f_min, f_max, rng_err = _clean_range(p, 1.0, 1000.0)
         if rng_err:
             return json.dumps({"ok": False, "error": rng_err})
         if f_min <= 0 or f_max <= 0:
             return json.dumps({"ok": False, "error": "Bode frequencies must be positive (Hz)."})
-        res = ui.bode_ui(desc, key, f_min, f_max, n,
-                         extra_equations, extra_unknowns, extra_conditions)
+        if tool == "bode_tf":
+            res = ui.bode_tf_ui(key, f_min, f_max, n)
+        else:
+            res = ui.bode_ui(desc, key, f_min, f_max, n,
+                             extra_equations, extra_unknowns, extra_conditions)
     if res.get("ok"):
         res["tool"] = tool
     return json.dumps(res)

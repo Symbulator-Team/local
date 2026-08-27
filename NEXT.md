@@ -96,6 +96,49 @@ Cache **v68**, build `2026-08-27 05:36 UTC`.
 
 ---
 
+## #123 — Two new plot types — done, awaiting deploy (needs an offline rebuild)
+
+**27 Aug 2026, Roberto's request, resolving the documentation review's
+A7.** The Plot card's type menu grows from two entries to four:
+
+- **Bode plot of a transfer function H(s).** Type H(s) directly —
+  `100/(s^2 + 10*s + 100)` — no circuit involved; the Circuit
+  Description is ignored for this type. The expression takes the same
+  shorthand a circuit value does (`^`, implied multiplication, `1'k`)
+  and must be numeric apart from `s`; a stray symbol is refused by
+  name. This is what makes Lesson 11's five practice problems (which
+  hand the reader an H(s) with no circuit) followable in version 9 —
+  their v9 notes should now be rewritten to use it.
+- **Plot a variable against another variable (DC).** `v2` against
+  `rx`, when `rx` is a symbolic value in the circuit: solved once in
+  DC with the sweep variable left symbolic, then sampled linearly
+  across the range. Leftover symbols beyond the sweep variable are
+  refused by name (pin them with a condition, or sweep them instead);
+  an answer that doesn't involve the sweep variable plots flat with a
+  note saying so. A pole inside the range becomes a gap in the line,
+  not a broken response — non-finite samples cross as null and the
+  chart skips them.
+
+New `sweep_ui` and `bode_tf_ui` in `symbulator_ui.py`; `/api/plot` in
+`app.py` and `plot()` in `bridge.py` grew the two tools and a
+`xname` field; the template's Plot card gained the two menu entries, a
+sweep-variable field, and per-type labels. The sweep variable is saved
+and loaded with the circuit (`plotx:` in the file format,
+`circuitbook.py`).
+
+Found and fixed in passing: the offline `bridge.plot` never expanded
+the Define box, so an offline plot of a circuit leaning on Defines
+failed on symbols the solve had accepted — it now mirrors the server
+route.
+
+Verified through both front ends by measurement: 24 route-level checks
+(values against hand-computed answers, error wording, the pole-gap
+null, the old tools unregressed) plus the bridge path with and without
+defines. Not yet built or deployed — rides the pending batch with
+#120–#122.
+
+---
+
 ## #122 — Numerical Solver: guessed units and Interactive Mode — done, rides #120's deploy
 
 **27 Aug 2026, Roberto's third solver round, two features.** Results
