@@ -1585,13 +1585,19 @@ units: yes</pre>
           <select id="plotTool">
             <option value="plot_time">Plot a function of time</option>
             <option value="bode">Bode plot (magnitude &amp; phase vs. frequency)</option>
+            <option value="bode_tf">Bode plot of a transfer function H(s)</option>
+            <option value="sweep">Plot a variable against another variable (DC)</option>
           </select>
         </div>
       </div>
       <div class="row">
         <div>
-          <label for="plotKey">Variable to plot <span class="hint">e.g. v_2 or i_r1</span></label>
+          <label for="plotKey"><span id="plotKeyLabel">Variable to plot</span></label>
           <input type="text" id="plotKey" placeholder="v_2">
+        </div>
+        <div id="plotXField" hidden>
+          <label for="plotX">Variable on the x-axis</label>
+          <input type="text" id="plotX" placeholder="rx">
         </div>
         <div id="plotMinField">
           <label for="plotMin"><span id="plotMinLabel">Start time (s)</span></label>
@@ -1621,10 +1627,13 @@ units: yes</pre>
 
   <!-- Explore numerically: the bridge to the Numerical Solver at
        /eqsheet/ (EqSheet is its internal name). The card comes on only
-       when the last solve carried a payload for it -- DC, or AC with a
-       numeric omega. fd and tr answers are expressions in s or t, and
-       the Numerical Solver is a numerical tool, so for those the card
-       stays inactive rather than offering a dead button. -->
+       when the last solve carried a payload for it. All four domains do
+       now (#124): dc and ac cross as the stamped system; fd crosses as
+       the same system in complex mode with s as a Known the reader can
+       move; tr crosses as its *answers* (the system is differential),
+       with t as a Known starting at 0. Only an ac solve with a symbolic
+       omega, or a tr solve whose every answer contains delta(t), leaves
+       the card inactive. -->
   <div class="card inactive" id="exploreCard">
     <details id="exploreBox">
       <summary class="results-h section-toggle">Explore numerically</summary>
@@ -1634,7 +1643,11 @@ units: yes</pre>
         a handy numerical solver you can use. It opens in a new tab,
         preloaded with this solve&#8217;s equations and results — untick
         an equation, flip a Known to Unknown, and see how the results
-        change. Available for DC and AC answers.
+        change. A transient (TR) solve hands over its answers as functions
+        of time, with <code>t</code> as a Known you can set — or make
+        <code>t</code> the Unknown and find when a waveform reaches a
+        value. An FD solve hands over its s-domain system with
+        <code>s</code> as a Known complex number to play with.
       </p>
       <div class="dl-row">
         <button id="whatifBtn" disabled
@@ -1711,7 +1724,7 @@ units: yes</pre>
   <a href="https://github.com/Symbulator" target="_blank" rel="noopener">GitHub</a> ·
   <a href="https://pypi.org/project/symbulator/" target="_blank" rel="noopener">PyPI</a><br>
   Free and open-source software under the MIT licence · results are symbolic, powered by SymPy<br>
-  Symbulator 9 version 2026-08-27 09:47 UTC
+  Symbulator 9 version 2026-08-27 11:15 UTC
 </footer>
 
 <script>
@@ -1724,7 +1737,7 @@ const plotToolSel = $('plotTool');
 // tool + domain combination (omega only for AC, the two port-node fields
 // only for th/er/port, "kind" only for port, etc.), and lock th/er/port
 // to DC/AC since those tools don't support fd/tr.
-const PLOT_TOOLS = new Set(['plot_time', 'bode']);
+const PLOT_TOOLS = new Set(['plot_time', 'bode', 'bode_tf', 'sweep']);
 
 // The Analysis menu offers "Solve circuit" or "Find equivalent"; which
 // equivalent lives in a second menu. The solver, the saved file format
@@ -1770,10 +1783,16 @@ $('equivType').addEventListener('change', syncFields);
 // it only needs to relabel its own start/end fields.
 function syncPlotFields() {
   const tool = plotToolSel.value;
-  $('plotMinLabel').textContent = tool === 'bode' ? 'Start frequency (Hz)' : 'Start time (s)';
-  $('plotMaxLabel').textContent = tool === 'bode' ? 'End frequency (Hz)' : 'End time (s)';
-  $('plotMin').placeholder = tool === 'bode' ? '10' : '0';
-  $('plotMax').placeholder = tool === 'bode' ? '100000' : '0.01';
+  const bodeish = tool === 'bode' || tool === 'bode_tf';
+  $('plotKeyLabel').textContent = tool === 'bode_tf' ? 'Transfer function H(s)' : 'Variable to plot';
+  $('plotKey').placeholder = tool === 'bode_tf' ? '100/(s^2 + 10*s + 100)' : 'v_2';
+  $('plotXField').hidden = tool !== 'sweep';
+  $('plotMinLabel').textContent = bodeish ? 'Start frequency (Hz)'
+    : tool === 'sweep' ? 'Start value' : 'Start time (s)';
+  $('plotMaxLabel').textContent = bodeish ? 'End frequency (Hz)'
+    : tool === 'sweep' ? 'End value' : 'End time (s)';
+  $('plotMin').placeholder = bodeish ? '10' : tool === 'sweep' ? '1' : '0';
+  $('plotMax').placeholder = bodeish ? '100000' : tool === 'sweep' ? '10000' : '0.01';
 }
 plotToolSel.addEventListener('change', syncPlotFields);
 syncPlotFields();
@@ -1874,6 +1893,13 @@ const freshness = { solve: false, evaluate: false, solveq: false, plot: false };
 function paintFreshness(tool) {
   const btn = $(TOOL_BUTTON[tool]);
   if (btn) btn.classList.toggle('is-current', freshness[tool]);
+  // The Run button reads "Solved!" while its answers still describe the
+  // inputs, and reverts the moment anything invalidates them (#125).
+  // Not while disabled -- mid-solve it says "Solving…" and the finally
+  // block settles the label when the solve returns.
+  if (tool === 'solve' && btn && !btn.disabled) {
+    btn.textContent = freshness.solve ? 'Solved!' : 'Run Symbulator';
+  }
   const statusId = TOOL_STATUS[tool];
   if (statusId && !freshness[tool]) $(statusId).textContent = '';
 }
@@ -1913,7 +1939,7 @@ const STALE_ON_CHANGE = [
   [['digits', 'nDigits', 'siUnits', 'showUnits', 'useRms', 'polarPhasors'], ['solve', 'evaluate', 'solveq']],
   [['evalExpr', 'evalConds'], ['evaluate']],
   [['solveqEqs', 'solveqUnks', 'solveqConds', 'solveqReal'], ['solveq']],
-  [['plotTool', 'plotKey', 'plotMin', 'plotMax', 'plotN'], ['plot']],
+  [['plotTool', 'plotKey', 'plotX', 'plotMin', 'plotMax', 'plotN'], ['plot']],
 ];
 for (const [ids, tools] of STALE_ON_CHANGE) {
   for (const id of ids) {
@@ -1965,9 +1991,8 @@ function activatePostSolve() {
   $('dlBtn').disabled = false;
   $('dlCard').classList.remove('inactive');
   // Explore numerically comes on only when the solve carried a payload
-  // for the Numerical Solver: dc always, ac only with a numeric omega.
-  // fd/tr answers are expressions in s or t, and the Numerical Solver is
-  // a numerical tool -- see symbulator_ui.
+  // for the Numerical Solver -- all four domains build one now (#124);
+  // the exceptions that leave it off are in symbulator_ui.
   const canExplore = !!(last && last.eqsheet);
   $('whatifBtn').disabled = !canExplore;
   $('exploreCard').classList.toggle('inactive', !canExplore);
@@ -2031,7 +2056,7 @@ const pyReady = (async () => {
     // Plot card fails at the point of use with a raw "No module named
     // 'numpy'" -- the two plot examples in the supplied set among them.
     await pyodide.loadPackage(['sympy', 'numpy']);
-    await pyodide.loadPackage('vendor/symbulator-0.5.14-py3-none-any.whl');
+    await pyodide.loadPackage('vendor/symbulator-0.5.15-py3-none-any.whl');
     // symbulator_ui.py and circuitbook.py are shared verbatim with the
     // server build; bridge.py is this build's own glue module.
     for (const f of ['symbulator_ui.py', 'circuitbook.py', 'bridge.py']) {
@@ -2223,6 +2248,7 @@ function applyCircuit(c) {
   $('unks').value = c.unknowns || '';
   if (plotTool) plotToolSel.value = plotTool;
   $('plotKey').value = c.plotkey || '';
+  $('plotX').value = c.plotx || '';
   $('plotMin').value = c.plotmin || '';
   $('plotMax').value = c.plotmax || '';
   $('plotN').value = c.plotpoints || 300;
@@ -2695,6 +2721,7 @@ function inputsSnapshot() {
     solve_conditions: linesOf($('solveqConds').value),
     solve_real_only: $('solveqReal').checked,
     plotkey: hasPlot ? $('plotKey').value : '',
+    plotx: hasPlot ? $('plotX').value : '',
     plotmin: hasPlot ? $('plotMin').value : '',
     plotmax: hasPlot ? $('plotMax').value : '',
     plotpoints: hasPlot ? $('plotN').value : ''
@@ -2985,7 +3012,8 @@ function clearAllInputs() {
   $('evalExpr').value = ''; $('evalConds').value = '';
   $('solveqEqs').value = ''; $('solveqConds').value = ''; $('solveqUnks').value = '';
   $('solveqReal').checked = false;
-  $('plotKey').value = ''; $('plotMin').value = ''; $('plotMax').value = '';
+  $('plotKey').value = ''; $('plotX').value = '';
+  $('plotMin').value = ''; $('plotMax').value = '';
   $('plotN').value = 300;
   $('plotTool').value = 'plot_time';
   syncPlotFields();
@@ -3268,7 +3296,7 @@ async function renderSolveResult(data, idx) {
 
   if (!count) {
     out.innerHTML = '<div class="lcd"><div class="placeholder">— solved, but no variables to report —</div></div>';
-    status.textContent = 'Solved!';
+    status.textContent = '';
     markFresh('solve');
     return;
   }
@@ -3276,7 +3304,7 @@ async function renderSolveResult(data, idx) {
   meta.className = 'lcd-meta';
   meta.textContent = `${data.domain.toUpperCase()} analysis · ${count} result(s) · ${data.elapsed}s`;
   out.appendChild(meta);
-  status.textContent = 'Solved!';
+  status.textContent = '';
   markFresh('solve');
 
   // Remember this solve for the evaluator + download area.
@@ -3304,8 +3332,13 @@ async function renderSolveResult(data, idx) {
 
 async function solve(suffixChoices) {
   const btn = $('solveBtn'), out = $('out'), status = $('status');
+  // The button carries its own status (#125): "Run Symbulator" at rest,
+  // "Solving…" while busy, "Solved!" until an input changes and
+  // paintFreshness reverts it. Errors still go in the line beside it --
+  // a button cannot hold "No solution found" and stay a button.
   btn.disabled = true;
-  status.textContent = 'Solving…';
+  btn.textContent = 'Solving…';
+  status.textContent = '';
   out.innerHTML = '<div class="lcd"><div class="placeholder">computing symbolically…</div></div>';
   $('evalOut').style.display = 'none';
   $('evalOut').innerHTML = '';
@@ -3395,6 +3428,9 @@ async function solve(suffixChoices) {
     showHostNotice();
   } finally {
     btn.disabled = false;
+    // markFresh ran inside renderSolveResult on success; on any failure
+    // freshness.solve is still false and the label falls back.
+    btn.textContent = freshness.solve ? 'Solved!' : 'Run Symbulator';
   }
 }
 // "Nice numbers for graph labels" (Heckbert): round a raw span to the
@@ -3536,9 +3572,10 @@ async function plot() {
   out.innerHTML = '<div class="lcd"><div class="placeholder">computing symbolically…</div></div>';
   try {
     const body = {
-      desc: $('desc').value, tool: tool === 'bode' ? 'bode' : 'time',
+      desc: $('desc').value, tool: tool === 'plot_time' ? 'time' : tool,
       defines: linesOf($('defines').value),
-      key: $('plotKey').value, min: $('plotMin').value, max: $('plotMax').value,
+      key: $('plotKey').value, xname: $('plotX').value,
+      min: $('plotMin').value, max: $('plotMax').value,
       n: $('plotN').value,
       ...expertFields()
     };
@@ -3569,7 +3606,7 @@ async function plot() {
     const chartWrap = document.createElement('div');
     chartWrap.className = 'lcd';
     chartWrap.style.padding = '1rem';
-    if (tool === 'bode') {
+    if (tool === 'bode' || tool === 'bode_tf') {
       chartWrap.innerHTML =
         svgLineChart(data.freq, data.mag_db, {
           title: `${data.key} — magnitude`, xLabel: 'frequency (Hz, log scale)',
@@ -3577,6 +3614,9 @@ async function plot() {
         svgLineChart(data.freq, data.phase_deg, {
           title: `${data.key} — phase`, xLabel: 'frequency (Hz, log scale)',
           yLabel: 'degrees', logX: true});
+    } else if (tool === 'sweep') {
+      chartWrap.innerHTML = svgLineChart(data.x, data.y, {
+        title: `${data.key} vs. ${data.xname}`, xLabel: data.xname, yLabel: data.key});
     } else {
       chartWrap.innerHTML = svgLineChart(data.t, data.y, {
         title: data.key, xLabel: 'time (s)', yLabel: data.key});
@@ -3584,8 +3624,10 @@ async function plot() {
     out.appendChild(chartWrap);
     const meta = document.createElement('div');
     meta.className = 'lcd-meta';
-    const nPts = tool === 'bode' ? data.freq.length : data.t.length;
-    meta.textContent = `${tool === 'bode' ? 'Bode plot' : 'Time plot'} · ${nPts} point(s) · ${data.elapsed}s`;
+    const nPts = (data.freq || data.x || data.t).length;
+    const toolLabel = tool === 'bode' ? 'Bode plot' : tool === 'bode_tf' ? 'Bode plot of H(s)'
+      : tool === 'sweep' ? 'Variable sweep' : 'Time plot';
+    meta.textContent = `${toolLabel} · ${nPts} point(s) · ${data.elapsed}s`;
     out.appendChild(meta);
     status.textContent = 'Plotted!';
     markFresh('plot');
