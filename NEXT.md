@@ -1,37 +1,36 @@
 # Next build — accepted but not yet done
 
-> **Deployed and verified, 26 Aug 2026.** Build `2026-08-26 07:37 UTC`, solver
-> 0.5.11, cache **v59**. It carries #94, #95 and #96 -- the Conditions box on
-> Evaluate, and the two silent binding bugs behind it. **All five sites are on
-> this build.**
->
-> Commits live: `repos/server` `b487416`, `repos/local` `afbb6aa`,
-> `repos/solver` `13c42aa` (untouched). All three clean and level with origin.
+> **Deployed 27 Aug 2026, one step outstanding.** Build
+> `2026-08-27 03:17 UTC`, solver 0.5.14 (unchanged), cache **v66**. It
+> carries **#116** -- an error about a value now quotes what the reader
+> typed (`rx[1'k]`, not `rxpr(1'k)`) through every front end, not just
+> `solve_ui` called directly.
 >
 > Measured, not eyeballed:
 >
-> 1. `https://install.symbulator.com/` -- footer reads
->    `Symbulator 9 version 2026-08-26 07:37 UTC`, `sw.js` reads
->    `symbulator-v59`, and the page carries `id="evalConds"`.
-> 2. `https://symbulator.com/9/local.zip` -- 17,484,844 bytes, sha256
->    `abe82885dec8ea58f6d024eb32977fa8aa5e1cd1d54592cd5fff59708737111b`,
->    byte-identical to `repos/local/local.zip`, and the copy inside carries
->    the same stamp, the same cache version and the same field.
-> 3. `https://symbulator.pythonanywhere.com/healthz` -- `build` and
->    `build_on_disk` both `2026-08-26 07:37 UTC`, `needs_reload: false`,
->    `solver: 0.5.11`. Pulled and reloaded by Roberto. Behaviour checked
->    rather than the stamp alone: the Conditions box is on the page,
->    `.2v1` gives -2, 3, -8 and -0.5 -- the answers HK5's Drill Problem
->    1-13 prints -- and `vc` with `t = to` gives `V - V*exp(-to/(c*r))`,
->    which is the calculator's `vc|t=to` working in version 9 for the
->    first time.
-> 4. `banner.css` served by `symbulator.com` and by `learn.symbulator.com`
->    both hash to the same 11,149 bytes as the one source,
->    `C:\Users\perez\Claude Code\Sym Docum\Documentation\design\banner.css`.
->    symbulator.com had been serving an older copy until this deploy.
-> 5. The banner measured in a browser at 1280 wide on the app and on learn:
->    `.topbar` 149, `.subbar` 62, same keyline, controls in the subbar.
->    That is #74, finally closed.
+> 1. `https://install.symbulator.com/` -- `bridge.py`, `index.html` and
+>    `sw.js` uploaded and hash-verified over HTTPS by
+>    `deploy_symbulator.py`; the other 42 files verified already
+>    identical. `sw.js` reads `symbulator-v66`.
+> 2. `https://symbulator.com/9/local.zip` -- 17,526,881 bytes, sha256
+>    `835f55cafb8ebf8d838411c5d925d004a63a70b7f55991b16102d3c3cd023ad8`,
+>    hash-verified against `repos/local/local.zip` after upload.
+> 3. Before deploying, all 322 worked examples across the 19 `.cir`
+>    files were re-run through `/api/solve` (`tools/verify_lesson.py`):
+>    0 problems everywhere, with Lesson 4's Bo2 Example 3.11 the one
+>    deliberate failure, as the chapter teaches it. The 216 solver
+>    tests pass unchanged.
+> 4. `learn.symbulator.com` and `symbulator.com` (landing) are untouched
+>    by this change and stay on their 27 Aug deploys.
+>
+> **The outstanding step is the server, and it is Roberto's:**
+> `symbulator.pythonanywhere.com` still runs the previous build and
+> still quotes the half-rewritten form. In a PythonAnywhere Bash
+> console: `cd ~/symbulator_web`, `git pull`, then **Reload** on the Web
+> tab -- no `pip install --upgrade`, the solver did not move. Then check
+> `https://symbulator.pythonanywhere.com/healthz` reports build
+> `2026-08-27 03:17 UTC` with `needs_reload: false`, and run the real
+> case: `rx,1,0,rx[1'k]` in DC must error quoting `rx[1'k]`.
 >
 > Every build re-stamps, so these figures hold only until the next one.
 
@@ -45,10 +44,12 @@ same pass are in `Sym Docum/Documentation/NEXT_DOCS.md`.
 
 ---
 
-## #116 — #59's fix does not reach the Flask server's `/api/solve`
+## #116 — #59's fix does not reach the Flask server's `/api/solve` — fixed
 
-**Open, found 27 Aug 2026 while verifying 0.5.14 on the live server.**
-Where: `repos/server/app.py:562`.
+**Found 27 Aug 2026 while verifying 0.5.14 on the live server; fixed the
+same day.** Where: the `desc` re-emission in `repos/server/app.py`'s
+`/api/solve` — **and, it turned out, the identical re-emission in
+`repos/local/bridge.py`**, see the closing note below.
 
 #59 made an error quote what the reader typed instead of the machine's
 rewrite of it, and that works — in the solver, and in the offline builds.
@@ -88,6 +89,58 @@ mis-solved.
 `solve_ui` hand it to the solver as the `original`. The second is smaller
 and does not depend on the two field lists lining up -- which, as #59
 found, they do not when a bracket is unbalanced.
+
+**How it was actually fixed, 27 Aug 2026.** The first way, because the
+second is not smaller after all: `solve_ui` has no channel to hand an
+`original` to the solver -- `ex`/`dc`/`ac`/`fd`/`tr` take only the
+description string, so that route means a solver API change and a PyPI
+release for a message-wording bug. And the first way's stated weakness
+is moot at the point of the fix: an unbalanced bracket raises inside
+`parse_circuit`, *before* the re-emission line, so it can never reach
+it. Two edits, made identically in `app.py` and `bridge.py`:
+
+- the re-emission prefers each element's `raw_fields` (the fields as
+  typed, which at that point already carry `normalise_imaginary` and
+  the Define expansion) and falls back to `fields` where `raw_fields`
+  is empty -- which by then can only mean "nothing was rewritten"
+  (identical) or the multi-comma `[a,b]` case, where the typed text
+  splits into a different number of fields and cannot be lined up
+  (unchanged behaviour, same as the solver's own recovery);
+- the ambiguous-suffix rewrite mirrors its explicit spelling into
+  `raw_fields` too, so resolving `2k` to `2'k` is not lost when the
+  description is rebuilt from the typed copy.
+
+A side effect worth having: `desc_used` now echoes rewritten-but-
+alignable fields as typed, so a reader who wrote `[2'k]` gets `[2'k]`
+back, not `pr(2'k)`. The multi-comma `[1'k,2'k]` still echoes as
+`pr(1'k,2'k)` -- that is the unrecoverable case above.
+
+**The closing surprise: the offline builds had the same bug.** This
+entry originally said `bridge.py` "calls symbulator_ui directly with the
+description as typed; there is no re-emission step". That was verified
+by calling `solve_ui` directly -- which bypasses `bridge.solve`, where
+the same always-echo re-emission had been sitting since 21 Aug 2026
+(`a1dc288`, the same change that added it to `app.py`). Measured before
+the fix, `bridge.solve` gave the identical wrong `rxpr(1'k)`. So the
+deployed offline builds (v65) were wrong too, and the fix ships to all
+five sites, not just the server.
+
+Measured after the fix, through both `bridge.solve` and a test client on
+`/api/solve`, identically:
+
+| typed | now |
+|---|---|
+| `r1,1,0,[1'k,2'k` | names the missing bracket, as typed |
+| `rx,1,0,rx[1'k]` | quotes `rx[1'k]` |
+| `r1,1,0,1'Q` | names the value, as typed |
+| `r1,1,0,[1'k,2'k]` | solves; echoes `pr(1'k,2'k)` as before |
+| `r1,1,0,[2'k]` | solves; echoes `[2'k]` as typed |
+| `2k` + choice si / var | solves as 2'k / 2*k -- the choice survives |
+| `e1,1,0,5*i` in AC | normalised to `5j` with the note, as before |
+
+Solver untouched: 216 tests pass unchanged, and the server needs no
+`pip install --upgrade` -- a `git pull` and **Reload** is the whole
+server deploy.
 
 ---
 

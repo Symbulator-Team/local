@@ -130,12 +130,31 @@ def solve(payload_json: str) -> str:
                 if m:
                     sep = "'" if choices[el.fields[idx].strip()] == "si" else "*"
                     el.fields[idx] = f"{m[0]}{sep}{m[1]}"
+                    # Keep the typed copy in step: `desc` is rebuilt from
+                    # raw_fields below, so the resolved spelling has to
+                    # land there too or the choice would be lost.
+                    _raw = getattr(el, "raw_fields", None)
+                    if _raw and idx < len(_raw):
+                        _raw[idx] = el.fields[idx]
 
     # Always echo the circuit back one element per line, same as app.py's
     # /api/solve -- consistent every time you run, not just on the two
     # occasions (imaginary-unit normalizing, an ambiguous suffix being
     # resolved) that used to trigger it.
-    desc = ":".join(e.name + "," + ",".join(e.fields) for e in elements)
+    #
+    # Each element re-emits from raw_fields -- the fields as typed --
+    # not from fields, where the `[...]` shortcut has already been
+    # rewritten to pr(...). Re-emitting the rewrite was #116: solve_ui's
+    # own parse then recorded pr(...) as "what the reader typed", so an
+    # error about the value quoted `rxpr(1'k)` for a reader who wrote
+    # `rx[1'k]`. raw_fields is empty when nothing was rewritten (fields
+    # is identical) and when the shortcut's inner commas made the typed
+    # text split differently (unrecoverable -- see parse_circuit), so
+    # falling back to fields loses nothing. An unbalanced bracket cannot
+    # reach here: it raised in the parse above.
+    desc = ":".join(
+        e.name + "," + ",".join(getattr(e, "raw_fields", None) or e.fields)
+        for e in elements)
     desc_used = desc.replace(":", "\n")
 
     res = ui.solve_ui(desc, domain, omega, variables or None, tool, n1, n2, kind,
