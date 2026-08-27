@@ -1,5 +1,68 @@
 # Next build — accepted but not yet done
 
+> **Deployed and verified, 27 Aug 2026 (fifth release that day — the
+> night wave).** Cache **v70**, solver 0.5.15 (unchanged). It carries
+> **#126–#129**: the mobile pass (every control reachable at 375px,
+> 16px inputs so iOS stops zooming on focus, the Numerical Solver's
+> table scrolling sideways, learn's version menu on screen), the
+> documentation's mathematics set as mathematics (#127: KaTeX/LaTeX
+> for 52 bare-text answers and 19 symbolic {{o:}} values, centered
+> display blocks, PDF margins clean), the Plot menu naming its
+> analysis — (TR)/(FD)/(DC) — with lessons 6 and 11 updated in step,
+> the Circuit Description / Analysis & Settings split into two
+> collapsible cards (#128), and the [ T O O L S ] group heading
+> (#129). install + ZIP + learn deployed and hash-verified;
+> **PythonAnywhere pull + Reload pending** (no pip — the solver did
+> not move). Write-ups below; the fourth release's banner follows.
+
+---
+
+## #129 — the [ T O O L S ] group heading — done and deployed
+
+Same `.group-h` style as INPUTS and OUTPUTS, brackets and spaced
+letters included, above the Mini-Tools card — so Mini-Tools, Plot and
+Explore numerically read as the tools group. Measured identical in
+computed style to the other two headings.
+
+## #128 — Circuit Description and Analysis & Settings split — done and deployed
+
+The one card that held both is two cards now, each its own
+collapsible, both open by default. Nothing in the JS referenced the
+old container; verified with a live solve after the split, and
+build_local's coupling checks pass.
+
+## #127 — mathematics set as mathematics — done and deployed
+
+Roberto asked that math given as text be pretty-printed, centered, in
+a distinctive font. KaTeX was wired into learn all along; what changed:
+`{{o:...}}` values that parse to symbolic SymPy expressions render as
+mathematics (19 sites, source text untouched so the originals checker
+and harness still read answers as printed; `\ansmath` joins
+symbulator.cls for print); 52 bare-text answer paragraphs in lesson 6
+— the calculator's `{ 6e^-4t , ... }` lists — became `$$` display
+blocks, typography only, with the two longest split across aligned
+lines after they overflowed the PDF margin by 180pt (worst overfull is
+now a pre-existing 32pt chapter title). Verified on the live page (52
+of 52 blocks and 18 of 18 inline answers KaTeX-rendered, zero raw) and
+by opening the PDF (page 238: Figure 5.38's centered answers and
+in-sentence fractions in the answer colour). Deliberately not
+converted, awaiting Roberto's ruling: bold set-answers inside
+sentences ("The answer, **{12,4,3}**, is correct").
+
+## #126 — the mobile pass — done and deployed
+
+All three properties audited at 375×812 by measurement. Fixed: the
+Numerical Solver's variable table was clipped by overflow:hidden (the
+Value/guess and SI Prefix columns unreachable on a phone — it scrolls
+sideways now); every input on both app pages is 16px at ≤520px, the
+size below which iOS Safari zooms the page on focus; the Built-in
+Examples panel ran 13px off screen (clamped, scrolls inside); learn's
+version menu opened 128px off a phone's screen (it hangs from the
+right edge below 40rem now, measured 74..314 after). The landing page
+and the app's results area passed as they stood.
+
+---
+
 > **Deployed and verified, 27 Aug 2026 (fourth release that day — the
 > evening batch).** Build `2026-08-27 11:15 UTC`, solver **0.5.15**
 > (the impulse fix, published to PyPI that evening, hashes verified),
