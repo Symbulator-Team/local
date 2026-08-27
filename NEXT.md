@@ -1,33 +1,35 @@
 # Next build — accepted but not yet done
 
-> **Deployed and verified, 27 Aug 2026 (second release that day).**
-> Build `2026-08-27 03:49 UTC`, solver 0.5.14 (unchanged), cache
-> **v67**. It carries **#117** -- EqSheet, the what-if solver, at
-> `https://symbulator.pythonanywhere.com/eqsheet/`, with the app's
-> **What if…** button feeding it -- on top of **#116** from the build
-> before it (errors quote what the reader typed).
+> **Deployed and verified, 27 Aug 2026 (third release that day).**
+> Build `2026-08-27 05:36 UTC`, solver 0.5.14 (unchanged), cache
+> **v68**. It carries **#118** -- the feedback round: the what-if
+> solver is now the **Numerical Solver** with dark mode and the
+> reworked sheet behaviour, fed from the app's new **Explore
+> numerically** card, plus the Input File, Circuit Description,
+> Evaluate and Export Output card changes -- on top of #117 (the solver
+> itself) and #116 (errors quote what the reader typed).
 >
 > Measured, not eyeballed:
 >
 > 1. `https://symbulator.pythonanywhere.com/healthz` -- `build` and
->    `build_on_disk` both `2026-08-27 03:49 UTC`, `needs_reload: false`,
->    `solver: 0.5.14`. Pulled, `pip install -r requirements.txt` (numpy
->    and scipy new) and reloaded by Roberto. Behaviour checked over the
->    live API: the DC divider's payload arrives, EqSheet re-solves it
->    with the source rule dropped and recovers `v_1 = 12`; the RL
->    divider at ω=1000 arrives as `v_2 = [5, 5]`; tr and symbolic-ω
->    carry no payload.
-> 2. `https://install.symbulator.com/` -- `index.html`, `sw.js` and
->    `symbulator_ui.py` uploaded and hash-verified; the other 42 files
->    already identical. Loaded in a browser: after the v67 service
->    worker took over, the footer reads `2026-08-27 03:49 UTC`, a solve
->    enables **What if…**, and the button builds the live
->    `/eqsheet/?import=` URL.
-> 3. `https://symbulator.com/9/local.zip` -- 17,528,206 bytes,
+>    `build_on_disk` both `2026-08-27 05:36 UTC`, `needs_reload: false`,
+>    `solver: 0.5.14`. Pulled and reloaded by Roberto (no pip step --
+>    requirements did not change this time). Fetched, not assumed: the
+>    `/eqsheet/` page titles itself Numerical Solver, carries the dark
+>    block, List of Equations and Open a system file, and has no paste
+>    box; the app page carries Explore numerically and Export Output.
+> 2. `https://install.symbulator.com/` -- `index.html` and `sw.js`
+>    uploaded and hash-verified; 43 files already identical. Loaded in
+>    a browser: after the v68 service worker took over, the footer
+>    reads `2026-08-27 05:36 UTC`, the Explore numerically card is on
+>    the page and the button reads **Numerical Solver**.
+> 3. `https://symbulator.com/9/local.zip` -- 17,528,897 bytes,
 >    hash-verified against `repos/local/local.zip` after upload.
-> 4. All 322 worked examples re-run through `/api/solve` after the
->    payload change: 0 problems, the one deliberate Lesson 4 failure
->    only. 216 solver tests pass unchanged.
+> 4. Item-by-item browser verification before release: button widths
+>    and band heights measured, the examples popup's direction and
+>    z-index checked, the dark preference carried between the two
+>    pages, the fd gate inactive, the oversized-payload file fallback
+>    run end to end with a 62-element ladder.
 > 5. `learn.symbulator.com` and `symbulator.com` (landing) untouched.
 >    **All five sites are current.**
 >
@@ -35,7 +37,7 @@
 
 ---
 
-## #118 — Roberto's feedback round on #117 and the app — done, awaiting deploy
+## #118 — Roberto's feedback round on #117 and the app — done and deployed
 
 **27 Aug 2026, twenty-eight numbered items of feedback taken live in one
 sitting; built as one release.** The user-facing name is now the
