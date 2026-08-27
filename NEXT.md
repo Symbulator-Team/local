@@ -79,8 +79,9 @@ always opens downward, above the banner (z-index 60) and scrolls —
 flip-up, which hid it behind the bands, is gone; Circuit Description is
 collapsible, open by default; the "Insert δ(t)" link is gone and the
 syntax reference notes `delta(t)` = `δ(t)` instead (**`mu(t)` is NOT
-noted: the parser does not accept it** — making it an alias for `u(t)`
-would be a solver change and a PyPI release, parked here); the Evaluate
+noted: the parser does not accept it** — an alias was offered and
+Roberto declined; he had been thinking of `u(t)`, which already
+works); the Evaluate
 label points at the "Useful SymPy functions" fold; the Conditions field
 starts at the Evaluate field's height; "About this checkbox" → "About
 'real solutions'"; "Download Output" → "Export Output", split into
