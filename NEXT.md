@@ -34,6 +34,66 @@
 
 ---
 
+## #117 — EqSheet, the what-if solver, integrated — done, awaiting server deploy
+
+**Built standalone in a separate session; integrated 27 Aug 2026.**
+EqSheet is a TK!Solver/SolveSys-style numerical solver: a Rule Sheet of
+equations, a Variable Sheet where each variable is Known or Unknown, and
+SciPy root-finding on the residuals (DC real / AC phasor modes). It is
+mounted on the Flask app at
+`https://symbulator.pythonanywhere.com/eqsheet/` — `repos/server/eqsheet.py`
+(a Blueprint; its `/api/solve` must not collide with the app's own),
+`repos/server/templates/eqsheet.html` (the page), `EQSHEET.md` (user
+docs), `tools/eqsheet_export.py` (the reference implementation of the
+import contract).
+
+**The interface side.** After a DC solve, or an AC solve with numeric ω,
+the Download Output card offers **What if…** beside Export to SymPy: it
+opens EqSheet in a new tab with the solved circuit's stamped equation
+system in the Rule Sheet and every numeric answer as a Known, via a
+`?import=` base64url payload. The payload is built at solve time in
+`symbulator_ui.solve_ui` (both front ends get it; app.py names the
+`eqsheet` key in its hand-enumerated response, the bridge passes it
+through). fd and tr carry no payload and the button stays disabled —
+their answers are expressions, and EqSheet is a numerical tool. The
+handover's claim that expert-mode extras "come along for free" was wrong
+for this code path — `solve_ui` re-stamps a Circuit without them — so
+extras and conditions are appended to the payload explicitly, through
+`expand_shorthand` (a reader may have typed `2'k`; EqSheet reads plain
+SymPy).
+
+**Decisions taken** (the handover delegated them): mounted as a path on
+the existing app rather than a subdomain, so deploying stays `git pull`
++ Reload with no new PythonAnywhere config; the button ships in the
+offline builds too, as an outward link like Documentation — EqSheet
+needs SciPy and is server-hosted only, and its URL is pinned absolute in
+the shared script. The page carries the shared two-band banner with
+`banner.css` inlined verbatim between the same guarded markers as
+index.html, and `build_local.py`'s `check_banner` now validates **both**
+templates (verified by deliberately drifting one: the build refuses).
+The subbar's DC/AC toggle is pinned to the ribbon's standard 2.5rem
+control height, so the bands measure the same as the app's — topbar
+148.8, subbar 61.6, measured side by side, not eyeballed. No dark mode
+yet; if someone asks, follow the tokens' three-part pattern and keep the
+navy band navy.
+
+**Verified by running** (test client + the real page in a browser):
+DC divider `e1,1,0,12:r1,1,2,2'k:r2,2,0,1'k` → button → sheet arrives
+with 5 rules ticked and every value Known; untick the source rule, flip
+`v_1` to Unknown → 12.0 comes back. The RL divider at ω=1000 arrives
+with `v_2 = [5, 5]` and re-solves to 5+j5 with every variable flipped to
+Unknown. An expert-mode solve (`v_2 = 2`, unknown `vs`) carries the
+extra equation and the solved `vs = 6` as a Known. fd, tr and
+symbolic-ω AC all return `eqsheet: null`. The payload survives the
+base64url round-trip (371 chars for the divider).
+
+**Deploy state:** committed and built (cache **v67**); the server needs
+Roberto's step — `git pull`, `pip install -r requirements.txt` (numpy
+and scipy are new), **Reload** — and the offline pair deploys after it,
+since their What if… button points at the server-hosted page.
+
+---
+
 
 ## Found building the tutorial's example input files, 26 Aug 2026
 

@@ -539,8 +539,15 @@ def check_js(text: str, where: str) -> None:
                     "backslash-n, not a real line break.")
 
 
-def check_banner(template_text: str) -> None:
-    """Stop the build if the inlined banner has drifted from its source."""
+def check_banner(template_text: str, where: str = "templates/index.html") -> None:
+    """Stop the build if the inlined banner has drifted from its source.
+
+    Checked in two templates: index.html (the app, whose copy this build
+    inlines into the offline page) and eqsheet.html (the what-if solver
+    at /eqsheet/, server-hosted but carrying the same lockup). Neither
+    page can link the source file -- it lives in the other repository --
+    so each carries a verbatim copy between the same markers, and this
+    one check guards them both."""
     if not BANNER_SRC.is_file():
         print(f"build_local.py: note -- {BANNER_SRC.name} not found at "
               f"{BANNER_SRC}; the banner copy could not be checked.")
@@ -548,15 +555,15 @@ def check_banner(template_text: str) -> None:
     start = template_text.find(BANNER_BEGIN)
     end = template_text.find(BANNER_END)
     if start == -1 or end == -1:
-        raise SystemExit("build_local.py: the banner markers are missing from "
-                         "the template. Restore them, or the shared lockup "
+        raise SystemExit(f"build_local.py: the banner markers are missing from "
+                         f"{where}. Restore them, or the shared lockup "
                          "stops being checked.")
     inlined = template_text[template_text.index("*/", start) + 2:end]
     want = "\n".join(("  " + ln).rstrip() for ln in
                      BANNER_SRC.read_text(encoding="utf-8").splitlines())
     if _trim(inlined) != _trim(want):
         raise SystemExit(
-            "build_local.py: the banner block in templates/index.html no "
+            f"build_local.py: the banner block in {where} no "
             f"longer matches {BANNER_SRC}.\n"
             "  The lockup is shared with symbulator.com and "
             "learn.symbulator.com; edit the source, then paste it back "
@@ -575,6 +582,15 @@ def build() -> str:
     # dashes, and Windows would otherwise decode it as cp1252 and crash.
     s = TEMPLATE.read_text(encoding="utf-8")
     check_banner(s)
+
+    # EqSheet's page is not part of this build -- it is server-hosted --
+    # but its banner copy has no other guard, and this is the one check
+    # that runs on the app tree. A server checkout old enough to lack
+    # the page is not an error.
+    eqsheet_template = TEMPLATE.parent / "eqsheet.html"
+    if eqsheet_template.is_file():
+        check_banner(eqsheet_template.read_text(encoding="utf-8"),
+                     where="templates/eqsheet.html")
 
     # --- drop every server-only block: the "download the offline
     #     version" card, and the "no backend here" notice -- both are
