@@ -58,7 +58,7 @@ const ASSETS = [
   'vendor/sympy-1.14.0-py3-none-any.whl',
   'vendor/numpy-2.4.6-cp314-cp314-pyemscripten_2026_0_wasm32.whl',
   'vendor/mpmath-1.4.1-py3-none-any.whl',
-  'vendor/symbulator-0.5.14-py3-none-any.whl',
+  'vendor/symbulator-0.5.15-py3-none-any.whl',
 ];
 
 self.addEventListener('install', event => {

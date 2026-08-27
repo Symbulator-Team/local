@@ -145,12 +145,21 @@ Two findings along the way, both fixed or flagged:
   on a residual that is already zero. TR handovers are all explicit
   assignments and hit this every time. The sheet now judges success by
   the residual itself when the flag disagrees.
-- **Solver-level observation, not fixed here:** with symbulator 0.5.14
-  a TR answer whose true value is an impulse comes back as its
-  s-domain constant (`tr("e,1,0,delta(t):r1,1,0,1")` reports
-  `v_1 = 1`, not `delta(t)`), and the app's Results card shows the
-  same today. The payload's delta skip therefore cannot fire yet; it
-  stays as the belt for when the solver starts saying delta.
+- **Solver-level finding, fixed the same day as 0.5.15:** with
+  symbulator 0.5.14 a TR answer whose true value was an impulse came
+  back as its s-domain constant (`tr("e,1,0,delta(t):r1,1,0,1")`
+  reported `v_1 = 1`, not `delta(t)`) — a 10 V·s impulse printed
+  identically to a 10 V step. Roberto asked for the fix; 0.5.15
+  (published 27 Aug 2026, hashes verified against PyPI) transforms
+  s-free circuit answers to `expr*DiracDelta(t)` while expert-mode
+  scalars and dependent-source echoes still pass through, judged by
+  provenance instead of shape. 223 solver tests pass; all 60 tutorial
+  TR entries re-swept — only the two impulse problems' unprinted
+  answers changed. The payload's delta skip now fires for real:
+  impulse-bearing answers are named in the `#` comment, and a circuit
+  whose every answer is an impulse produces no payload at all. The
+  wheel pins (build_local.py, sw.js, vendor/, requirements.txt) all
+  moved to 0.5.15 and ride the pending batch.
 
 Server-hosted page plus shared payload builder; the offline builds
 pick the payload up through `symbulator_ui` and hand it to the same
