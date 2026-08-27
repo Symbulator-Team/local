@@ -1,6 +1,6 @@
 # Next build — accepted but not yet done
 
-> **Deployed 27 Aug 2026, one step outstanding.** Build
+> **Deployed and verified, 27 Aug 2026.** Build
 > `2026-08-27 03:17 UTC`, solver 0.5.14 (unchanged), cache **v66**. It
 > carries **#116** -- an error about a value now quotes what the reader
 > typed (`rx[1'k]`, not `rxpr(1'k)`) through every front end, not just
@@ -22,15 +22,13 @@
 >    tests pass unchanged.
 > 4. `learn.symbulator.com` and `symbulator.com` (landing) are untouched
 >    by this change and stay on their 27 Aug deploys.
->
-> **The outstanding step is the server, and it is Roberto's:**
-> `symbulator.pythonanywhere.com` still runs the previous build and
-> still quotes the half-rewritten form. In a PythonAnywhere Bash
-> console: `cd ~/symbulator_web`, `git pull`, then **Reload** on the Web
-> tab -- no `pip install --upgrade`, the solver did not move. Then check
-> `https://symbulator.pythonanywhere.com/healthz` reports build
-> `2026-08-27 03:17 UTC` with `needs_reload: false`, and run the real
-> case: `rx,1,0,rx[1'k]` in DC must error quoting `rx[1'k]`.
+> 5. `https://symbulator.pythonanywhere.com/healthz` -- `build` and
+>    `build_on_disk` both `2026-08-27 03:17 UTC`, `needs_reload: false`,
+>    `solver: 0.5.14`. Pulled and reloaded by Roberto. Behaviour checked
+>    rather than the stamp alone, over the live API: `rx,1,0,rx[1'k]`
+>    errors quoting `rx[1'k]`, `r1,1,0,[1'k,2'k` names the missing
+>    bracket as typed, and `[1'k,2'k]` still solves. **All five sites
+>    are on this build.**
 >
 > Every build re-stamps, so these figures hold only until the next one.
 
