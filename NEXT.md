@@ -96,6 +96,21 @@ Cache **v68**, build `2026-08-27 05:36 UTC`.
 
 ---
 
+## #121 — β and γ join the description whitelist — done, rides #120's deploy
+
+Found by the documentation's C/E pass on 27 Aug 2026: the 2023 pages
+write symbolic circuits with Greek values (`β*irb`, `vγ`), the engine
+reads the glyphs fine, and µ and δ were already allowed through
+`symbulator_ui._ALLOWED` for exactly this reason — but β and γ were
+not, so the restored panels failed validation with "characters that
+aren't used in Symbulator syntax". Both are now in the whitelist (and
+`_ALLOWED_EQ`). The lesson example files also moved to the
+calculator's own notation — `u(t)`, `δ(t)`, `2e^(-4t)`, SI shorthand
+in expert equations — all verified equivalent by measurement, and the
+touched lessons re-swept clean.
+
+---
+
 ## #120 — Numerical Solver, Roberto's second feedback round — done, awaiting server deploy
 
 **27 Aug 2026, five items.** The solver now speaks sans-underscore:
