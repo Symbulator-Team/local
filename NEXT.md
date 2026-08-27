@@ -45,6 +45,52 @@ same pass are in `Sym Docum/Documentation/NEXT_DOCS.md`.
 
 ---
 
+## #116 — #59's fix does not reach the Flask server's `/api/solve`
+
+**Open, found 27 Aug 2026 while verifying 0.5.14 on the live server.**
+Where: `repos/server/app.py:562`.
+
+#59 made an error quote what the reader typed instead of the machine's
+rewrite of it, and that works — in the solver, and in the offline builds.
+It does **not** work through `symbulator.pythonanywhere.com`:
+
+    typed  rx,1,0,rx[1'k]
+    local  Could not read the value 'rx[1'k]': a name is being used ...
+    live   Could not read the value 'rxpr(1'k)': a name is being used ...
+
+`rxpr(1'k)` is half-rewritten: the brackets have become `pr(`, the SI
+prefix has not. It comes from `/api/solve` rebuilding the description
+before solving it:
+
+    desc = ":".join(e.name + "," + ",".join(e.fields) for e in elements)
+
+`elements` there was parsed with `expand_si=False`, which is deliberate --
+it keeps `4.7'M` as typed for the copy the reader is shown. But the
+**bracket rewrite is unconditional** (it has to be: `_split_fields` cannot
+tell the shortcut's inner commas from an element's own field commas), so
+`e.fields` already reads `rxpr(1'k)`. The original `[...]` form is gone
+one layer above the solver, and #59's machinery can only quote what it is
+handed.
+
+**Why the offline builds are fine.** `bridge.py` calls `symbulator_ui`
+directly with the description as typed; there is no re-emission step.
+Verified: the same input through `solve_ui` locally gives `rx[1'k]`.
+
+**Not all of #59 is affected.** The missing-bracket case is correct on the
+server too, because it raises inside `expand_shorthand` during that very
+parse, before anything is re-emitted. Only the paths that survive to the
+solve are wrong, and only in which string they quote -- nothing is
+mis-solved.
+
+**Two ways to fix it.** Rebuild `desc_used` from `Element.raw_fields`
+(added in 0.5.14 for exactly this kind of recovery) rather than from
+`fields`; or pass the untouched posted description alongside, and let
+`solve_ui` hand it to the solver as the `original`. The second is smaller
+and does not depend on the two field lists lining up -- which, as #59
+found, they do not when a bracket is unbalanced.
+
+---
+
 ## #105 — A symbolic value sharing a name with a SymPy function broke Evaluate — fixed
 
 `rf` is a natural name for a feedback resistor and Lesson 5 uses it four

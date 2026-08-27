@@ -194,6 +194,36 @@ Two consequences worth knowing:
 
 ## Making a release
 
+### When the solver version moves, the order is fixed
+
+`repos/server/requirements.txt` pins `symbulator` from PyPI, so the server
+variant cannot use a new API until it is *published*. The offline builds bundle
+the wheel instead and are not subject to that — but the wheel's filename is
+pinned in three places that have to move together.
+
+1. Bump `symbulator/__init__.py`, write the CHANGELOG entry, run the tests.
+2. `python -m build`, then `python -m twine check dist/...`.
+3. **Publish to PyPI** — `python -m twine upload`. This is irreversible; a
+   version number cannot be reused.
+4. Copy the *same wheel file* into `repos/local/vendor/` and delete the old
+   one. Use the artefact you uploaded, so the bytes PyPI serves and the bytes
+   the offline build bundles are identical — and verify that by hash.
+5. Update the three pins: `WHEEL` in `build_local.py`, the cache list in
+   `sw.js`, and `symbulator>=` in `repos/server/requirements.txt`.
+6. **Bump `CACHE_VERSION` in `sw.js`.** Without it, returning visitors keep
+   the old build indefinitely.
+7. `python build_local.py`, then `python build_zip.py --assets ../../local`.
+8. Refresh `Symbulator/install_site` from the new ZIP.
+9. Deploy `install` and `zip`, then prune the superseded wheel (above).
+10. Server last: push, pull on PythonAnywhere, `pip install --upgrade
+    symbulator`, Reload, and run a real solve.
+
+PyPI's *simple index* lags the upload by a few minutes, so `pip` may briefly
+insist the new version does not exist while the release page already serves it.
+`--no-cache-dir` or a short wait fixes it; the release itself is fine, and its
+recorded SHA256 can be checked at
+`https://pypi.org/pypi/symbulator/<version>/json` without waiting.
+
 ### The ZIP
 
 ```
@@ -225,9 +255,31 @@ Chrome requires. It refuses to produce a ZIP that fails those checks.
 
 | Variant | How |
 |---|---|
-| **server** | Push to GitHub, then in a **PythonAnywhere Bash console**: `cd ~/symbulator_web`, `git pull`, `touch /var/www/symbulator_pythonanywhere_com_wsgi.py`. Then load the site and **run a real solve** — a clean pull does not catch a version-mismatch crash, which only appears on an actual request. |
-| **install** | Upload the local build's files to the `install` directory on the web host. |
-| **local** | Build the ZIP, upload as `symbulator.com/9/local.zip`. |
+| **server** | Push to GitHub, then in a **PythonAnywhere Bash console**: `cd ~/symbulator_web`, `source ~/.virtualenvs/symbulator-venv/bin/activate`, `git pull`, and — whenever the solver version moved — `pip install --upgrade symbulator`. Then **Reload** on the Web tab, and load the site and **run a real solve**: a clean pull does not catch a version-mismatch crash, which only appears on an actual request. `/healthz` reports the running build, the build on disk and the solver version, so a pull without a reload is visible in one request. |
+| **install** | `py deploy_symbulator.py install`, from `C:\Users\perez\Claude Code`. |
+| **local** | Build the ZIP, then `py deploy_symbulator.py zip`. |
+
+Both upload only what changed and verify over HTTPS afterwards. The `install`
+target's local folder is `Symbulator\install_site`, which is **the ZIP's
+contents minus the launchers** (`LICENSE`, `README.txt`, `start.bat`,
+`start.command`, `start.sh` — a hosted copy is reached by URL and never uses
+them). Refresh it from the ZIP you just built, or the two deployments of the
+same build drift.
+
+### One step that recurs every release
+
+The deploy never deletes, so each release leaves its predecessor's wheel in
+`vendor/` on the install host. Clear it, in a **PowerShell window** — the
+confirmation is typed, deliberately, and cannot be answered from a script:
+
+    cd "C:\Users\perez\Claude Code"
+    py deploy_symbulator.py install --prune "symbulator-*.whl"
+
+It deletes only files that match the glob **and** have no local counterpart,
+shows both lists first, and asks you to type DELETE. Read the KEPT list before
+you do: `.htaccess` and `.user.ini` are server config that lives only on the
+host, and they appear there precisely because the two-condition rule is what
+protects them.
 
 Deploying the local build is **two jobs**, not one: the hosted copy at
 `install.symbulator.com` *and* the ZIP. Doing one and forgetting the other
