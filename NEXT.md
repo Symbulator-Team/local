@@ -96,6 +96,29 @@ Cache **v68**, build `2026-08-27 05:36 UTC`.
 
 ---
 
+## #122 — Numerical Solver: guessed units and Interactive Mode — done, rides #120's deploy
+
+**27 Aug 2026, Roberto's third solver round, two features.** Results
+now carry a unit guessed from the variable's first letter, run
+together with the SI prefix the way it is read — `-4 mA`, `12 V`,
+`51.46 Ω`. Only the electrically confident letters guess (v e → V,
+i j → A, p → W, r z → Ω, s → VA, c → F, l → H, g → S); ambiguous ones
+guess nothing, so the default sheet's `T = T0 + P2*Rth` does not come
+back in seconds.
+
+And an **Interactive Mode** checkbox beside Solve. Unchecked, nothing
+changes. Checked, the sheet *tries* to solve half a second after any
+change settles — a value typed, a Known/Unknown flip, a prefix change,
+an equation ticked or edited (edits re-parse first, on a slightly
+longer settle, so half-typed lines don't thrash) — with a busy guard
+so solves never overlap. Verified in the browser: flip `v1` to Known,
+type 24, and `v2` reads 8 V with no button pressed; type a new
+equation `q = v1*3` into the box and `q = 72` appears on its own.
+
+Server-hosted page only — no offline rebuild involved.
+
+---
+
 ## #121 — β and γ join the description whitelist — done, rides #120's deploy
 
 Found by the documentation's C/E pass on 27 Aug 2026: the 2023 pages
