@@ -309,9 +309,9 @@ chapter plots.
 
 ---
 
-## #97 — The two shared modules are copied by the build now, not by hand
+## #97 — The two shared modules are copied by the build now, not by hand — shipped
 
-**Done 26 Aug 2026, not yet in a release.** `symbulator_ui.py` and
+**Done 26 Aug 2026, and in every release since 27 Aug.** `symbulator_ui.py` and
 `circuitbook.py` are one file each, shared verbatim between the server and
 the offline build. Nothing copied them and nothing compared them: the copy
 happened when somebody remembered.
