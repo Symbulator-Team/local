@@ -1,40 +1,41 @@
 # Next build — accepted but not yet done
 
-> **Deployed and verified, 27 Aug 2026.** Build
-> `2026-08-27 03:17 UTC`, solver 0.5.14 (unchanged), cache **v66**. It
-> carries **#116** -- an error about a value now quotes what the reader
-> typed (`rx[1'k]`, not `rxpr(1'k)`) through every front end, not just
-> `solve_ui` called directly.
+> **Deployed and verified, 27 Aug 2026 (second release that day).**
+> Build `2026-08-27 03:49 UTC`, solver 0.5.14 (unchanged), cache
+> **v67**. It carries **#117** -- EqSheet, the what-if solver, at
+> `https://symbulator.pythonanywhere.com/eqsheet/`, with the app's
+> **What if…** button feeding it -- on top of **#116** from the build
+> before it (errors quote what the reader typed).
 >
 > Measured, not eyeballed:
 >
-> 1. `https://install.symbulator.com/` -- `bridge.py`, `index.html` and
->    `sw.js` uploaded and hash-verified over HTTPS by
->    `deploy_symbulator.py`; the other 42 files verified already
->    identical. `sw.js` reads `symbulator-v66`.
-> 2. `https://symbulator.com/9/local.zip` -- 17,526,881 bytes, sha256
->    `835f55cafb8ebf8d838411c5d925d004a63a70b7f55991b16102d3c3cd023ad8`,
+> 1. `https://symbulator.pythonanywhere.com/healthz` -- `build` and
+>    `build_on_disk` both `2026-08-27 03:49 UTC`, `needs_reload: false`,
+>    `solver: 0.5.14`. Pulled, `pip install -r requirements.txt` (numpy
+>    and scipy new) and reloaded by Roberto. Behaviour checked over the
+>    live API: the DC divider's payload arrives, EqSheet re-solves it
+>    with the source rule dropped and recovers `v_1 = 12`; the RL
+>    divider at ω=1000 arrives as `v_2 = [5, 5]`; tr and symbolic-ω
+>    carry no payload.
+> 2. `https://install.symbulator.com/` -- `index.html`, `sw.js` and
+>    `symbulator_ui.py` uploaded and hash-verified; the other 42 files
+>    already identical. Loaded in a browser: after the v67 service
+>    worker took over, the footer reads `2026-08-27 03:49 UTC`, a solve
+>    enables **What if…**, and the button builds the live
+>    `/eqsheet/?import=` URL.
+> 3. `https://symbulator.com/9/local.zip` -- 17,528,206 bytes,
 >    hash-verified against `repos/local/local.zip` after upload.
-> 3. Before deploying, all 322 worked examples across the 19 `.cir`
->    files were re-run through `/api/solve` (`tools/verify_lesson.py`):
->    0 problems everywhere, with Lesson 4's Bo2 Example 3.11 the one
->    deliberate failure, as the chapter teaches it. The 216 solver
->    tests pass unchanged.
-> 4. `learn.symbulator.com` and `symbulator.com` (landing) are untouched
->    by this change and stay on their 27 Aug deploys.
-> 5. `https://symbulator.pythonanywhere.com/healthz` -- `build` and
->    `build_on_disk` both `2026-08-27 03:17 UTC`, `needs_reload: false`,
->    `solver: 0.5.14`. Pulled and reloaded by Roberto. Behaviour checked
->    rather than the stamp alone, over the live API: `rx,1,0,rx[1'k]`
->    errors quoting `rx[1'k]`, `r1,1,0,[1'k,2'k` names the missing
->    bracket as typed, and `[1'k,2'k]` still solves. **All five sites
->    are on this build.**
+> 4. All 322 worked examples re-run through `/api/solve` after the
+>    payload change: 0 problems, the one deliberate Lesson 4 failure
+>    only. 216 solver tests pass unchanged.
+> 5. `learn.symbulator.com` and `symbulator.com` (landing) untouched.
+>    **All five sites are current.**
 >
 > Every build re-stamps, so these figures hold only until the next one.
 
 ---
 
-## #117 — EqSheet, the what-if solver, integrated — done, awaiting server deploy
+## #117 — EqSheet, the what-if solver, integrated — done and deployed
 
 **Built standalone in a separate session; integrated 27 Aug 2026.**
 EqSheet is a TK!Solver/SolveSys-style numerical solver: a Rule Sheet of
@@ -87,10 +88,11 @@ extra equation and the solved `vs = 6` as a Known. fd, tr and
 symbolic-ω AC all return `eqsheet: null`. The payload survives the
 base64url round-trip (371 chars for the divider).
 
-**Deploy state:** committed and built (cache **v67**); the server needs
-Roberto's step — `git pull`, `pip install -r requirements.txt` (numpy
-and scipy are new), **Reload** — and the offline pair deploys after it,
-since their What if… button points at the server-hosted page.
+**Deploy state:** live on all five sites, 27 Aug 2026 — server first
+(Roberto: `git pull`, `pip install -r requirements.txt` for the new
+numpy and scipy, **Reload**), then the offline pair, in that order
+because their What if… button points at the server-hosted page. The
+header banner above carries the measurements.
 
 ---
 
