@@ -68,7 +68,7 @@ SW = HERE / "sw.js"
 SW_BEGIN = "  // ==== BEGIN examples ==== written by build_local.py; do not edit"
 SW_END = "  // ==== END examples ===="
 
-WHEEL = "symbulator-0.5.15-py3-none-any.whl"
+WHEEL = "symbulator-0.5.16-py3-none-any.whl"
 
 # The build stamp in the page footer, the last line of the interface.
 # It lives in the template, so the server page and the offline build cut

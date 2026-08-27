@@ -10,7 +10,7 @@
  * Bump CACHE_VERSION whenever the app files change, so returning users
  * get the new build instead of the cached one.
  */
-const CACHE_VERSION = 'symbulator-v70';
+const CACHE_VERSION = 'symbulator-v71';
 
 const ASSETS = [
   './',
@@ -58,7 +58,7 @@ const ASSETS = [
   'vendor/sympy-1.14.0-py3-none-any.whl',
   'vendor/numpy-2.4.6-cp314-cp314-pyemscripten_2026_0_wasm32.whl',
   'vendor/mpmath-1.4.1-py3-none-any.whl',
-  'vendor/symbulator-0.5.15-py3-none-any.whl',
+  'vendor/symbulator-0.5.16-py3-none-any.whl',
 ];
 
 self.addEventListener('install', event => {
