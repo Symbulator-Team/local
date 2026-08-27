@@ -96,6 +96,45 @@ Cache **v68**, build `2026-08-27 05:36 UTC`.
 
 ---
 
+## #120 — Numerical Solver, Roberto's second feedback round — done, awaiting server deploy
+
+**27 Aug 2026, five items.** The solver now speaks sans-underscore:
+the payload built in `symbulator_ui.solve_ui` strips underscores from
+every Symbulator-defined name — `v_1` arrives as `v1`, `i_r1` as
+`ir1` — in the equations, the result keys, and the expert extras
+(renamed longest-first so `i_r12` cannot be half-eaten by `i_r1`).
+`tools/eqsheet_export.py` matches. The noise chop groups by first
+letter accordingly, which is also what Roberto's original per-type
+spec said ("names that start with v… with i").
+
+On the page: every new variable — imported or hand-typed — starts
+Unknown with a guess prepopulated to **0**, and an empty guess field
+is read as 0 when Solve is pressed (a Known still insists on a
+value). A solved row's result now survives an SI-prefix change — the
+solution is kept per variable in base units, chopped, and re-scaled
+into whatever prefix the menu says, cleared only when the equations
+change under it. And a solved variable whose prefix menu is blank
+gets the most suitable prefix picked *in the menu itself*, matching
+the app's own SI style — 0.004 arrives as 4 m with the dropdown on m.
+(Roberto's threshold sentence read "smaller than 1E-3 or
+equal-or-larger than 1E-4"; the built rule is the app's always-pick
+autoPre, under which 0.5 shows 500 m and 1200 shows 1.2 k. If he
+meant a window that leaves those plain, it is a three-line change.)
+
+Verified in the browser against the running app: import lands
+`ie, ir1, ir2, v1, v2` all Unknown with the solved values as guesses;
+blanking a guess and solving assumes 0; flipping `v1` Known echoes 12;
+currents solve to **4 m** with the dropdown set; switching that row to
+µ re-displays **4000 µ**, back to blank **0.004**; a hand-typed
+`q = v1*2` arrives Unknown with guess 0; re-parsing clears stale
+results. Lesson 1 sweep re-run as a smoke test: 0 problems.
+
+**Deploy state:** committed and built (cache **v69**); the server
+needs Roberto's step — `git pull`, **Reload**, no pip — and the
+offline pair deploys after it.
+
+---
+
 ## #117 — EqSheet, the what-if solver, integrated — done and deployed
 
 **Built standalone in a separate session; integrated 27 Aug 2026.**
