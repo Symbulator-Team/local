@@ -638,25 +638,53 @@ served by `https://install.symbulator.com/` as well as in
 
 ---
 
-## #59 — Bracket typos quote the rewritten value, not what was typed
+## #59 — Bracket typos quoted the rewritten value, not what was typed — fixed
 
-**Accepted 23 Aug 2026, for the next solver release.** Where:
-`solver/symbulator/si_prefix.py`, around `expand_shorthand` and
-`check_expression_syntax`.
+**Fixed in solver 0.5.14, 27 Aug 2026.** Accepted 23 Aug and carried until
+there was a reason to cut a release.
 
-`[a,b]` (parallel impedance) is rewritten to `pr(a,b)` and SI prefixes are
-expanded *before* the value is parsed, so an error message quotes the
-rewritten string. Type `[1'k,2'k` and you are told about
-`pr(1*10**3,2*10**3`; type `rx[1'k]` and you get a bare
-`'Symbol' object is not callable`.
+Every value is rewritten before it is parsed: `expand_shorthand` turns
+`[a,b]` into `pr(a,b)`, `expand_value` turns `1'k` into `1*10**3`, and only
+then does `safe_sympify` call `check_expression_syntax`. That function
+quoted the string it was handed, which by then was the machine's rewrite.
 
-Nothing is mis-solved -- every case is refused, never answered wrongly -- and
-it is not a security gap: the syntax gate is intact, and `x(0)` is legitimate
-input that SymPy then rejects on its own. It is a papercut on a feature
-students are meant to use: the error is about internals rather than about
-their circuit. The fix is to carry the original text alongside the rewritten
-one and quote the original.
+Three symptoms, three fixes:
 
-Not worth a release of its own -- fold it into whatever next takes the
-solver to a new version, which means a version bump, a PyPI publish and
-a rebundled wheel in the offline builds.
+**The rewrite was quoted back.** `safe_sympify` and
+`check_expression_syntax` now take an `original` alongside the rewritten
+text and quote the original. `Element` gained `raw_fields`, the fields as
+typed, and the engine builds a rewritten-to-typed lookup in its constructor
+so `_value` -- which receives a field's text and nothing else -- can
+recover it.
+
+**An unbalanced bracket is caught before the rewrite**, not after, because
+after is too late: `_split_fields` does not respect `[...]`, which is
+exactly why the bracket rewrite has to run on the whole element line first.
+With one bracket missing, the typed text and the rewrite split into
+*different numbers of fields*, so no field-by-field lookup can line them
+up. The balance check is now the first thing `expand_shorthand` does:
+
+    'r1,1,0,[1'k,2'k' is missing a closing bracket. A parallel
+    combination is written [a,b], as in [1'k,2'k].
+
+**A name used as a function says so.** `rx[1'k]` has balanced brackets, so
+it rewrites into a call shape, passes the syntax gate -- calls of named
+functions are legitimate -- and died in SymPy as `'Symbol' object is not
+callable`, which named nothing at all. It now names the value.
+
+It deliberately does **not** name the symbol in that case. The rewrite makes
+`rx[1'k]` into `rxpr(...)`, so the culprit SymPy reports is `rxpr`, a name
+the reader never typed; naming it is worse than naming nothing. The message
+only names a symbol when the text was not rewritten.
+
+Thrown in while there: an unrecognised unit prefix now names the value and
+lists the prefixes that exist, rather than "Circuit description uses
+shorthand that Symbulator does not recognize" with nothing to go on.
+
+**What to watch.** The balance check runs on the echo path too
+(`expand_si=False`, which the schematic and the ambiguity check use), so an
+unbalanced bracket now raises where it used to be quietly rewritten. Both
+surfaces were checked: each reports the message rather than crashing. Four
+tests cover it in `test_suffix.py`, including one asserting that correct
+shorthand still solves -- a guard must not cost the feature it guards.
+
