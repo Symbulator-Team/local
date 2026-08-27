@@ -35,6 +35,64 @@
 
 ---
 
+## #118 — Roberto's feedback round on #117 and the app — done, awaiting deploy
+
+**27 Aug 2026, twenty-eight numbered items of feedback taken live in one
+sitting; built as one release.** The user-facing name is now the
+**Numerical Solver** — `/eqsheet/`, `eqsheet.py` and the other file
+names stay as internal handles, the way a numbered item keeps its
+number.
+
+**On the solver page:** dark mode (same toggle, icons, `data-theme`
+attribute and `symbulator-theme` storage key as the app — the pages
+share an origin, so one choice carries to both); "Rule Sheet" →
+"List of Equations" and "rule" → "equation" everywhere, including the
+API messages; the new tagline; "×" → "SI Prefix", with a blank
+dropdown entry replacing the dash; **every variable now defaults to
+Unknown** — imported results arrive as guesses, so a sheet lands square
+and re-solves as it stands; the Result column moved next to Variable;
+Result text raised to the Value/guess size (the AC polar subline stays
+smaller); a Known's Result shows its given value immediately; and the
+**numerical-noise chop**: within each variable-type group (leading
+letters of the name), a result more than 1e8 times smaller than the
+group's largest magnitude displays as 0, plus an absolute 1e-18 floor
+for groups that are all noise — display only, residuals stay raw.
+
+**The system handover is now hybrid:** the paste box is gone; the URL
+carries the payload as before, but past ~6 KB the button saves
+`numerical_system.json` and opens the page empty, and the page's new
+"Open a system file…" control reads it back — which also makes a system
+keepable and re-openable, which the URL never was. Tested for real with
+a 62-element ladder: the file saves, the page opens, the file loads,
+the sheet solves.
+
+**In the app:** the button is now **Numerical Solver** and lives in a
+new **Explore numerically** card under Plot, active only when the solve
+carried a payload (DC, or AC with numeric ω — fd/tr leave it inactive
+rather than offering a dead button); the Input File card's three
+buttons are equal-width on one line; the loaded-file note renders under
+the "Entries in" dropdown, whose file title is now bold (appended as a
+text node — titles are user-supplied); the Built-in Examples popup
+always opens downward, above the banner (z-index 60) and scrolls —
+flip-up, which hid it behind the bands, is gone; Circuit Description is
+collapsible, open by default; the "Insert δ(t)" link is gone and the
+syntax reference notes `delta(t)` = `δ(t)` instead (**`mu(t)` is NOT
+noted: the parser does not accept it** — making it an alias for `u(t)`
+would be a solver change and a PyPI release, parked here); the Evaluate
+label points at the "Useful SymPy functions" fold; the Conditions field
+starts at the Evaluate field's height; "About this checkbox" → "About
+'real solutions'"; "Download Output" → "Export Output", split into
+"Export to .txt file" and "Export to SymPy" subheadings with the new
+copy, and output files download as `.txt` instead of `.sym`.
+
+Verified in the browser against the running app, item by item — button
+widths and band heights measured, the popup's z-index and direction
+checked, the dark preference confirmed to carry between the two pages,
+the fd gate confirmed inactive, the file round trip run end to end.
+Cache **v68**, build `2026-08-27 05:36 UTC`.
+
+---
+
 ## #117 — EqSheet, the what-if solver, integrated — done and deployed
 
 **Built standalone in a separate session; integrated 27 Aug 2026.**
