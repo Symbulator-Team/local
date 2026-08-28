@@ -1,5 +1,24 @@
 # Next build — accepted but not yet done
 
+## #132 — the Numerical Solver's "Unrestricted" reads "None"
+
+Roberto, 28 Aug 2026: in the Restriction menu (#131), rename the
+first option from "Unrestricted" to "None". Label only; the stored
+value `any` and the API stay as they are.
+
+## #133 — Expert answers in the two exports
+
+Roberto, 28 Aug 2026: check whether the answers an Expert solve finds
+(the extra unknowns — `vs`, `is` in the monograph's showcase) are
+carried by the Numerical Solver export and by Export to SymPy, and
+add them if not. Partly overtaken the same day: with the export
+fixed (conditions dropped, expert equations expanded into
+first/second-degree terms), the expert unknowns cross to the sheet
+as unknowns with their solved values as guesses, verified on the
+showcase round trip. What remains is the Export to SymPy side, and
+confirming nothing else Expert-specific is missing from either
+payload.
+
 > **Deployed and verified, 28 Aug 2026 (four releases).** Cache
 > **v71**–**v74**; solver **0.5.16** through **0.5.19**. 0.5.16 is
 > the schematic rework — the drawer reviewed against all 322 tutorial
