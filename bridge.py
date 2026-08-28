@@ -57,9 +57,13 @@ def solve(payload_json: str) -> str:
 
     variables = [v.strip() for v in
                  ui.re.split(r"[,\s]+", str(p.get("variables") or "")) if v.strip()]
-    equations = lines("equations")
-    # "vin = 12 and pr2 = 0" is one line naming two conditions -- expand
-    # before validating/solving, matching app.py's /api/solve.
+    # Equations and conditions alike: one per line, or several on one
+    # line joined with ` and ` -- "re = 12'k and ir3 = 6'm" is two
+    # equations. Expanded before validating/solving, matching app.py's
+    # /api/solve. Equations joined the conditions on 28 Aug 2026, when
+    # the Expert Mode hint started saying so (#12 of the day's batch)
+    # and Roberto asked whether it was actually true.
+    equations = ui._expand_and(lines("equations"))
     conditions = ui._expand_and(lines("conditions"))
     unknowns = [u.strip() for u in
                 ui.re.split(r"[,\s]+", str(p.get("unknowns") or "")) if u.strip()]
@@ -220,7 +224,7 @@ def plot(payload_json: str) -> str:
             return [str(x).strip() for x in raw if str(x).strip()]
         return [ln.strip() for ln in ui.re.split(r"[\r\n]+", str(raw)) if ln.strip()]
 
-    extra_equations = lines("equations")
+    extra_equations = ui._expand_and(lines("equations"))
     extra_conditions = ui._expand_and(lines("conditions"))
     extra_unknowns = [u.strip() for u in
                       ui.re.split(r"[,\s]+", str(p.get("unknowns") or "")) if u.strip()]
