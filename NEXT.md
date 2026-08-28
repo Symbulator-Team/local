@@ -1,21 +1,26 @@
 # Next build — accepted but not yet done
 
-> **Deployed and verified, 28 Aug 2026 (three releases).** Cache
-> **v71**, **v72**, then **v73**; solver **0.5.16**, **0.5.17**, then
-> **0.5.18**. 0.5.16 is the schematic rework — the drawer reviewed
-> against all 322 tutorial circuits (wires never cross element bodies,
-> real crossings drawn as hops, junctions on node corners, values
-> shown as typed, long values captioned below the drawing; see the
-> solver CHANGELOG); 0.5.17 has the op-amp feedback wire leave the tip
-> the way the triangle points; 0.5.18 closes #130 below. Between
-> them, `banner.css` moved into this repository (#75's inversion — see
-> the write-up below) and the review harness landed in
-> `server/tools/review_schematics.py`. install + ZIP + learn + landing
-> deployed and hash-verified. PythonAnywhere done the same night
-> (one console pass landed 0.5.18 directly; `/healthz` reports solver
-> 0.5.18 with both stamps `2026-08-28 00:27 UTC`, and a live solve and
-> a live `/api/schematic` both verified). The one leftover: the prune
-> of superseded wheels (0.5.15, 0.5.16, 0.5.17) on the install host —
+> **Deployed and verified, 28 Aug 2026 (four releases).** Cache
+> **v71**–**v74**; solver **0.5.16** through **0.5.19**. 0.5.16 is
+> the schematic rework — the drawer reviewed against all 322 tutorial
+> circuits (wires never cross element bodies, real crossings drawn as
+> hops, junctions on node corners, values shown as typed, long values
+> captioned below the drawing; see the solver CHANGELOG); 0.5.17 has
+> the op-amp feedback wire leave the tip the way the triangle points;
+> 0.5.18 closes #130 below; **0.5.19** (cache v74) adds expert-mode
+> inequality conditions, Python keywords (`is`) as names, and full
+> spelling equivalence of underscored and flat answer names —
+> universal, in values, expert equations, unknowns and conditions.
+> Between them, `banner.css` moved into this repository (#75's
+> inversion — see the write-up below) and the review harness landed
+> in `server/tools/review_schematics.py`. install + ZIP + learn +
+> landing deployed and hash-verified with 0.5.19 bundled. **PyPI and
+> PythonAnywhere still at 0.5.18**: the autonomous session could not
+> run `twine upload` (permission-gated), so the upload is Roberto's
+> (`py -m twine upload dist/*` in `repos/solver` — the dist there is
+> byte-identical to the bundled wheel), followed by the usual
+> PythonAnywhere console pass. The other leftover: the prune of
+> superseded wheels (0.5.15–0.5.18) on the install host —
 > interactive, Roberto's to type.
 
 ---
