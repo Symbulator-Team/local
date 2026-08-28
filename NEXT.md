@@ -1,8 +1,29 @@
 # Next build — accepted but not yet done
 
-Both lists are empty: #132–#135 all closed on 28 Aug 2026, the same
-day they were accepted. The write-ups are below, newest first; the
-next new item is #136.
+## #136 — Explore Numerically, capitalised and always active
+
+Roberto, 28 Aug 2026 (accepted, not built):
+
+- In the app, the card heading "Explore numerically" becomes
+  "Explore Numerically".
+- The card is active even when nothing has been solved yet:
+  - after a circuit has been solved, it works exactly as it does now
+    (the button opens the Numerical Solver preloaded with that solve's
+    system via the `?import=` payload);
+  - before a circuit has been solved, the button brings the user to a
+    blank instance of the Numerical Solver (a plain link to
+    `/eqsheet/`, no payload).
+
+Touches `repos/server/templates/index.html` (the card's inactive
+gating in `activatePostSolve`/`clearResults` and the `whatifBtn`
+handler) and rides to the offline builds via `build_local.py` — a
+CACHE_VERSION bump when it ships.
+
+---
+
+Everything below is closed: #132–#135 all landed on 28 Aug 2026, the
+same day they were accepted. The write-ups follow, newest first; the
+next new item is #137.
 
 ## #135 — the property mark — done
 
