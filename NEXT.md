@@ -1,33 +1,55 @@
 # Next build — accepted but not yet done
 
-## #132 — the Numerical Solver's "Unrestricted" reads "None"
+Both lists are empty: #132–#135 all closed on 28 Aug 2026, the same
+day they were accepted. The write-ups are below, newest first; the
+next new item is #136.
 
-Roberto, 28 Aug 2026: in the Restriction menu (#131), rename the
-first option from "Unrestricted" to "None". Label only; the stored
-value `any` and the API stay as they are.
+## #135 — the property mark — done
 
-## #134 — a rounding option in the Numerical Solver
+Roberto's brief, 28 Aug 2026: an elegant designation of which
+property the reader is on — Documentation (learn), Welcome (landing),
+Application (the hosted app and PythonAnywhere, *not* the downloaded
+local build), Numerical (the Numerical Solver). Chosen from a
+rendered mockup: spaced capitals in the sky at 55% opacity, no
+brackets — the app's [ T O O L S ] motif moved into the banner — at
+the right of the top band, on the wordmark's centre line, ending on
+the band's own right edge (a negative margin swallows the trailing
+letter-space). Treatment 2 for mobile, Roberto's pick: shrunk below
+640px, and at ≤480px it moves into the slot the hidden subtitle
+leaves under the wordmark. The styling is shared vocabulary in
+`banner.css` (`.property-mark`, `-top`, `-slot`: one word, two
+spellings in the markup, exactly one ever shown); each property
+supplies its word, the app's wrapped in the markers the offline
+build strips — which is what keeps the local build unmarked for
+free. Verified by computed style at 1280/500/360 on the docs
+preview, and by grep that the built local page carries no mark.
 
-Roberto, 28 Aug 2026: a rounding option for the sheet, for display
-purposes. Display only, like the existing noise chop: the solver's
-own numbers and the residuals line stay untouched, only the Result
-cells re-format. Presumably significant digits, in the spirit of the
-app's own Rounding setting; it should play well with the SI-prefix
-re-display (a result shown in a prefix rounds in that prefix), and
-in AC apply to Re, Im, magnitude and angle alike.
+## #134 — rounding in the Numerical Solver — done
 
-## #133 — Expert answers in the two exports
+A Rounding menu in the sheet's status bar — full (the original
+behaviour), or 3/4/5/6 significant digits. Display-only, the same
+doctrine as the noise chop: the solver's numbers and the residuals
+line stay raw; Result cells re-format, in the row's SI prefix, and
+in AC the angle follows the same choice (it keeps its two decimals
+until a rounding is chosen). Persists in localStorage like the
+theme. √2 shows 1.41421 on full and 1.41 at 3 digits, measured.
 
-Roberto, 28 Aug 2026: check whether the answers an Expert solve finds
-(the extra unknowns — `vs`, `is` in the monograph's showcase) are
-carried by the Numerical Solver export and by Export to SymPy, and
-add them if not. Partly overtaken the same day: with the export
-fixed (conditions dropped, expert equations expanded into
-first/second-degree terms), the expert unknowns cross to the sheet
-as unknowns with their solved values as guesses, verified on the
-showcase round trip. What remains is the Export to SymPy side, and
-confirming nothing else Expert-specific is missing from either
-payload.
+## #133 — Expert answers in the two exports — done
+
+The Numerical Solver side was overtaken by the export fixes (v79):
+expert unknowns cross as unknowns with their solved values as
+guesses. The Export to SymPy side had a real hole: an expert unknown
+named `is` produced `is = sp.S(...)` — a script dead on arrival,
+since `is` is a Python keyword, and the same name broke the
+sp.symbols declaration line. Keyword names now export with a
+trailing underscore (`is_`), PEP 8's own convention, while the
+SymPy Symbol keeps the true name; a comment in the script says which
+names were renamed. The generated script for the showcase circuit
+executes clean under real Python, `is_` = 0.39727 included.
+
+## #132 — the Restriction menu's first option reads "None" — done
+
+Label only; the stored value and the API are unchanged.
 
 > **Deployed and verified, 28 Aug 2026 (four releases).** Cache
 > **v71**–**v74**; solver **0.5.16** through **0.5.19**. 0.5.16 is
