@@ -1,33 +1,33 @@
 # Next build — accepted but not yet done
 
-> **Deployed and verified, 28 Aug 2026 (two releases).** Cache **v71**
-> then **v72**; solver **0.5.16** then **0.5.17**. 0.5.16 is the
-> schematic rework — the drawer reviewed against all 322 tutorial
-> circuits (wires never cross element bodies, real crossings drawn as
-> hops, junctions on node corners, values shown as typed, long values
-> captioned below the drawing; see the solver CHANGELOG); 0.5.17 has
-> the op-amp feedback wire leave the tip the way the triangle points.
-> Between them, `banner.css` moved into this repository (#75's
-> inversion — see the write-up below) and the review harness landed in
+> **Deployed and verified, 28 Aug 2026 (three releases).** Cache
+> **v71**, **v72**, then **v73**; solver **0.5.16**, **0.5.17**, then
+> **0.5.18**. 0.5.16 is the schematic rework — the drawer reviewed
+> against all 322 tutorial circuits (wires never cross element bodies,
+> real crossings drawn as hops, junctions on node corners, values
+> shown as typed, long values captioned below the drawing; see the
+> solver CHANGELOG); 0.5.17 has the op-amp feedback wire leave the tip
+> the way the triangle points; 0.5.18 closes #130 below. Between
+> them, `banner.css` moved into this repository (#75's inversion — see
+> the write-up below) and the review harness landed in
 > `server/tools/review_schematics.py`. install + ZIP + learn + landing
-> deployed and hash-verified; PythonAnywhere pull + pip + Reload done
-> for 0.5.16, **pending for 0.5.17**. The prune of superseded wheels
-> (0.5.15, 0.5.16) on the install host is also pending — interactive,
-> Roberto's to type.
+> deployed and hash-verified; **PythonAnywhere pull + pip + Reload
+> pending** (one console pass lands 0.5.18 directly). The prune of
+> superseded wheels (0.5.15, 0.5.16, 0.5.17) on the install host is
+> also pending — interactive, Roberto's to type.
 
 ---
 
-## #130 — the op-amp's + and − match the source's polarity marks (open)
+## #130 — the op-amp's + and − match the source's polarity marks — done, deployed
 
-Roberto, 28 Aug 2026: the plus and minus signs at the op-amp's input
-pins should match the voltage source's polarity marks in line
-thickness and size. Today they are 13px *text* glyphs (`cv.text`,
-filled), while the source's marks are stroked paths (`_polarity` in
-`repos/solver/symbulator/schematic.py`: 3.5px arms at the page's
-1.7px stroke). The fix is to draw the pin signs the same way the
-source's marks are drawn — small stroked paths, not font glyphs — so
-the two symbols read as one drawing style. Solver change; ships with
-the next release.
+**Done 28 Aug 2026, solver 0.5.18.** Roberto: the signs at the
+op-amp's input pins should match the voltage source's polarity marks
+in line thickness and size. They were 13px *text* glyphs (filled from
+the label font); the source's marks are stroked 3.5px arms at the
+page's 1.7px stroke. Both now draw through one helper
+(`_sign_mark` in `repos/solver/symbulator/schematic.py`), so they are
+identical by construction and cannot drift apart. Verified across all
+322 tutorial circuits with `server/tools/review_schematics.py`.
 
 ---
 
