@@ -25,10 +25,11 @@
 
 ---
 
-## #131 — the Numerical Solver restricts where it looks — done, not yet deployed
+## #131 — the Numerical Solver restricts where it looks — done, deployed
 
 **Done 28 Aug 2026, server repo only (eqsheet.py + eqsheet.html);
-rides the same pending deploy as the day's feedback batch.** Roberto:
+the cPanel sites deployed the same morning, PythonAnywhere on
+Roberto's next console pass (pull + Reload, no pip).** Roberto:
 for each unknown, an option to restrict the search space —
 Unrestricted, Positive, Negative, or a Range from/to. Each unknown's
 row now carries a **Restriction** menu; the range's two ends read in
