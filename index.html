@@ -1741,7 +1741,7 @@ units: yes</pre>
   <a href="https://github.com/Symbulator" target="_blank" rel="noopener">GitHub</a> ·
   <a href="https://pypi.org/project/symbulator/" target="_blank" rel="noopener">PyPI</a><br>
   Free and open-source software under the MIT licence · results are symbolic, powered by SymPy<br>
-  Symbulator 9 version 2026-08-28 00:13 UTC
+  Symbulator 9 version 2026-08-28 00:27 UTC
 </footer>
 
 <script>
@@ -2073,7 +2073,7 @@ const pyReady = (async () => {
     // Plot card fails at the point of use with a raw "No module named
     // 'numpy'" -- the two plot examples in the supplied set among them.
     await pyodide.loadPackage(['sympy', 'numpy']);
-    await pyodide.loadPackage('vendor/symbulator-0.5.17-py3-none-any.whl');
+    await pyodide.loadPackage('vendor/symbulator-0.5.18-py3-none-any.whl');
     // symbulator_ui.py and circuitbook.py are shared verbatim with the
     // server build; bridge.py is this build's own glue module.
     for (const f of ['symbulator_ui.py', 'circuitbook.py', 'bridge.py']) {
