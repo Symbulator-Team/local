@@ -61,6 +61,7 @@ EXCLUDE_NAMES = {
     "build_zip.py",
     "CLAUDE.md",
     "NEXT.md",           # deferred-work list; developer-facing
+    "banner.css",        # source of the inlined lockup; the page carries it
     ".gitignore",
     ".gitattributes",
     "local.zip",

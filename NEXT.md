@@ -1017,6 +1017,15 @@ Left open, deliberately: the app's build now reads a file from a tree that is
 the docs' `build.py` read it from there would invert that dependency. Worth
 doing when `Sym Docum` becomes a repo; nothing breaks meanwhile.
 
+> **Closed 28 Aug 2026** by doing exactly the inversion above (`Sym Docum`
+> had become a repo on the 26th, which removed half the reason, but the
+> commit-pinning half stood): the canonical is `banner.css` in this
+> repository, `check_banner()` reads its own tree and fails hard instead of
+> warning, and the docs' `build.py` copies the canonical for `learn` and
+> checks the landing copy against it. Byte-identical move, so nothing needed
+> redeploying; the current arrangement is described in the top-level
+> `CLAUDE.md`.
+
 ## #74 — The app and the two websites are different shapes (**done, deployed**)
 
 **Settled 23 Aug 2026, by the app adopting two bands.** The websites had been

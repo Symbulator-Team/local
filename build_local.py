@@ -320,18 +320,17 @@ INSTALLBAR_CSS = """  .installbar { background: var(--card); border: 1px solid v
 
 
 # The banner lockup is shared with symbulator.com and
-# learn.symbulator.com, whose tree holds the single source. The template
-# carries a verbatim copy between markers, because a build has to be
-# self-contained -- the offline ZIP cannot fetch a stylesheet from another
-# repository. A copy nothing compares is a copy that drifts: it drifted
-# twice in one day while three files each stated the lockup, so the copy
-# is checked here instead.
-#
-# The docs tree is not required to build. When it is absent this warns and
-# carries on, so `repos/` alone still produces a release; when it is present
-# and disagrees, the build stops.
-BANNER_SRC = (HERE.parent.parent.parent / "Sym Docum" / "Documentation"
-              / "design" / "banner.css")
+# learn.symbulator.com. banner.css in THIS repository is the single
+# source (moved here from the docs tree, closing #75's open question:
+# now the commit that changes the lockup and the commit the app build
+# was checked against are the same commit). The template carries a
+# verbatim copy between markers, because a build has to be
+# self-contained -- the offline ZIP cannot fetch a stylesheet at all.
+# A copy nothing compares is a copy that drifts: it drifted twice in
+# one day while three files each stated the lockup, so the copy is
+# checked here. The docs build reads the same file for the two
+# websites, and its --check guards the landing page's hand copy.
+BANNER_SRC = HERE / "banner.css"
 BANNER_BEGIN = "/* ==== BEGIN banner.css ===="
 BANNER_END = "/* ==== END banner.css ====================================== */"
 
@@ -545,13 +544,14 @@ def check_banner(template_text: str, where: str = "templates/index.html") -> Non
     Checked in two templates: index.html (the app, whose copy this build
     inlines into the offline page) and eqsheet.html (the what-if solver
     at /eqsheet/, server-hosted but carrying the same lockup). Neither
-    page can link the source file -- it lives in the other repository --
-    so each carries a verbatim copy between the same markers, and this
-    one check guards them both."""
+    page can link the source file -- the offline page cannot fetch one
+    at all -- so each carries a verbatim copy between the same markers,
+    and this one check guards them both."""
     if not BANNER_SRC.is_file():
-        print(f"build_local.py: note -- {BANNER_SRC.name} not found at "
-              f"{BANNER_SRC}; the banner copy could not be checked.")
-        return
+        raise SystemExit(
+            f"build_local.py: {BANNER_SRC} is missing. It is the one "
+            "source of the shared banner lockup and lives in this "
+            "repository; a checkout without it is broken.")
     start = template_text.find(BANNER_BEGIN)
     end = template_text.find(BANNER_END)
     if start == -1 or end == -1:

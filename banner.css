@@ -1,0 +1,241 @@
+/* Symbulator — the shared banner
+   ==========================================================================
+   ONE source for the lockup that appears on all three properties:
+
+       symbulator.com          Documentation/landing/
+       learn.symbulator.com    Documentation/web/  (via build.py)
+       the app                 repos/local, repos/server
+
+   This file exists because the same rules were previously written out three
+   times in three repositories, and drifted twice in a single day, in both
+   directions, each fix a person copying values by hand. Import it; do not
+   copy it.
+
+   Two bands: .topbar carries the lockup alone, .subbar carries each
+   property's own controls in a slightly lighter shade. The sky keyline
+   closes the pair, under the subbar.
+
+   It is self-contained on purpose. Every colour is var(--name, #literal), so
+   it works whether or not the host defines the tokens, and whatever the host
+   calls them.
+
+   Scope widened 23 Aug 2026. It used to style the bands and nothing inside
+   them, leaving every property to dress its own ribbon -- which produced
+   three ribbons that looked like three different websites. It now also
+   owns the ribbon's shared vocabulary: the row, and what a link in it looks
+   like. What goes *in* the row is still each property's own business, and
+   genuinely local controls (learn's version picker, the app's Clear all
+   inputs) still layer on top in their own stylesheets.
+
+   Both .vnum and .tm are matched for the version numeral, because the three
+   properties named that span differently before this file existed.
+
+   Verified computed values at 1280px wide: lockup band 148px, controls
+   ribbon 62px, container 1152 and left edge 64 on both,
+   logo 80/r12, gap 19.2px, name 32/700/.5px/lh49.6, numeral italic 29.44px
+   #8ec7f5, second line 16px #b7c3d6, keyline 3px. If you change anything
+   here, re-measure — do not judge by eye.
+   ========================================================================== */
+
+:root {
+  --banner-w:   72rem;
+  --banner-pad: clamp(1.25rem, 4vw, 2.75rem);
+}
+
+.topbar {
+  position: relative; z-index: 50;
+  padding-block: 2.2rem 2rem;
+  background: var(--navy, #203864);
+  color: #fff;
+}
+
+/* The controls ribbon: a second, slightly lighter band under the lockup.
+   The lockup band carries the identity and nothing else; every control --
+   nav links on symbulator.com, Start reading / Download the PDF and the
+   version picker on learn, whatever the app puts there -- sits down here.
+
+   The two bands are one assembly: the shade change is the only divider
+   between them, and the 3px sky keyline finishes the pair rather than
+   splitting them, so it moved off .topbar and onto .subbar. A page with no
+   subbar keeps the keyline via .topbar:last-child below.
+
+   #2a4576 is --navy lightened about 8% -- far enough to read as a distinct
+   band on both themes, close enough that the two still read as one header.
+   Deliberately not a token: it exists only in relation to --navy. */
+.subbar {
+  /* Above .topbar so the version picker's dropdown, which lives inside this
+     band, is never trapped under the lockup's stacking context. */
+  position: relative; z-index: 51;
+  background: var(--navy-2, #2a4576);
+  border-bottom: 3px solid var(--sky, #8ec7f5);
+  color: #fff;
+}
+.subbar-inner {
+  width: min(var(--banner-w), 100%); margin-inline: auto;
+  padding-inline: var(--banner-pad);
+  min-height: 3.25rem;
+  display: flex; align-items: center; gap: 0.6rem;
+  flex-wrap: wrap;
+  padding-block: 0.6rem;
+}
+/* Controls sit left, under the wordmark; anything after .subbar-spacer is
+   pushed to the right edge. */
+.subbar-spacer { flex: 1 1 auto; }
+
+/* The ribbon's links, shared by all three properties.
+   ---------------------------------------------------------------------
+   These moved here on 23 Aug 2026. Until then this file styled the bands
+   and nothing inside them, on the principle that each property owns its
+   own controls -- and the result was three ribbons that read as three
+   different websites: symbulator.com had plain links, learn had two solid
+   chips, the app had no ribbon at all.
+
+   The lesson is the same one the lockup taught. A shared band with
+   unshared contents is not a shared banner. So the *vocabulary* lives
+   here -- a row of links, and what a link in a navy ribbon looks like --
+   while what each property puts in the row stays its own business.
+
+   Anything genuinely local still layers on top: learn's version picker,
+   the app's Clear all inputs. They sit in the same row, at the same
+   size. */
+.subbar nav {
+  display: flex; align-items: center; gap: 1.15rem;
+  flex-wrap: wrap; min-width: 0;
+}
+.subbar nav a {
+  /* font-family is pinned, not inherited. learn.symbulator.com sets its
+     body in IBM Plex Serif for long-form reading, so an inheriting ribbon
+     rendered its links in a serif there and in a sans on the other two --
+     the same words, three sizes of the same idea, in two different faces.
+     Reported 24 Aug 2026. --sans is whatever the host calls its sans stack;
+     the literal is here for a host that defines nothing. */
+  font-family: var(--sans, -apple-system, "Segoe UI", Roboto, Helvetica,
+                Arial, sans-serif);
+  color: #dbe6f5; text-decoration: none;
+  font-size: 0.875rem; line-height: 1.4;
+  border-radius: 4px;
+}
+.subbar nav a:hover { color: #fff; text-decoration: underline; }
+.subbar nav a:focus-visible {
+  outline: 2px solid var(--sky, #8ec7f5); outline-offset: 3px;
+}
+/* A link that happens to act on the page rather than lead somewhere -- the
+   app's Clear all inputs. Same size and colour as its neighbours; it is a
+   <button> only because it does something, and should not look like one.
+
+   The class is .subbar-action, not the more natural .linkish, because the
+   app already has a small underlined link-button of its own under that very
+   name -- and the two collided: this rule won on specificity for what it
+   declared, and the app's underline came through for what it did not, so
+   Clear all inputs rendered underlined at rest while its neighbours did not.
+   A shared file must not claim a class name a host might already use. Check
+   for collisions before naming anything here.
+
+   The selector is .subbar, not .subbar nav: an action may sit after
+   .subbar-spacer, at the right-hand end beside the theme toggle, which
+   puts it outside <nav>. The app's "Clear all inputs" does exactly that.
+   Adding nav back would silently strip the styling off any such button. */
+.subbar button.subbar-action {
+  appearance: none; background: none; border: 0; padding: 0;
+  font-family: var(--sans, -apple-system, "Segoe UI", Roboto, Helvetica,
+                Arial, sans-serif);
+  font-weight: 400; color: #dbe6f5; font-size: 0.875rem; line-height: 1.4;
+  cursor: pointer; border-radius: 4px;
+}
+.subbar button.subbar-action:hover { color: #fff; text-decoration: underline; }
+.subbar button.subbar-action:focus-visible {
+  outline: 2px solid var(--sky, #8ec7f5); outline-offset: 3px;
+}
+.subbar button.subbar-action:disabled {
+  color: #8ea3c4; cursor: default; text-decoration: none;
+}
+
+/* A header with no controls ribbon still needs its bottom edge. */
+.topbar:last-child { border-bottom: 3px solid var(--sky, #8ec7f5); }
+
+.topbar-inner {
+  width: min(var(--banner-w), 100%); margin-inline: auto;
+  padding-inline: var(--banner-pad);
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 1.5rem;
+}
+
+.header-brand {
+  /* The app loads no webfont. The websites load IBM Plex. Naming Plex here
+     would render the banner in Plex on the sites and the system face in the
+     app -- identical layout, different letterforms, and invisible unless you
+     look closely. All three therefore pin the system stack on the banner
+     alone; the page body keeps whatever the host uses. Do not "tidy" this
+     back to --sans. */
+  --banner-sans: -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  display: flex; align-items: center; gap: 1.2rem;
+  color: #fff; text-decoration: none; min-width: 0;
+}
+.header-logo { width: 80px; height: 80px; border-radius: 12px; flex: none; display: block; }
+
+/* The scorpion is a link home, on every property and from every page.
+   ---------------------------------------------------------------------
+   It has to be its own anchor rather than part of .header-brand, because
+   two of the three properties wrapped the whole lockup in a link already
+   and an anchor inside an anchor is not valid markup. So .header-brand is
+   a plain container now, and its children carry the links.
+
+   Requested 24 Aug 2026: wherever you are -- reading a lesson, running the
+   app offline -- the scorpion goes to symbulator.com. */
+.header-logo-link {
+  flex: none; display: block; border-radius: 12px;
+  color: inherit; text-decoration: none;
+}
+.header-logo-link:focus-visible {
+  outline: 2px solid var(--sky, #8ec7f5); outline-offset: 3px;
+}
+/* .header-brand may be a div wrapping links, or a link itself. Either way
+   nothing inside it should look like an underlined blue anchor. */
+.header-brand a { color: inherit; text-decoration: none; }
+.header-title { min-width: 0; }
+
+.brand-name {
+  margin: 0; font-family: var(--banner-sans);
+  font-size: 2rem; font-weight: 700; letter-spacing: 0.5px; line-height: 1.55;
+}
+.brand-name .vnum,
+.brand-name .tm {
+  color: var(--sky, #8ec7f5);
+  font-family: Georgia, "Times New Roman", "Nimbus Roman", serif;
+  font-style: italic; font-size: 0.92em; letter-spacing: 0;
+}
+.brand-sub {
+  margin: 0.4rem 0 0; font-family: var(--banner-sans);
+  font-size: 1rem; line-height: 1.55; color: #b7c3d6;
+}
+
+.theme-toggle {
+  /* padding:0 is load-bearing, not tidiness. A host with a generic
+     `button { padding: .6rem 1.6rem }` rule -- the app has exactly that --
+     wins over the width below, because a flex item cannot shrink under its
+     own padding. The toggle then measures 53x40 there and 40x40 on the
+     websites: the same circle on two sites and an oval on the third.
+     Measured 23 Aug 2026. */
+  padding: 0;
+  flex: none; width: 2.5rem; height: 2.5rem;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(255,255,255,.12); color: #fff;
+  border: 1px solid rgba(255,255,255,.35); border-radius: 999px;
+  font-size: 1.2rem; line-height: 1; cursor: pointer;
+  transition: background-color .15s ease, transform .06s ease;
+}
+.theme-toggle svg { width: 1.15em; height: 1.15em; flex: none; }
+.theme-toggle:hover  { background: rgba(255,255,255,.22); }
+.theme-toggle:active { transform: translateY(1px); }
+.theme-toggle:focus-visible { outline: 2px solid var(--sky, #8ec7f5); outline-offset: 2px; }
+
+@media (max-width: 520px) {
+  .topbar { padding-block: 1.6rem 1.4rem; }
+  .subbar-inner { min-height: 0; padding-block: 0.5rem; gap: 0.45rem; }
+  .topbar-inner { gap: 0.9rem; }
+  .header-brand { gap: 0.9rem; }
+  .header-logo { width: 56px; height: 56px; border-radius: 9px; }
+  .brand-name { font-size: 1.4rem; letter-spacing: 0.3px; }
+  .brand-sub { font-size: 0.9rem; margin-top: 0.25rem; }
+  .theme-toggle { width: 2.15rem; height: 2.15rem; font-size: 1.05rem; }
+}
