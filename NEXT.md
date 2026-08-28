@@ -1,19 +1,33 @@
 # Next build — accepted but not yet done
 
-> **Deployed and verified, 27 Aug 2026 (fifth release that day — the
-> night wave).** Cache **v70**, solver 0.5.15 (unchanged). It carries
-> **#126–#129**: the mobile pass (every control reachable at 375px,
-> 16px inputs so iOS stops zooming on focus, the Numerical Solver's
-> table scrolling sideways, learn's version menu on screen), the
-> documentation's mathematics set as mathematics (#127: KaTeX/LaTeX
-> for 52 bare-text answers and 19 symbolic {{o:}} values, centered
-> display blocks, PDF margins clean), the Plot menu naming its
-> analysis — (TR)/(FD)/(DC) — with lessons 6 and 11 updated in step,
-> the Circuit Description / Analysis & Settings split into two
-> collapsible cards (#128), and the [ T O O L S ] group heading
-> (#129). install + ZIP + learn deployed and hash-verified;
-> **PythonAnywhere pull + Reload pending** (no pip — the solver did
-> not move). Write-ups below; the fourth release's banner follows.
+> **Deployed and verified, 28 Aug 2026 (two releases).** Cache **v71**
+> then **v72**; solver **0.5.16** then **0.5.17**. 0.5.16 is the
+> schematic rework — the drawer reviewed against all 322 tutorial
+> circuits (wires never cross element bodies, real crossings drawn as
+> hops, junctions on node corners, values shown as typed, long values
+> captioned below the drawing; see the solver CHANGELOG); 0.5.17 has
+> the op-amp feedback wire leave the tip the way the triangle points.
+> Between them, `banner.css` moved into this repository (#75's
+> inversion — see the write-up below) and the review harness landed in
+> `server/tools/review_schematics.py`. install + ZIP + learn + landing
+> deployed and hash-verified; PythonAnywhere pull + pip + Reload done
+> for 0.5.16, **pending for 0.5.17**. The prune of superseded wheels
+> (0.5.15, 0.5.16) on the install host is also pending — interactive,
+> Roberto's to type.
+
+---
+
+## #130 — the op-amp's + and − match the source's polarity marks (open)
+
+Roberto, 28 Aug 2026: the plus and minus signs at the op-amp's input
+pins should match the voltage source's polarity marks in line
+thickness and size. Today they are 13px *text* glyphs (`cv.text`,
+filled), while the source's marks are stroked paths (`_polarity` in
+`repos/solver/symbulator/schematic.py`: 3.5px arms at the page's
+1.7px stroke). The fix is to draw the pin signs the same way the
+source's marks are drawn — small stroked paths, not font glyphs — so
+the two symbols read as one drawing style. Solver change; ships with
+the next release.
 
 ---
 
