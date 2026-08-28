@@ -11,10 +11,12 @@
 > them, `banner.css` moved into this repository (#75's inversion — see
 > the write-up below) and the review harness landed in
 > `server/tools/review_schematics.py`. install + ZIP + learn + landing
-> deployed and hash-verified; **PythonAnywhere pull + pip + Reload
-> pending** (one console pass lands 0.5.18 directly). The prune of
-> superseded wheels (0.5.15, 0.5.16, 0.5.17) on the install host is
-> also pending — interactive, Roberto's to type.
+> deployed and hash-verified. PythonAnywhere done the same night
+> (one console pass landed 0.5.18 directly; `/healthz` reports solver
+> 0.5.18 with both stamps `2026-08-28 00:27 UTC`, and a live solve and
+> a live `/api/schematic` both verified). The one leftover: the prune
+> of superseded wheels (0.5.15, 0.5.16, 0.5.17) on the install host —
+> interactive, Roberto's to type.
 
 ---
 
