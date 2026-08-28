@@ -6,6 +6,16 @@ Roberto, 28 Aug 2026: in the Restriction menu (#131), rename the
 first option from "Unrestricted" to "None". Label only; the stored
 value `any` and the API stay as they are.
 
+## #134 — a rounding option in the Numerical Solver
+
+Roberto, 28 Aug 2026: a rounding option for the sheet, for display
+purposes. Display only, like the existing noise chop: the solver's
+own numbers and the residuals line stay untouched, only the Result
+cells re-format. Presumably significant digits, in the spirit of the
+app's own Rounding setting; it should play well with the SI-prefix
+re-display (a result shown in a prefix rounds in that prefix), and
+in AC apply to Re, Im, magnitude and angle alike.
+
 ## #133 — Expert answers in the two exports
 
 Roberto, 28 Aug 2026: check whether the answers an Expert solve finds
