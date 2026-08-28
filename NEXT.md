@@ -25,6 +25,33 @@
 
 ---
 
+## #131 — the Numerical Solver restricts where it looks — done, not yet deployed
+
+**Done 28 Aug 2026, server repo only (eqsheet.py + eqsheet.html);
+rides the same pending deploy as the day's feedback batch.** Roberto:
+for each unknown, an option to restrict the search space —
+Unrestricted, Positive, Negative, or a Range from/to. Each unknown's
+row now carries a **Restriction** menu; the range's two ends read in
+the row's SI prefix, like the guess. A restricted solve goes through
+SciPy's `least_squares` with bounds (MINPACK's hybr takes none;
+unrestricted solves keep it, untouched), and a square restricted
+system is judged by its residual, so a root outside the restriction
+reports "no solution found under the restrictions" instead of a
+boundary minimum posing as one. A guess outside its restriction is
+moved to a genuinely *interior* start — reflected across the bound,
+or 10% inside a range — never onto the boundary itself, where trf
+nudges ~1e-10 inward and reports convergence without moving
+(measured). In AC the menu applies to Real only / Imag only unknowns
+and greys out on Complex ones: a restriction is a statement about one
+real scalar, and a complex value has no sign. Verified through the
+API (both x² = 4 roots selectable by sign, a range picking one root
+of a two-unknown system, the no-solution and empty-range messages)
+and through the page itself. The same session made the sheet accept
+Python keywords (`is`) as variable names — the 0.5.19 shielding,
+ported to the sheet's own parser.
+
+---
+
 ## #130 — the op-amp's + and − match the source's polarity marks — done, deployed
 
 **Done 28 Aug 2026, solver 0.5.18.** Roberto: the signs at the
