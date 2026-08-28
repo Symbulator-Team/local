@@ -1,29 +1,62 @@
 # Next build — accepted but not yet done
 
-## #136 — Explore Numerically, capitalised and always active
+## #137 — remove the β from the banner wordmark
 
-Roberto, 28 Aug 2026 (accepted, not built):
-
-- In the app, the card heading "Explore numerically" becomes
-  "Explore Numerically".
-- The card is active even when nothing has been solved yet:
-  - after a circuit has been solved, it works exactly as it does now
-    (the button opens the Numerical Solver preloaded with that solve's
-    system via the `?import=` payload);
-  - before a circuit has been solved, the button brings the user to a
-    blank instance of the Numerical Solver (a plain link to
-    `/eqsheet/`, no payload).
-
-Touches `repos/server/templates/index.html` (the card's inactive
-gating in `activatePostSolve`/`clearResults` and the `whatifBtn`
-handler) and rides to the offline builds via `build_local.py` — a
-CACHE_VERSION bump when it ships.
+Roberto, 28 Aug 2026: the wordmark reads **Symbulator 9β** while
+version 9 is in beta — banner titles only, on all five properties
+(learn shows it only on the version-9 pages), shipped the same day.
+This item is the standing reminder to take it out "when it's no
+longer betta": the five spots are `web/index.php` +
+`tools/static_preview.py` (a label == '9' conditional),
+`landing/index.html`, and the two `templates/*.html` in the server
+repo — each marked with a "temporary" comment. A cache bump ships
+the removal to the offline builds.
 
 ---
 
-Everything below is closed: #132–#135 all landed on 28 Aug 2026, the
-same day they were accepted. The write-ups follow, newest first; the
-next new item is #137.
+Everything below is closed: #132–#136, #138 and #139 all landed on
+28 Aug 2026, the same day they were accepted. The write-ups follow,
+newest first; the next new item is **#140**.
+
+## #139 — the Built-in Examples dropdown closes on an outside click — done
+
+Roberto, 28 Aug 2026: "it doesn't want to go away unless you click on
+'Built-in Examples' again. It's annoying, hehe." The `<details>` menu
+now closes on any click outside itself (a document-level listener that
+checks `menu.contains(ev.target)`) and on Escape, which also returns
+focus to the summary. Clicks inside the panel still work as before —
+picking an entry already closed it. Shipped at cache v82.
+
+## #138 — URL parameters open a built-in example — done
+
+Roberto, 28 Aug 2026: a link like
+`https://symbulator.pythonanywhere.com/?lesson=4b&entry=17` opens the
+app with the 17th entry of Lesson_04b loaded — for linking straight
+from the documentation to a worked example. `?input=` is an alias for
+`?lesson=` (both of Roberto's spellings work), `entry` is 1-based and
+defaults to 1, and `lesson=showcase` / `lesson=monograph` reach the
+Showcase and The_Monograph books. Lesson values accept `4b`, `04b`,
+`7` and so on (a leading zero is optional). A bad lesson or an
+out-of-range entry shows the app's own note ("no lesson 99…") and
+falls through to normal startup. **The link wins over the restored
+workspace**: `openFromUrl()` runs before `restoreState()` in
+`loadExamples`, and a successful open persists, so a reload without
+the query keeps what the link loaded. Works identically in the
+offline builds — the query is read client-side, so
+`install.symbulator.com/?lesson=4b&entry=17` works too. Verified live
+on the Flask build: `?lesson=4b&entry=17` → Bo2's Drill Exercise 3.12
+with picker synced and note shown; `?input=7&entry=3` → AS7's
+Example 9.10.
+
+## #136 — Explore Numerically, capitalised and always active — done
+
+The card heading "Explore numerically" became "Explore Numerically",
+and the card is active before anything has been solved: after a solve
+the button carries that solve's system to the Numerical Solver via
+the `?import=` payload exactly as before, and before one it opens a
+blank solver (a plain link to `/eqsheet/`, no payload). The
+`inactive` gating in `activatePostSolve`/`clearResults` is gone.
+Shipped at cache v82.
 
 ## #135 — the property mark — done
 
