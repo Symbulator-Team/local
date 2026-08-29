@@ -1,5 +1,31 @@
 # Next build — accepted but not yet done
 
+## #168 — the two-port's Results card, and two Tools-group touches — done, cache v90
+
+Roberto, 29 Aug 2026, on seeing where Example 19.2's port currents
+landed: showing them under "Expert mode unknowns" was "ridiculous" —
+they have nothing to do with expert mode. Now the two-port gets a
+proper card in **Results by Element**: its name, the kind label
+*two-port*, and the two port currents, each labelled **"current into
+port at node <n>"** — *into* the two-port (measured: the engine
+stamps each as leaving its node into the block; 19.2's i_z1 = +2∠0°
+with the source driving port 1 confirms the direction), matching the
+chapter's "current entering each port" and the 2023 originals. Card
+rows gained an optional per-row subscript (`sub`) so the two
+currents print as i_z1 and i_z2 rather than both claiming i_z; the
+catch-all section keeps its role for genuine expert-mode unknowns
+and is empty on 19.2. `verify_lesson.py` reads the new spelling and
+Lesson_13 still ends 0 problems.
+
+Two more of Roberto's touches rode along: the **SPICE Translator
+moved to last of the four Tools cards** (Mini-Tools, Plot, Explore
+Numerically, SPICE Translator), and its **buttons swapped** so
+*Symbulator to SPICE* sits on the left. All three verified in the
+running app before deploying. Cache **v90** on both offline sites;
+the server needs Roberto's pull + Reload (no pip — the shared
+`symbulator_ui.py` and the template).
+
+
 ## #167 — a called name is not an answer reference — done, cache v89
 
 Roberto, 29 Aug 2026 late evening, running Lesson 13's Example 19.2:
