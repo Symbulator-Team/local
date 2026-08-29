@@ -19,7 +19,7 @@ Shipped at cache **v87** on both offline sites, hash-verified; the
 server variant gets it with Roberto's pending pull + Reload (one
 pull now carries #164's fix, the lesson-13 examples, and this).
 
-## #165 — brackets mean pr only in a resistor's value — built, awaits the next release
+## #165 — brackets mean pr only in a resistor's value — done, shipped in 0.5.22
 
 Roberto, 29 Aug 2026 evening, on hearing how #164's AC bug was fixed:
 he remembered the calculator restricting the `[...]` shorthand, and
