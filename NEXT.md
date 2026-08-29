@@ -1,5 +1,24 @@
 # Next build — accepted but not yet done
 
+## #166 — the port tool's parameters, ready to paste — done, cache v87
+
+Roberto, 29 Aug 2026 evening, closing the loop #163 opened: after
+*Find equivalent → Two-port parameters*, the reader should be able to
+carry the four found values into a following simulation without
+transcribing them. Below the four named answers the app now shows
+**"As a two-port element's parameter term: `[60,40,40,70]`"** with a
+**Copy** button — the term only, per Roberto ("not sure if the whole
+element, but at least the parameters"). Built from the *exact*
+solved expressions in `values`, not the rounded display strings, so
+an FD run copies `[1/(s+1),...]` intact; whitespace is stripped so
+the term pastes cleanly. Clipboard via `navigator.clipboard` with a
+legacy fallback; when neither works the button says "Select and copy
+by hand" (the term is plain text either way). Verified in the real
+app: the z-parameter T-network run shows the term and the button.
+Shipped at cache **v87** on both offline sites, hash-verified; the
+server variant gets it with Roberto's pending pull + Reload (one
+pull now carries #164's fix, the lesson-13 examples, and this).
+
 ## #165 — brackets mean pr only in a resistor's value — built, awaits the next release
 
 Roberto, 29 Aug 2026 evening, on hearing how #164's AC bug was fixed:
