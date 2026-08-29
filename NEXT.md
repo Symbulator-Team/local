@@ -1,5 +1,45 @@
 # Next build — accepted but not yet done
 
+## #160 — the SPICE Translator card — built and on the offline sites; PyPI and the server pass remain
+
+Roberto, 29 Aug 2026: a Tools card named **SPICE Translator** — a
+Symbulator Notation field and a SPICE Notation field, a button for
+each direction, and warnings whenever the origin holds element types
+or symbolic values the destination cannot express. A prototype, to
+be tested online and refined.
+
+Built and shipped the same day to both offline sites (cache **v84**,
+wheel **0.5.20** bundled, hash-verified). The translation lives in
+the solver as `symbulator.spice.to_spice/from_spice` (18 tests,
+round trips verified by solving both circuits, not comparing text);
+`symbulator_ui.spice_ui` wraps it; the server has `/api/spice`; the
+offline build calls `bridge.spice()`. What translates: r/l/c with
+initial conditions (`IC=`), independent sources, shorts (a 0 V
+source, SPICE's own idiom), mutual inductance ↔ `K` (numeric
+inductances only), and SPICE's E/G/F/H controlled sources
+(`E1` → `ee1`, so it can never collide with `V1` → `e1`). Everything
+else warns instead of mistranslating: op-amps, ideal transformers,
+two-ports, symbolic values, waveform sources (a `SIN(...)` keeps its
+DC value if it has one), diodes and transistors, subcircuits,
+directives. The mega/milli trap is closed by construction: `1'M`
+exports as `1MEG`, and the exporter never writes a bare `M` at all —
+milli becomes a plain decimal.
+
+**Remaining, in this order (both Roberto's):**
+1. `py -m twine upload dist/symbulator-0.5.20-py3-none-any.whl
+   dist/symbulator-0.5.20.tar.gz` from
+   `C:\Users\perez\Claude Code\Symbulator\repos\solver` — the upload
+   was blocked for the assistant by the permission layer. The wheel
+   to upload is the one the offline sites already bundle
+   (sha256 5d856850…, matching `vendor/`).
+2. The PythonAnywhere pass — pull, `pip install --upgrade
+   symbulator`, Reload, one real solve *and* one translation (the
+   server pins `symbulator>=0.5.20`, so the pull must not precede
+   the upload).
+3. The wheel prune on the install host
+   (`py deploy_symbulator.py install --prune "symbulator-*.whl"`,
+   typed DELETE) — 0.5.19 is still sitting beside 0.5.20 there.
+
 ## #137 — remove the β from the banner wordmark
 
 Roberto, 28 Aug 2026: the wordmark reads **Symbulator 9β** while
