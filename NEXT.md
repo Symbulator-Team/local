@@ -25,18 +25,17 @@ directives. The mega/milli trap is closed by construction: `1'M`
 exports as `1MEG`, and the exporter never writes a bare `M` at all —
 milli becomes a plain decimal.
 
-**Remaining, in this order (both Roberto's):**
-1. `py -m twine upload dist/symbulator-0.5.20-py3-none-any.whl
-   dist/symbulator-0.5.20.tar.gz` from
-   `C:\Users\perez\Claude Code\Symbulator\repos\solver` — the upload
-   was blocked for the assistant by the permission layer. The wheel
-   to upload is the one the offline sites already bundle
-   (sha256 5d856850…, matching `vendor/`).
-2. The PythonAnywhere pass — pull, `pip install --upgrade
+**0.5.20 reached PyPI on 29 Aug 2026** (uploaded from Roberto's
+machine at his instruction after the permission layer blocked the
+assistant's first attempt; PyPI's recorded sha256 5d856850… matches
+the bundled `vendor/` wheel exactly). This release also carries
+#158's README section and #159's name check to the PyPI page.
+
+**Remaining (both Roberto's):**
+1. The PythonAnywhere pass — pull, `pip install --upgrade
    symbulator`, Reload, one real solve *and* one translation (the
-   server pins `symbulator>=0.5.20`, so the pull must not precede
-   the upload).
-3. The wheel prune on the install host
+   server pins `symbulator>=0.5.20`, now published).
+2. The wheel prune on the install host
    (`py deploy_symbulator.py install --prune "symbulator-*.whl"`,
    typed DELETE) — 0.5.19 is still sitting beside 0.5.20 there.
 
