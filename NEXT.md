@@ -14,12 +14,51 @@ the removal to the offline builds.
 
 ---
 
-Everything below is closed: #140–#150 landed on 29 Aug 2026 and
-#132–#136, #138 and #139 on 28 Aug 2026, each the same day it was
+Everything below is closed: #140–#150 and #158 landed on 29 Aug 2026
+and #132–#136, #138 and #139 on 28 Aug 2026, each the same day it was
 accepted. (#151–#157, the docs-side visual pass over the PDFs, are
 written up in `Sym Docum/Documentation/NEXT_DOCS.md` on the same
 running sequence.) The write-ups follow, newest first; the next new
-item is **#158**.
+item is **#159**.
+
+## #158 — the solver README teaches the SymPy side — done
+
+Roberto, 29 Aug 2026: asked whether the `symbulator` package deserved
+a manual on being used from Python/SymPy. The README already *was*
+the manual for the API; what no package user could learn from it was
+what to do with an answer once they had one — every answer is a SymPy
+expression — and the two traps recorded only in
+`Sym Docum/Documentation/VERIFIED-v9-api.md`, which no PyPI reader
+ever sees.
+
+New README section, **Working with the answers (SymPy)**, between the
+`fd()`/`tr()` section and expert mode: answers are exact SymPy
+expressions (`5/2`, not `2.5`); `simplify` on a symbolic solve; the
+time-symbol trap — answers use `Symbol("t", nonnegative=True)`, so a
+bare `Symbol("t")` substitutes as a silent no-op — with its two
+escapes, `res.at(t=...)` (substitutes by name) and
+`from symbulator import t, s`; initial/final values by `subs`/`limit`
+plus the final-value theorem on an `fd()` answer; `sympy.plot` with
+the imported `t`; `lambdify` for NumPy; `bode_samples()`/
+`time_samples()` and why an `ac()` result cannot be swept by
+`plot()`; and the `pf()` sign at a source (negate the current for
+leading/lagging).
+
+Alongside it: `llms.txt`'s easy-to-get-wrong list grew from two
+entries to three with the `t` trap, and the one stale
+`positive=True` in `Result.at()`'s docstring
+(`symbulator/analysis.py`) was corrected to `nonnegative=True` — the
+assumption changed to `nonnegative` on 26 Aug 2026 so impulses at
+t = 0 survive, and the docstring had not followed.
+
+Verified before committing: every code block in the section was
+executed verbatim, in published order, against the installed 0.5.19,
+with each printed claim asserted (17 checks, all passing). GitHub is
+the deploy for a README change; the PyPI page renders the README of
+the *last uploaded release*, so it picks this up with the next real
+release — no version was cut for prose alone, to keep the
+0.5.19-everywhere parity across PyPI, the bundled wheel and the
+server pin.
 
 ## #150 — the app footer wraps between the copyright and the links — done
 
