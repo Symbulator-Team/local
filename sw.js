@@ -10,7 +10,7 @@
  * Bump CACHE_VERSION whenever the app files change, so returning users
  * get the new build instead of the cached one.
  */
-const CACHE_VERSION = 'symbulator-v88';
+const CACHE_VERSION = 'symbulator-v89';
 
 const ASSETS = [
   './',
