@@ -1,6 +1,6 @@
 # Next build — accepted but not yet done
 
-## #160 — the SPICE Translator card — built and on the offline sites; PyPI and the server pass remain
+## #160 — the SPICE Translator card — done, live on all three app surfaces
 
 Roberto, 29 Aug 2026: a Tools card named **SPICE Translator** — a
 Symbulator Notation field and a SPICE Notation field, a button for
@@ -31,13 +31,17 @@ assistant's first attempt; PyPI's recorded sha256 5d856850… matches
 the bundled `vendor/` wheel exactly). This release also carries
 #158's README section and #159's name check to the PyPI page.
 
-**Remaining (both Roberto's):**
-1. The PythonAnywhere pass — pull, `pip install --upgrade
-   symbulator`, Reload, one real solve *and* one translation (the
-   server pins `symbulator>=0.5.20`, now published).
-2. The wheel prune on the install host
-   (`py deploy_symbulator.py install --prune "symbulator-*.whl"`,
-   typed DELETE) — 0.5.19 is still sitting beside 0.5.20 there.
+**Roberto's PythonAnywhere pass completed 29 Aug** ("PyAn done"),
+verified by fetching: `/healthz` reports build `2026-08-29 07:05
+UTC` running and on disk, `needs_reload: false`, solver **0.5.20**;
+a real solve through the live `/api/solve` returned the Lesson 1
+answers exactly, and a live `/api/spice` translation spelled `2.2'M`
+as `2.2MEG` with no warnings. The card is a prototype by design —
+Roberto will test online and refinements become new numbered items.
+
+The one loose end is routine: the wheel prune on the install host
+(`py deploy_symbulator.py install --prune "symbulator-*.whl"`, typed
+DELETE — Roberto's) still has 0.5.19 sitting beside 0.5.20.
 
 ## #137 — remove the β from the banner wordmark
 
