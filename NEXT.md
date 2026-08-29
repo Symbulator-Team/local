@@ -1,5 +1,56 @@
 # Next build — accepted but not yet done
 
+## #169 + #170 — the reader-quiet examples pass — done overnight, cache v91
+
+Roberto, 29 Aug 2026, late: having caught two bugs by running library
+examples as a reader, he asked for all of them run and every Results
+notice justified — then accepted the recommendations and went to
+sleep ("work autonomously... so that when I wake up I do PyAn"). The
+sweep: all 330 entries of the 20 books through the real app, four
+parallel batches. 121 findings, four classes.
+
+**#169, the code half** (`symbulator_ui.py`): the AC imaginary
+normaliser now touches a value only when it genuinely respells
+`i`/`I`/`J` — a value already in j-form is left exactly as typed,
+which removes the "normalised '8-6j' to '8 - 6j'" yellow box from
+roughly ninety AC/power/three-phase entries (a note per spacing
+change), and it never reprints through sympify, which had collapsed
+Problem 9.39's typed `4+20j+pr(16,-14j+25j)` into an opaque
+fraction. The SymPy-shadow note skips names the circuit owns (`rf`
+is the feedback resistor, not the rising factorial), and the
+answer-name-as-value note skips an element valued by its own name —
+the idiom Lesson 2 documents ("it is not a problem that the symbolic
+value is the same as the name"), which the transistor bias model's
+`re1,e,0,re1` uses. Genuine cases all still fire: `10+5*i` still
+normalises with its note, `gamma` still gets the shadow note, a
+resistor valued by *another* element's answer still warns.
+
+**#170, the entry half**: eleven TR sources written as explicit
+steps (`u(t)`-form) — **Drill 5.7 alone keeps the bare constant**,
+because its own note and the chapter teach exactly that shorthand
+("a plain 12 is enough, no u(t) needed"), so its step note is the
+lesson confirmed; everywhere else the constant was incidental and
+the chapter's own house style is explicit `V*u(t)` anyway. Fifteen
+entries with decimal inputs now carry `rounding: approx` themselves
+instead of being auto-switched with a note. Example 6.6 keeps its
+Float source (`12.0*u(t)`): dropping the trailing dot made the
+answers come back in exact `sqrt(3999991)` form instead of the
+chapter's decimals — caught by the display-equality check, restored.
+Ten `field 9` blocks in `Sym Docum`'s transient chapter updated to
+match (the DC-interval twins verified untouched), plus the chapter
+date.
+
+**Verification, twice over**: the displayed answers of all 185
+entries in the affected books captured before and after —
+byte-identical (the one drift, 6.6's exact-form slip, was caught and
+fixed by exactly this check). Then the full 330-entry sweep re-run:
+**exactly four notices remain, each deliberate** — Bo2 3.11's taught
+failure, the Thévenin unbounded-current lesson, Drill 5.7's step
+note, and the Bode showcase's impulse note. Shipped at cache **v91**
+on both offline sites; the server takes it with Roberto's morning
+pull + Reload (no pip — `symbulator_ui.py` and the examples).
+
+
 ## #168 — the two-port's Results card, and two Tools-group touches — done, cache v90
 
 Roberto, 29 Aug 2026, on seeing where Example 19.2's port currents
