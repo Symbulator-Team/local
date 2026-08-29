@@ -37,11 +37,17 @@ written `2*i_r-x` silently read as the subtraction `2*i_r - x` and
 returned an answer containing phantom symbols — no error, wrong
 result. Dots and spaces failed the same way.
 
-Roberto: names should not have hyphens; put in a warning. Implemented
-as a parse-time `CircuitError` rather than a Python warning, because
-a library warning is invisible in the app, which is where circuits
-are typed; flagged in chat for him to downgrade if he meant it
-softer. `parse_circuit` now requires the folded name to be
+Roberto: names should not have hyphens; put in a warning — and, he
+clarified when the implementation was reported back, by "warning" he
+meant the ambiguous-suffix treatment: the user is asked to resolve
+it and the simulation does not proceed. That is exactly what the
+parse-time `CircuitError` gives through the app: the pre-flight
+parse in `repos/server/app.py` (the same stage as the ambiguity
+check) catches it before any solve and returns the message to the
+browser. The one difference from the suffix flow is deliberate —
+`1k` gets a picker because both readings are valid and the app can
+proceed with either; a hyphenated name has no valid reading, so the
+resolution is the message itself: rename the element. `parse_circuit` now requires the folded name to be
 identifier-safe (letters, digits, underscores — `name.isidentifier()`),
 on the solve and echo (`expand_si=False`) paths alike, with a message
 that quotes the name as typed and says why: the element's answers
