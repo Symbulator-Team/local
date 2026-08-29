@@ -100,16 +100,25 @@ ngspice/LTspice/PSpice follow it, so the exporter targets the
 manual and the test harness flips H gains into ahkab's dialect.
 288 solver tests pass.
 
-**Remaining, on Roberto's go:** the 0.5.21 release train — now
-carrying #161, #162 and #163 together — PyPI upload, vendor wheel +
-`sw.js` pins + cache **v85**, `build_local` + ZIP + install/zip
-deploys, `requirements.txt` to `>=0.5.21`, and the PythonAnywhere
-pass. The shared `symbulator_ui.py` changed too (#163's Define
-materialisation), so the server pull matters beyond the pip
-upgrade. Accepted and queued behind the release: **#164**, the
-Lesson 13 two-port documentation revision in the docs tree
-(`Sym Docum`) — Roberto: "in addition to, and independent from, the
-SPICE stuff" — documenting the three cases, the naming rule, and
+**The train ran on Roberto's "Punch it!", 29 Aug 2026 evening**,
+carrying #161, #162 and #163 together: 0.5.21 on PyPI (wheel
+sha256 3a45f825…, hash-verified identical to the bundled copy),
+cache **v85**, both offline sites deployed and hash-verified, the
+SPICE card's beta note live, `requirements.txt` at `>=0.5.21`. The
+offline build was smoke-tested through real Pyodide before deploying
+(a two-port parameter solve and an op-amp export) — after first
+falling for the documented stale-service-worker trap in the test
+browser itself, which is the trap doing its job.
+
+**Remaining:** Roberto's PythonAnywhere pass — the pull matters
+beyond `pip install --upgrade symbulator` this time, since the
+shared `symbulator_ui.py` changed (#163's Define materialisation) —
+then verify with a solve, a translation, and a two-port parameter
+circuit. And the wheel prune on the install host (typed DELETE):
+0.5.19 **and** 0.5.20 now sit beside 0.5.21 there. Queued next:
+**#164**, the Lesson 13 two-port documentation revision in the docs
+tree (`Sym Docum`) — Roberto: "in addition to, and independent from,
+the SPICE stuff" — documenting the three cases, the naming rule, and
 the guards.
 
 ## #160 — the SPICE Translator card — done, live on all three app surfaces
