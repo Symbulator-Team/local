@@ -1,6 +1,24 @@
 # Next build — accepted but not yet done
 
-## #163 — two-port parameters in the description — built, rides the 0.5.21 train
+## #165 — brackets mean pr only in a resistor's value — built, awaits the next release
+
+Roberto, 29 Aug 2026 evening, on hearing how #164's AC bug was fixed:
+he remembered the calculator restricting the `[...]` shorthand, and
+measurement proved the port looser — `e1,1,0,[4,4]` silently became
+a meaningless "2 V" source (pr applied to a source value), and a
+capacitor value would have computed the *series* combination
+(parallel capacitances add; pr is the resistor rule). His ruling: in
+two-ports `[...]` is the parameter term, in a resistor's value it is
+the pr shorthand, and **anywhere else it stops the simulation** with
+a message. Implemented in `parse_circuit` on the *typed* text (a
+`pr(...)` the user typed remains a function call, legal anywhere);
+nested brackets in a resistor value still work. Swept first: none of
+the 330 built-in examples nor the docs use brackets outside the two
+legitimate places. 311 solver tests pass. In the repo — ships with
+the next solver release; live sites stay 0.5.21 (which still accepts
+the loose forms) until then.
+
+## #163 — two-port parameters in the description — done, shipped in 0.5.21
 
 Roberto, 29 Aug 2026, on discovering that the v9 port had left
 two-port parameters reachable only through expert mode (a Sonnet
@@ -31,7 +49,7 @@ v7/v8-era guards were confirmed still live and stopping the solve
 deliberate and documented rather than warned about, per Roberto.
 Solver README rewritten accordingly; every code block run verbatim.
 
-## #162 — every element type exports to SPICE — built, rides the 0.5.21 train
+## #162 — every element type exports to SPICE — done, shipped in 0.5.21
 
 Roberto, 29 Aug 2026: ideally any Symbulator element translates to
 SPICE, even where the reverse is not feasible. Now true. The ideal
@@ -57,7 +75,7 @@ voltage against the independent simulator: op-amp, transformer, and
 each of the six two-port kinds, alongside the #161 cases. 310
 solver tests pass.
 
-## #161 — dependent sources translate to SPICE — built, awaiting the go to release
+## #161 — dependent sources translate to SPICE — done, shipped in 0.5.21
 
 Roberto, 29 Aug 2026, after testing the SPICE Translator online:
 solve the Symbulator→SPICE direction for dependent sources ("think
