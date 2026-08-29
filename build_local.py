@@ -779,12 +779,13 @@ def build() -> str:
         """  const r = await fetch('/api/minitool', {
     method: 'POST',
     headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({ tool: tool, args: args, values: last.values,
+    body: JSON.stringify({ tool: tool, args: args,
+                           values: last ? last.values : {},
                            ...roundingState() })
   });
   return await r.json();""",
         """  return await py('mini_tool', { tool: tool, args: args,
-    values: last.values, ...roundingState() });""",
+    values: last ? last.values : {}, ...roundingState() });""",
         label="mini-tool fetch",
     )
 

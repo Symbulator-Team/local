@@ -14,9 +14,116 @@ the removal to the offline builds.
 
 ---
 
-Everything below is closed: #132–#136, #138 and #139 all landed on
-28 Aug 2026, the same day they were accepted. The write-ups follow,
-newest first; the next new item is **#140**.
+Everything below is closed: #140–#150 landed on 29 Aug 2026 and
+#132–#136, #138 and #139 on 28 Aug 2026, each the same day it was
+accepted. (#151–#157, the docs-side visual pass over the PDFs, are
+written up in `Sym Docum/Documentation/NEXT_DOCS.md` on the same
+running sequence.) The write-ups follow, newest first; the next new
+item is **#158**.
+
+## #150 — the app footer wraps between the copyright and the links — done
+
+Roberto, 29 Aug 2026: if the "Symbulator © 1999–2026 Roberto
+Perez-Franco · symbulator.com · Facebook · GitHub · PyPI" line has to
+wrap, it should break where the links start, the separator dot leading
+the second line. Two nowrap spans now; measured breaking exactly there
+at 375px, one line on desktop. Shipped at cache v83.
+
+## #149 — Mini-Tools works before a solve — done
+
+The card sat dim until a circuit was solved, but aa, pf and gain are
+standalone calculators on typed arguments. Now active from the start,
+like Explore Numerically (#136); Clear all inputs empties its output
+but no longer deactivates it. The real coupling turned out to be two
+lines of code, not the tools: `runMiniTool` returned silently without
+a solve, and `callMiniTool` read `last.values` off the null `last` —
+both now tolerate no-solve (an empty values dict; a solve only adds
+its answer names to what arguments may reference). The offline build's
+`build_local.py` substitution moved in step, and `aa(3+4j)` was run
+pre-solve in the rebuilt offline app: 5.00000∠53.1301°.
+
+## #148 — one phrasing for how entries are separated — done
+
+Seven hint spans (Expert Mode's equations/unknowns/conditions, the
+Solve card's three, Evaluate's Conditions) now all read canonically:
+"one per line or separated by `and`" for equations and conditions,
+"one per line or separated by commas" for unknowns, each with an
+e.g. Wording only — measured first that every one of the seven
+fields already splits on both (the #96/v76 machinery).
+
+## #147 — the Built-in Examples picker no longer overflows on mobile — done
+
+Roberto's screenshot, 29 Aug 2026: the entry picker ran off the right
+edge of the phone. A native select's default width is its widest
+option's text, and entry names are wider than a phone. `max-width:
+100%` on `.examples select` (and on the solution picker, whose labels
+quote roots); the closed select clips its label, the opened list is
+the OS's own and loses nothing. Measured at 375px: 294px wide, inside
+the viewport.
+
+## #146 — the Plot menu reordered, H(s) label shortened — done
+
+New order: the DC sweep first (and the menu's rest state, including
+after Clear all inputs), Bode of a variable, "Bode plot of transfer
+function H(s)" (the "(FD)" dropped so the label holds one line on a
+phone — the H(s) gives the analysis away), the TR plot last. The
+sweep's label also shortened to "Plot a variable against another
+(DC)". Values unchanged, so nothing downstream moved.
+
+## #145 — the Numerical Solver's name moved into the property mark — done
+
+The property mark reads **Numerical Solver** (both spellings), the
+ribbon dropped the sheet-id and the "Symbulator App" link, and
+Documentation — the one link left — shortens to "Docs" at phone
+widths via the shared vocabulary of #144. Measured at 375, 560 and
+1280: the mark fits in the slot form, never overlaps the brand, and
+the ribbon holds one line with the DC/AC toggle in view.
+
+## #144 — the app ribbon's labels shorten on narrow screens — done
+
+Download App → App, Documentation → Docs, Clear all inputs → Clear
+inputs, at ≤480px — the width where the banner already hides the
+subtitle. Mechanics in the shared `banner.css`: a control carries two
+spans, `.subbar-lbl` and `.subbar-lbl-short`, and exactly one shows —
+the same two-spellings idea as the property mark. Measured at 375px
+on both variants: short labels, one-line ribbon.
+
+## #143 — the ribbon is one line at every width — done
+
+The one-line clip of 28 Aug capped the *link row*, but the ribbon
+row itself (`.subbar-inner`) still flex-wrapped — and flexbox wraps
+on content sizes before it shrinks anything, so learn's version
+picker dropped to a second line while all three links showed. Now
+`.subbar nav` is `flex: 999 1 0`: the nav claims no width of its
+own, grows into what the row can spare, and a link that does not fit
+clips away (on learn, "How it works" hides first, exactly as asked).
+Grow 999 and not 1 because the spacer grows too and at equal factors
+starved the nav into clipping links it had room for — caught by
+measurement at 375px, not by eye. Verified live on learn at 375
+(How it works hidden, one line) and 700 (all three shown).
+
+## #142 — "How it works" points at the landing section — done
+
+learn's ribbon link goes to `https://symbulator.com/#logic` — the
+landing page's new "The logic and its history" section (#140), where
+the monograph is offered with its context — instead of at the PDF
+directly.
+
+## #141 — the landing footer's line reworded — done
+
+"Born free and shared openly for the greater good." — "freely"
+became "openly" and the comma went. One spot; verified live.
+
+## #140 — the landing page reordered — done
+
+New order: Hero · What it does (with its limits block) · Start here
+(the Learn It cluster keeps only the Documentation card) · For
+developers · On a calculator · **The logic and its history** — a new
+final section (`#logic`) holding the Internal Logic and Symbulator
+Book cards, under the headline "Two books: how it works inside, and
+where it began." The tinted bands reassigned to keep alternating down
+the new order (what/build/logic tinted). Verified live: order,
+anchor, and a one-line ribbon at phone width.
 
 ## #139 — the Built-in Examples dropdown closes on an outside click — done
 
