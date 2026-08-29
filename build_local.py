@@ -68,7 +68,7 @@ SW = HERE / "sw.js"
 SW_BEGIN = "  // ==== BEGIN examples ==== written by build_local.py; do not edit"
 SW_END = "  // ==== END examples ===="
 
-WHEEL = "symbulator-0.5.19-py3-none-any.whl"
+WHEEL = "symbulator-0.5.20-py3-none-any.whl"
 
 # The build stamp in the page footer, the last line of the interface.
 # It lives in the template, so the server page and the offline build cut
@@ -787,6 +787,18 @@ def build() -> str:
         """  return await py('mini_tool', { tool: tool, args: args,
     values: last ? last.values : {}, ...roundingState() });""",
         label="mini-tool fetch",
+    )
+
+    s = sub(
+        s,
+        """  const r = await fetch('/api/spice', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({ direction: direction, text: text })
+  });
+  return await r.json();""",
+        """  return await py('spice', { direction: direction, text: text });""",
+        label="spice fetch",
     )
 
     s = sub(

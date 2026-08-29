@@ -342,6 +342,16 @@ def mini_tool(payload_json: str) -> str:
                                       _digits(p) or 4))
 
 
+def spice(payload_json: str) -> str:
+    """JS-callable counterpart of app.py's /api/spice: translate between
+    Symbulator notation and a SPICE netlist (the SPICE Translator card,
+    #160). Thin like the others -- the work and the warnings both live
+    in symbulator_ui.spice_ui."""
+    p = json.loads(payload_json)
+    return json.dumps(ui.spice_ui(str(p.get("direction", "")).strip(),
+                                  p.get("text", "")))
+
+
 def solve_equations(payload_json: str) -> str:
     """JS-callable counterpart of app.py's /api/solveq: solve user-
     supplied equations against known values, with no server round-trip."""
