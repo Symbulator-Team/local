@@ -1,5 +1,26 @@
 # Next build — accepted but not yet done
 
+## #167 — a called name is not an answer reference — done, cache v89
+
+Roberto, 29 Aug 2026 late evening, running Lesson 13's Example 19.2:
+a note asked about a `pr` he never wrote. Confirmed: the
+answer-name-as-value heuristic (`ambiguous_answer_names`, 24 Aug)
+scans value *text* after the bracket shorthand has encoded `[...]`
+as `pr(...)`, so any circuit with an element literally named `r`
+warned about `pr` ≡ `p_r`. 19.2 has a bare `r` — which is also why
+the tests missed it (they used `r1`, `rl`). Three shapes tripped it:
+an encoded parameter term, an encoded resistor bracket, and a typed
+`pr(6,3)` call. The fix covers all three at once: a name immediately
+followed by `(` is a function call, never an answer reference, and
+is skipped. The true positives stand — a *bare* `pr` or `re` used
+as a value still warns exactly as designed. Verified on all five
+shapes. #165 itself was checked and is correct — the encoding is
+text-level and universal by design; only this reader of the encoded
+text was naïve. Shipped at cache v89 on both offline sites; the
+server needs Roberto's pull + Reload (no pip — `symbulator_ui.py`
+only).
+
+
 ## #166 — the port tool's parameters, ready to paste — done, cache v87
 
 Roberto, 29 Aug 2026 evening, closing the loop #163 opened: after
