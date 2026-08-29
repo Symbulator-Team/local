@@ -1,5 +1,54 @@
 # Next build — accepted but not yet done
 
+## #161 — dependent sources translate to SPICE — built, awaiting the go to release
+
+Roberto, 29 Aug 2026, after testing the SPICE Translator online:
+solve the Symbulator→SPICE direction for dependent sources ("think
+deep and hard about it"). Built the same day as solver **0.5.21**
+(committed and pushed, wheel built and twine-checked, **not yet on
+PyPI** — the release train awaits Roberto's go).
+
+The mechanism: `to_spice()` decomposes a dependent value as an
+*affine* expression over node voltages (`v_2`), two-terminal element
+drops (`v_r1`) and element currents (`i_r1`) — spelling equivalence
+included — via SymPy's `linear_coeffs`, then emits one plain linear
+SPICE element per term: E/G for voltage controls (a `+k`/`−k` node
+pair folds into one textbook difference-controlled element, oriented
+so the gain is positive), H/F for current controls, an independent
+V/I for any constant. Terms chain in **series** for a voltage source
+and in **parallel** for a current source, through generated internal
+nodes (`e2_x1`…). A current control on anything that is not already
+a voltage source gets a **0 V sensing source** spliced into that
+branch (`Vi_r1` — SPICE's own ammeter idiom), shared by all
+referencing sources, and dependent sources can sense each other. The
+current of an independent current source is its own value and folds
+into the constant. Nonlinear controls and symbolic gains warn as
+before; a reference to an untranslatable current cascades its
+warning to the referencing source, naming the culprit.
+
+Sign conventions were **measured, not assumed**: Symbulator's
+`i_el` is positive n1→n2, its `e`/`j` node order and SPICE's
+`V`/`I`/`I(V)`/E-control conventions align in all four cases with no
+flips anywhere. Verified two independent ways: round trips re-solved
+through `from_spice()`, and — because a symmetric sign flip cancels
+in a round trip — every emitted netlist also runs through **ahkab**,
+an independently implemented pure-Python MNA simulator, compared
+node voltage by node voltage (11 parametrized cases in the new
+`test_spice_groundtruth.py`, self-skipping where ahkab is absent;
+reviving ahkab 0.18 on Python 3.14 took three shims, documented in
+the file). The harness caught a real quirk worth remembering:
+**ahkab's H (CCVS) senses with the opposite sign to its own F and to
+the ngspice manual** — the manual defines F and H identically, and
+ngspice/LTspice/PSpice follow it, so the exporter targets the
+manual and the test harness flips H gains into ahkab's dialect.
+288 solver tests pass.
+
+**Remaining, on Roberto's go:** the 0.5.21 release train — PyPI
+upload, vendor wheel + `sw.js` pins + cache **v85**, `build_local` +
+ZIP + install/zip deploys, `requirements.txt` to `>=0.5.21`, and the
+PythonAnywhere pass. No app-side code changes are needed: the card
+calls `spice_ui`, which picks up whatever solver is installed.
+
 ## #160 — the SPICE Translator card — done, live on all three app surfaces
 
 Roberto, 29 Aug 2026: a Tools card named **SPICE Translator** — a
