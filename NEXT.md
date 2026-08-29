@@ -14,12 +14,55 @@ the removal to the offline builds.
 
 ---
 
-Everything below is closed: #140–#150 and #158 landed on 29 Aug 2026
-and #132–#136, #138 and #139 on 28 Aug 2026, each the same day it was
-accepted. (#151–#157, the docs-side visual pass over the PDFs, are
-written up in `Sym Docum/Documentation/NEXT_DOCS.md` on the same
-running sequence.) The write-ups follow, newest first; the next new
-item is **#159**.
+Everything below is closed: #140–#150, #158 and #159 landed on
+29 Aug 2026 and #132–#136, #138 and #139 on 28 Aug 2026, each the
+same day it was accepted. (#151–#157, the docs-side visual pass over
+the PDFs, are written up in `Sym Docum/Documentation/NEXT_DOCS.md` on
+the same running sequence.) The write-ups follow, newest first; the
+next new item is **#160**.
+
+## #159 — names that cannot appear in an expression are refused — done
+
+Roberto, 29 Aug 2026, asked whether any resistor names were
+forbidden. Measured against 0.5.19: none were — the old
+`RESERVED_NAMES` set in `symbulator/elements.py` was declared and
+referenced by nothing, dead since the fixes that removed
+reserved-name handling (Roberto remembered this correctly). The only
+enforced rules were the element-kind prefix and uniqueness after
+case folding.
+
+The measurement also showed why that was one rule short: a resistor
+named `r-x` parsed and solved fine alone, but a dependent source
+written `2*i_r-x` silently read as the subtraction `2*i_r - x` and
+returned an answer containing phantom symbols — no error, wrong
+result. Dots and spaces failed the same way.
+
+Roberto: names should not have hyphens; put in a warning. Implemented
+as a parse-time `CircuitError` rather than a Python warning, because
+a library warning is invisible in the app, which is where circuits
+are typed; flagged in chat for him to downgrade if he meant it
+softer. `parse_circuit` now requires the folded name to be
+identifier-safe (letters, digits, underscores — `name.isidentifier()`),
+on the solve and echo (`expand_si=False`) paths alike, with a message
+that quotes the name as typed and says why: the element's answers
+(`i_...`, `v_...`, `p_...`) must stay typable inside a value or an
+added equation. `RESERVED_NAMES` deleted in the same commit.
+
+Checked before committing: all 246 solver tests pass (two new — the
+rejection for `r-x`/`r.1`/`r x`, and a guard that `r`, `r0`, `r_1`,
+`ris`, `rlongname99` still solve); every one of the 1,637 element
+lines across the 330 built-in examples already satisfies the rule.
+One residual quirk left alone, recorded here: `r1` and `r_1` may
+coexist as distinct elements, and a spelled reference like `ir1`
+binds to one of them without an ambiguity error — legal under the
+spelling-equivalence rules, confusing to write, not worth a rule
+until someone actually does it.
+
+In the repo, not yet released: ships with the next solver release
+(the same one that takes #158's README section to PyPI). Until then
+PyPI, the bundled wheel and the server all stay 0.5.19, which still
+*accepts* such names — the app's behaviour changes only when that
+release is cut and deployed.
 
 ## #158 — the solver README teaches the SymPy side — done
 
