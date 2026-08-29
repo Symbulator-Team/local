@@ -1,5 +1,62 @@
 # Next build — accepted but not yet done
 
+## #163 — two-port parameters in the description — built, rides the 0.5.21 train
+
+Roberto, 29 Aug 2026, on discovering that the v9 port had left
+two-port parameters reachable only through expert mode (a Sonnet
+porting decision he had not reviewed): a design of his own, three
+cases. **Case A** — `z,1,2` alone keeps the tacit parameter term
+`[z11,z12,z21,z22]` and the parameters stay symbolic (today's
+behaviour, so old descriptions are untouched). **Case B** — Define
+supplies values for any of the four names, and they land: the app's
+`expand_defines_in_desc` (shared `symbulator_ui.py`, both repos)
+materialises the tacit term when a define names one of its entries,
+and the values substitute; partial definitions leave the rest
+symbolic. **Case C** — the term written explicitly:
+`z,1,2,[100,10,20,50]`, entries numeric, SI-prefixed or symbolic
+expressions. Implementation: each entry binds its
+correspondingly-named variable through the same substitution
+machinery as expert conditions (the TI's `|` operator — the
+calculator's "store the values first"), placed so an explicit user
+condition on the same name still wins. The values are substituted
+into the system *before* solving, so they ride into the Numerical
+Solver handover already baked in. No clash with the `[a,b]` parallel
+shorthand: two-ports have no value field, and the internal `pr(...)`
+encoding disambiguates by element kind. Verified: term ≡ conditions
+(same answers), all six kinds, override, partial defines, malformed
+lists refused, the schematic drawer unaffected — and Roberto's
+v7/v8-era guards were confirmed still live and stopping the solve
+(a port node of 0, or both ports on one node, each a clear
+`CircuitError`). The naming rule (`z` → `z11`, `z1` → `z111`) is
+deliberate and documented rather than warned about, per Roberto.
+Solver README rewritten accordingly; every code block run verbatim.
+
+## #162 — every element type exports to SPICE — built, rides the 0.5.21 train
+
+Roberto, 29 Aug 2026: ideally any Symbulator element translates to
+SPICE, even where the reverse is not feasible. Now true. The ideal
+**op-amp** exports as a gain-1e9 VCVS (`Eo1 3 0 0 2 1G`) — the
+universal SPICE idiom, parts-per-billion finite-gain error, and the
+warning says "finite-gain stand-in" honestly. The ideal
+**transformer** exports *exactly*: a VCVS at the turns ratio, a 0 V
+current sense, and a CCCS reflecting the secondary current into the
+primary — correct at DC, where the coupled-inductor approximation
+(k=1 inductors) shorts out; the measured port relations
+(`v/t` equal, `t·i` conserved, both checked against the solver)
+round-trip symbolically equal. A **two-port block** with a numeric
+parameter term (#163) exports as up to four grounded VCCS elements
+via the engine's own admittance reduction — the i1/i2 formulas
+transcribed verbatim from `engine._stamp_two_port`, so exporter and
+solver cannot disagree; sets singular in admittance form warn, as
+the solver itself cannot substitute them either. Also fixed while
+verifying: computed netlist numbers (gains, ratios, coupling
+factors) now print with round-trip precision — six significant
+digits measurably shifted every solved voltage at the 1e-6 level,
+caught by the ground-truth harness. All of it verified per node
+voltage against the independent simulator: op-amp, transformer, and
+each of the six two-port kinds, alongside the #161 cases. 310
+solver tests pass.
+
 ## #161 — dependent sources translate to SPICE — built, awaiting the go to release
 
 Roberto, 29 Aug 2026, after testing the SPICE Translator online:
@@ -43,11 +100,17 @@ ngspice/LTspice/PSpice follow it, so the exporter targets the
 manual and the test harness flips H gains into ahkab's dialect.
 288 solver tests pass.
 
-**Remaining, on Roberto's go:** the 0.5.21 release train — PyPI
-upload, vendor wheel + `sw.js` pins + cache **v85**, `build_local` +
-ZIP + install/zip deploys, `requirements.txt` to `>=0.5.21`, and the
-PythonAnywhere pass. No app-side code changes are needed: the card
-calls `spice_ui`, which picks up whatever solver is installed.
+**Remaining, on Roberto's go:** the 0.5.21 release train — now
+carrying #161, #162 and #163 together — PyPI upload, vendor wheel +
+`sw.js` pins + cache **v85**, `build_local` + ZIP + install/zip
+deploys, `requirements.txt` to `>=0.5.21`, and the PythonAnywhere
+pass. The shared `symbulator_ui.py` changed too (#163's Define
+materialisation), so the server pull matters beyond the pip
+upgrade. Accepted and queued behind the release: **#164**, the
+Lesson 13 two-port documentation revision in the docs tree
+(`Sym Docum`) — Roberto: "in addition to, and independent from, the
+SPICE stuff" — documenting the three cases, the naming rule, and
+the guards.
 
 ## #160 — the SPICE Translator card — done, live on all three app surfaces
 
