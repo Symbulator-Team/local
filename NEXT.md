@@ -1,6 +1,6 @@
 # Next build — accepted but not yet done
 
-## #178 — an Acknowledgements link in the About card — **done, cache v94**
+## #178 — an Acknowledgements link in the About card — **done, cache v94; PyAn pending**
 
 Roberto, 30 Aug 2026: at the end of the first paragraph of the **About
 Symbulator** card, the word **Acknowledgements**, linking to that part of
