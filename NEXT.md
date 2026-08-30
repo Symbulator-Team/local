@@ -1,5 +1,218 @@
 # Next build — accepted but not yet done
 
+## #191 — a box for the settings notes — **done, not deployed**
+
+Roberto, 30 Aug 2026: put the notes about the settings inside a rounded
+rectangle with a tag reading **A word about your settings**.
+
+Three treatments were mocked up in both themes against the app's own
+tokens — a legend straddling the border, a pill on a tinted panel, and a
+header strip. Roberto chose the **legend**, and was right to: I had argued
+for the tinted one because it makes a live message land, but the box is
+inert most of the time, and a permanent tint gives permanent weight to
+something usually saying nothing. That is the same argument that hid the
+RMS row rather than greying it (#183's precedent).
+
+What compensates for the missing tint: the dynamic line is set **bold**
+inside the box. It already carried `--note-warn`; bold is what makes it
+read as an event rather than more explanation. If that turns out not to
+catch the eye in use, tinting the box only *while* a message is present is
+a two-line change.
+
+**In the box:** `#siNote` (the live message) and `#settingsNote` (the
+standing explanation about SI prefixes and exact).
+
+**Not in the box:** the Rounding control's own note. There is a comment
+beside it saying a message about one control belongs under that control,
+not in a shared box at the foot of the card — a decision already taken,
+and folding it in would have undone it. Worth knowing that the SI-versus-
+exact conflict raises *either* note depending on which control you touched:
+ticking SI writes the Rounding one, choosing exact writes the one in here.
+
+The tag paints `var(--card)` over the border to make its notch, **not a
+fixed white** — in dark mode the card is `#1b212c` and a white notch would
+be a bright bar across the border. Verified in both themes: the notch
+matches the card exactly, the tag takes the accent (#2f5fa8 light,
+#5b96e0 dark), and a real message raised through the app's own handler
+sits bold and crimson above the standing text.
+
+---
+
+## #189 — the showcase book is renamed — **done, not deployed**
+
+Roberto, 30 Aug 2026: in **Built-in Examples**, *A sample of what
+Symbulator can do* becomes **Claude's sampler for Symbulator 9**.
+
+One line, the `title:` in `examples/Showcase.cir`, which is what the menu
+lists the book by. `repos/local/examples/Showcase.cir` is generated from
+it by `build_local.py`, so the server copy is the one to edit.
+
+Checked afterwards that the apostrophe rides through `circuitbook.parse_book`
+intact and the book still reports its 12 entries.
+
+---
+
+## #190 — the *approx* option names its precision — **done, not deployed**
+
+The menu's **approx** becomes **approx (full precision)**. Roberto asked
+what the option actually does, having guessed "without rounding" or "12
+digits"; measured, it is neither. It converts to a decimal and shows the
+shortest form that is still exactly the same number at double precision,
+so `15/2` prints `7.5` and `1/3` prints `0.3333333333333333`. No fixed
+count — the number decides the width, where *approx to n digits* makes the
+setting decide.
+
+The write-up with the measurements is in `Sym Docum`'s `NEXT_DOCS.md`,
+since the tutorial line that names the option moved with it.
+
+---
+
+## #184 — the Solve card says it is waiting — **done, not deployed**
+
+Roberto, 30 Aug 2026: make the fields in the **Solve** card inactive until
+a simulation has been run, the way Evaluate's are.
+
+Measured first, and they already were. All five controls carry `disabled`
+in the markup, and `clearResults()` and `activatePostSolve()` handle them
+in step with Evaluate's. What was missing was the *signal*:
+
+| field | placeholder while disabled |
+|---|---|
+| `evalExpr`, `evalConds` | *solve a circuit first…* |
+| `solveqEqs` | **(empty)** — `clearResults()` blanked it |
+| `solveqUnks` | **`x`** — its live hint, never swapped out |
+| `solveqConds` | **(empty)** — never had one |
+
+So a card that could not be used read as one that could, and one of its
+fields advertised a value you could not type. Evaluate looked right for
+one reason only: it says so on both of its fields.
+
+All three now carry Evaluate's wording while they wait, and
+`activatePostSolve()` puts the live hints back (`e.g. p_r2 = 0.05`, `x`,
+and nothing for Conditions). The text is a single constant,
+`WAITING_FOR_SOLVE`, because this item *was* the two cards drifting apart.
+
+Verified in a browser: before a solve, all five controls disabled and all
+three fields reading *solve a circuit first…*; after one, the live hints
+back.
+
+Not changed, and worth knowing: a disabled field on this page does not
+*look* disabled — `opacity: .55; cursor: not-allowed` is scoped to
+`#expertBox` alone, so everywhere else a disabled input keeps the same
+background and ink as a live one. Widening that rule would grey the Solve
+and Evaluate fields, and also `omega`, `vars`, `n1`, `n2` and `kind`
+whenever the analysis does not use them. That is a bigger visual change
+than was asked for; say if it is wanted.
+
+---
+
+## #185 — the Numerical Solver opens blank — **done, not deployed**
+
+Roberto, 30 Aug 2026: after **Clear all inputs**, opening the Numerical
+Solver still showed a set of equations. Why?
+
+Not a leak from the app. `templates/eqsheet.html` shipped a worked example
+hard-coded in its `#rules` textarea — a voltage divider and a thermal
+equation — so the page would not be empty for someone arriving at
+`/eqsheet/` cold. The app opens it with no payload whenever nothing has
+been solved (#136), and that sample was simply sitting there.
+
+It also contradicted the page's own tagline three lines above it: *"Arrives
+preloaded with the solved circuit's equation system and results."* What
+arrived was a system no Symbulator circuit would ever produce.
+
+Gone. The box is empty, with a placeholder naming the format instead:
+*one equation per line, e.g. Vout = Vin \* R2 / (R1 + R2)*.
+
+---
+
+## #186 — Clear all inputs, in the Numerical Solver — **done, not deployed**
+
+Roberto, same day: the solver should be able to clean its slate in one
+click, as the app can.
+
+Same control, same place, same class — `.subbar-action` in the ribbon,
+right of the spacer beside the theme toggle, with the two spellings the
+shared banner switches between at phone widths. That class was already
+styled in `eqsheet.html` and had no button using it.
+
+It empties everything derived from the equations, not just the text: the
+parsed rules, which of them are ticked, every variable's Known/Unknown
+status and value, the stored solution, the residuals and both status
+lines. Done locally rather than by re-parsing an empty box, so it needs no
+round trip and works with the server unreachable.
+
+**Deliberately kept:** the DC/AC mode and the rounding menu. Those are
+preferences about how the sheet works rather than inputs typed into it,
+and the rounding one is remembered in `localStorage` between visits.
+
+Verified: two equations and five variable rows in, one click, everything
+back to zero with both tables hidden.
+
+---
+
+## #187 — the SPICE card's buttons, centred — **done, not deployed**
+
+Roberto, same day: centre the two buttons in the **SPICE Translator**
+card, on one line, rather than aligning them left.
+
+`justify-content: center` on that one row, inline, **not** on `.actions` —
+four cards share that class and the other three are meant to line up with
+the text above them. Confirmed after the change that `inputsCard`,
+`miniCard` and `plotCard` still read `normal`.
+
+At 1200px the two sit on one line with 180px clear on each side. The row
+keeps `flex-wrap: wrap`, so at phone widths they stack — and each line is
+then centred in turn, which is the sensible reading of the request.
+
+---
+
+## #183 — hide the polar phasors tick outside AC — **accepted, not done**
+
+Roberto, 30 Aug 2026, as a note for the to-do list: **Show AC answers as
+polar phasors** should be *hidden* when the analysis is not AC, not merely
+disabled as it is now.
+
+This finishes a decision already taken. On 28 Aug 2026 the **AC power
+convention** row faced the same question — grey it out, or hide it — and
+Roberto chose hiding, on the argument that a permanently greyed control is
+clutter that never becomes useful where it sits. `syncSettings()` already
+does that for RMS:
+
+    $('rmsRow').style.display = isAc ? '' : 'none';
+    $('useRms').disabled = !isAc;
+
+Polar was left on the older treatment three lines below, so the two
+settings that are AC-only behave differently on the same card:
+
+    $('polarPhasors').disabled = !isAc;
+    $('polarLine').style.opacity = isAc ? '1' : '.5';
+    $('polarLine').title = isAc ? '' : 'Applies to AC analysis only';
+
+### What makes this different from the RMS one
+
+**RMS has a row of its own; polar does not.** `#rmsRow` is a whole `.row`
+and can be hidden outright. `#polarLine` is one `.checkline` among several
+inside the Display block — *Show units*, *Use SI prefixes*, *Show AC
+answers as polar phasors*, *Show equations* — so what gets hidden is that
+one label, and the remaining ticks have to close up cleanly behind it.
+Worth a look at the card at phone width as well as desktop.
+
+The `opacity` and `title` lines go with it: both exist only to explain a
+greyed-out control, and neither means anything once it is gone.
+
+**Leave the value alone while it is hidden.** The RMS comment records why:
+nothing clears it, so an AC entry's choice comes back when the analysis
+returns to AC. The same must hold here — `polar` is saved in the `.cir`
+(and in `inputsSnapshot()`), so clearing it on a domain change would edit
+the reader's entry behind their back and, since #182, would rightly be
+reported as an unsaved edit.
+
+Check afterwards that loading an AC entry with `polar: yes` still shows
+the tick, and that switching that entry to DC and back leaves it ticked.
+
+---
+
 ## #182 — two things that went wrong around loading an entry — **done, cache v98**
 
 Roberto, 30 Aug 2026, describing both from use. Both reproduced in the
