@@ -1,5 +1,34 @@
 # Next build — accepted but not yet done
 
+## #189 — the showcase book is renamed — **done, not deployed**
+
+Roberto, 30 Aug 2026: in **Built-in Examples**, *A sample of what
+Symbulator can do* becomes **Claude's sampler for Symbulator 9**.
+
+One line, the `title:` in `examples/Showcase.cir`, which is what the menu
+lists the book by. `repos/local/examples/Showcase.cir` is generated from
+it by `build_local.py`, so the server copy is the one to edit.
+
+Checked afterwards that the apostrophe rides through `circuitbook.parse_book`
+intact and the book still reports its 12 entries.
+
+---
+
+## #190 — the *approx* option names its precision — **done, not deployed**
+
+The menu's **approx** becomes **approx (full precision)**. Roberto asked
+what the option actually does, having guessed "without rounding" or "12
+digits"; measured, it is neither. It converts to a decimal and shows the
+shortest form that is still exactly the same number at double precision,
+so `15/2` prints `7.5` and `1/3` prints `0.3333333333333333`. No fixed
+count — the number decides the width, where *approx to n digits* makes the
+setting decide.
+
+The write-up with the measurements is in `Sym Docum`'s `NEXT_DOCS.md`,
+since the tutorial line that names the option moved with it.
+
+---
+
 ## #184 — the Solve card says it is waiting — **done, not deployed**
 
 Roberto, 30 Aug 2026: make the fields in the **Solve** card inactive until
