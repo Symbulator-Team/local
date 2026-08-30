@@ -1,6 +1,6 @@
 # Next build — accepted but not yet done
 
-## #175 — rounding: "exact and approx to n digits" — **done, cache v93**
+## #175 — rounding: "exact and approx to n digits" — **done, cache v93; PyAn pending**
 
 Antony García's suggestion, brought by Roberto on 30 Aug 2026: solve the
 circuit exactly, but show, for every answer that is a pure number, both the
@@ -42,7 +42,7 @@ works online and silently does nothing offline.
 
 ---
 
-## #176 — a Show equations tick, and an Equations card — **done, cache v93**
+## #176 — a Show equations tick, and an Equations card — **done, cache v93; PyAn pending**
 
 Antony García's second suggestion, same day. A tick in **Settings**, and
 when it is on, a card under Results headed **Equations** listing the system
@@ -107,6 +107,20 @@ Verified afterwards: every one of the 18 example books through
 sole exception being Lesson 4's Bo2 Example 3.11, the failure that lesson
 teaches on purpose. The TR books (06a–d) and the FD book (12) were the ones
 Roberto asked for by name.
+
+**Deployed 30 Aug 2026 to the two offline sites**, at cache **v93**, and
+verified by fetching: the Rounding menu on `install.symbulator.com` reads
+exact / approximate / approximate to n significant digits / **exact and
+approx to n digits**; `showEquations` and `equationsCard` are both in the
+page; `sw.js` reports `symbulator-v93`; the served `symbulator_ui.py`
+carries both `_dualise` and the `_sources_to_s(desc)` TR fix; and
+`symbulator.com/9/local.zip` matches the local build by hash.
+
+**`symbulator.pythonanywhere.com` still runs the old build** until Roberto
+pulls. `symbulator_ui.py`, `app.py`, `circuitbook.py` and
+`templates/index.html` all changed, so the pull matters beyond pip; no
+solver release is involved, so `pip install --upgrade symbulator` is not
+needed and 0.5.22 stays correct.
 
 ---
 
