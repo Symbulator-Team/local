@@ -309,6 +309,23 @@ if it fails identically, the browser is the cause, not the build.
 
 ## Things that will bite you
 
+**A template change is not verified until Flask has rendered it.**
+`repos/server/templates/index.html` is a **Jinja** template; the offline
+builds are static HTML generated from it and never pass through Jinja. On
+30 Aug 2026 an HTML comment in it contained `{#`, which is Jinja's
+comment-opener, with no closing `#}`. The template stopped parsing and the
+server returned **500 on every page** — while `install.symbulator.com` and
+the ZIP were fine, verified clean by hash, and `/healthz` stayed green
+because it renders no template. Every check that had been run was
+structurally incapable of catching it.
+
+So: after touching anything under `templates/`, start the app and fetch
+`/`, `/eqsheet/` and `/healthz` before calling it done. `py app.py` and
+three requests take a minute. Watch for `{#`, `{%` and `{{` in comments
+and in JavaScript especially, since none of them look like template
+syntax to a reader.
+
+
 **`CACHE_VERSION` in `sw.js`.** The service worker is cache-first. If you
 change app files without bumping it, returning visitors keep the old build
 forever — including the old manifest. Any fix you cannot see on a device you
