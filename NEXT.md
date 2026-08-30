@@ -1,6 +1,19 @@
 # Next build — accepted but not yet done
 
-## #191 — a box for the settings notes — **done, not deployed**
+**#184–#191 deployed 30 Aug 2026** to `learn.symbulator.com`,
+`install.symbulator.com` and the ZIP, at cache **v99**, and verified by
+fetching: the settings box, the *approx (full precision)* label, the Solve
+card's waiting text, the centred SPICE row, the solver's Clear button and
+its blank sheet, the renamed showcase, `sw.js` at v99 and the ZIP matching
+by hash. **`symbulator.pythonanywhere.com` awaits Roberto's pull.**
+
+Version X has the same code: merged with `git fetch v9 && git merge
+v9/main` — clean, no conflicts — pushed to `Symbulator-Team`, and live on
+`symbulatorx.pythonanywhere.com`, verified the same way.
+
+---
+
+## #191 — a box for the settings notes — **done, cache v99; PyAn pending**
 
 Roberto, 30 Aug 2026: put the notes about the settings inside a rounded
 rectangle with a tag reading **A word about your settings**.
@@ -38,7 +51,7 @@ sits bold and crimson above the standing text.
 
 ---
 
-## #189 — the showcase book is renamed — **done, not deployed**
+## #189 — the showcase book is renamed — **done, cache v99; PyAn pending**
 
 Roberto, 30 Aug 2026: in **Built-in Examples**, *A sample of what
 Symbulator can do* becomes **Claude's sampler for Symbulator 9**.
@@ -52,7 +65,7 @@ intact and the book still reports its 12 entries.
 
 ---
 
-## #190 — the *approx* option names its precision — **done, not deployed**
+## #190 — the *approx* option names its precision — **done, cache v99; PyAn pending**
 
 The menu's **approx** becomes **approx (full precision)**. Roberto asked
 what the option actually does, having guessed "without rounding" or "12
@@ -67,7 +80,7 @@ since the tutorial line that names the option moved with it.
 
 ---
 
-## #184 — the Solve card says it is waiting — **done, not deployed**
+## #184 — the Solve card says it is waiting — **done, cache v99; PyAn pending**
 
 Roberto, 30 Aug 2026: make the fields in the **Solve** card inactive until
 a simulation has been run, the way Evaluate's are.
@@ -106,7 +119,7 @@ than was asked for; say if it is wanted.
 
 ---
 
-## #185 — the Numerical Solver opens blank — **done, not deployed**
+## #185 — the Numerical Solver opens blank — **done, cache v99; PyAn pending**
 
 Roberto, 30 Aug 2026: after **Clear all inputs**, opening the Numerical
 Solver still showed a set of equations. Why?
@@ -126,7 +139,7 @@ Gone. The box is empty, with a placeholder naming the format instead:
 
 ---
 
-## #186 — Clear all inputs, in the Numerical Solver — **done, not deployed**
+## #186 — Clear all inputs, in the Numerical Solver — **done, cache v99; PyAn pending**
 
 Roberto, same day: the solver should be able to clean its slate in one
 click, as the app can.
@@ -151,7 +164,7 @@ back to zero with both tables hidden.
 
 ---
 
-## #187 — the SPICE card's buttons, centred — **done, not deployed**
+## #187 — the SPICE card's buttons, centred — **done, cache v99; PyAn pending**
 
 Roberto, same day: centre the two buttons in the **SPICE Translator**
 card, on one line, rather than aligning them left.
