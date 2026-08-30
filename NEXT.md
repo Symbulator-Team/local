@@ -180,7 +180,7 @@ then centred in turn, which is the sensible reading of the request.
 
 ---
 
-## #183 — hide the polar phasors tick outside AC — **accepted, not done**
+## #183 — hide the polar phasors tick outside AC — **done, cache v100; PyAn pending**
 
 Roberto, 30 Aug 2026, as a note for the to-do list: **Show AC answers as
 polar phasors** should be *hidden* when the analysis is not AC, not merely
@@ -223,6 +223,45 @@ reported as an unsaved edit.
 
 Check afterwards that loading an AC entry with `polar: yes` still shows
 the tick, and that switching that entry to DC and back leaves it ticked.
+
+### Done, 30 Aug 2026
+
+Three lines became two:
+
+    $('polarLine').style.display = isAc ? '' : 'none';
+    $('polarPhasors').disabled = !isAc;
+
+`disabled` stays, mirroring the RMS pair. A hidden control is out of the
+accessibility tree anyway, so it guards nothing a reader can reach — it
+guards the code: anything that reads the tick without asking the domain
+first still gets the right answer.
+
+**Measured, not eyeballed**, driving the real Flask render:
+
+| domain | tick shown | still ticked |
+|---|---|---|
+| ac | yes | yes |
+| dc | **no** | yes |
+| fd | **no** | yes |
+| tr | **no** | yes |
+| back to ac | yes | yes |
+
+The Display block closes up behind it: in DC the remaining three — *Show
+units*, *Use SI prefixes*, *Show equations* — keep their rhythm, and at
+375px the block loses exactly the 84px the two-line polar label occupied,
+with no gap left where it was.
+
+The value survives, as required. Loading Lesson 7's *AS7's Example 9.9*
+(`polar: yes`), switching to DC and back leaves `inputsSnapshot().polar`
+`true` throughout, and the entry loads and returns **clean** — no phantom
+unsaved edit. It does report an unsaved change *while* the domain is DC,
+which is right: the reader really did change the analysis type. That is
+#182's warning working, not misfiring.
+
+Live on both offline sites and hash-verified: the deployed page carries
+the `style.display` line and **zero** occurrences of `Applies to AC
+analysis only`, the string that only ever existed to apologise for a
+greyed control.
 
 ---
 
