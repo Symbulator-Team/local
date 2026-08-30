@@ -1,5 +1,52 @@
 # Next build — accepted but not yet done
 
+## #181 — exact-and-approx folds when there is no exact — **done, cache v97**
+
+Roberto, 30 Aug 2026, with a screenshot of **AS7's Example 19.2** in
+Lesson 13: every polar answer printed the same number twice —
+`i_e = 2.0∠180.0° A  (≈ 2.0∠180.0° A)`. His rule: *the exact + approx
+should fold into simply approx when there is no exact.*
+
+Measured on that entry, the two halves of one phasor were
+
+    exact    plain '2.00000000000000∠180.000000000000°'   latex '2.0 \angle 180.0^\circ'
+    approx   plain '2.00∠180°'                            latex '2.0 \angle 180.0^\circ'
+
+— the **plain** strings differ, which is all `_join_dual` compared, while
+the **LaTeX**, the thing the reader actually sees, is identical.
+Underneath that is the real point: `_polar_format` numericises, so a
+phasor's "exact" half is not an exact form at all, only a longer decimal.
+
+Two tests now decide it, and they answer different questions:
+
+- **`_has_exact_form`** — is there an exact rendering worth showing?
+  No when the display is polar, and no when the value already carries a
+  `Float` (an approximate input like `2E3` was never exact). Folds to the
+  **approximation**, which is Roberto's rule exactly.
+- **`_is_whole`** — is there anything to round to? No for a whole number,
+  real or complex. Folds to the **exact** half, which is the better of
+  the two here: `1j`, not `1.0j`.
+
+`_join_dual` now compares LaTeX as well as plain, as a backstop for any
+other formatter whose two spellings render alike.
+
+The whole-number case was not in the report. It is the same defect in a
+milder guise — `i_r = 1j A  (≈ 1.0j A)` in rectangular display, a bracket
+that tells the reader nothing — and it is fixed with it. Say if that was
+wanted left alone.
+
+Verified on the reported entry: AS7's Example 19.2 in polar at 4 digits
+now prints **byte-identical to plain "approx to n digits"**, zero `≈`
+markers on the page. Rectangular gives `1j A`, `10j V`, `-1j A`, no
+brackets. And the bracket still earns its place where it should:
+`i_r1 = 3/500 A (≈ 6 mA)`, `p_r1 = 9/250 W (≈ 36 mW)`.
+
+Lessons 7, 8, 9 and 13 — the AC and two-port books — re-swept, all at 0
+entries with a problem. `/`, `/eqsheet/` and `/healthz` rendered through
+Flask, per the rule #180 wrote down.
+
+---
+
 ## #180 — the knowns are equations too — **done, cache v96**
 
 Roberto, 30 Aug 2026, on the Equations card (#176): the listing split into
