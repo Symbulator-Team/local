@@ -1,5 +1,43 @@
 # Next build — accepted but not yet done
 
+## #179 — the Rounding menu, reordered and reworded — **done, cache v95**
+
+Roberto, 30 Aug 2026, giving the order and the wording verbatim:
+
+    exact
+    exact and approx to n digits
+    approx to n digits
+    approx
+
+Most exact first, and the two modes that use the **n** box now sit
+together instead of at opposite ends.
+
+**The `value` of each option is deliberately unchanged** — `exact`,
+`both`, `n`, `approx`. Those are what `roundingLabel()` writes into a
+`.cir` and what `applyCircuit()` reads back, so every input file ever
+saved still loads and only what the reader sees has moved.
+
+### It made 22 lines of the tutorial wrong, which are fixed with it
+
+The chapters name these options by their labels, and two of the four
+labels changed. *approximate to n significant digits* → *approx to n
+digits* in 21 places (Lesson 1's own instruction, and the twenty copies
+of the `approx`/**Rounding** boilerplate across Lessons 1, 3 and 4), and
+*approximate* → *approx* once, in Lesson 5. Left alone: three references
+to *exact*, whose label did not change, and two `note:` lines in the
+example books that say "five significant digits" — prose about the
+setting's effect, not the name of a menu entry.
+
+`examples/Showcase.cir` documents the `.cir` keys at its head and was
+two releases stale: its `rounding:` line predated `exact+n` (#175) and
+`show_equations` (#176) was missing entirely. Both added.
+
+Docs guards after the pass: `check_against_originals` unchanged at 73
+verified / 11 not found, `check_control_chars` clean, `check_white_text`
+clean, three PDFs rebuilt at 240 / 205 / 195 pages.
+
+---
+
 ## #178 — an Acknowledgements link in the About card — **done, cache v94; PyAn pending**
 
 Roberto, 30 Aug 2026: at the end of the first paragraph of the **About
