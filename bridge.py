@@ -165,7 +165,7 @@ def solve(payload_json: str) -> str:
                       equations, unknowns, conditions, _digits(p),
                       bool(p.get("si")), bool(p.get("units")),
                       bool(p.get("use_rms")), bool(p.get("approx")),
-                      bool(p.get("polar")))
+                      bool(p.get("polar")), bool(p.get("dual")))
     # Attach the notes either way: when the solve fails, "normalised
     # '5*i' to '5j'" is often the explanation for the error underneath.
     res["notes"] = (define_notices + imaginary_notes
@@ -179,7 +179,8 @@ def solve(payload_json: str) -> str:
                     "digits": _digits(p), "si": bool(p.get("si")),
                     "units": bool(p.get("units")),
                     "use_rms": bool(p.get("use_rms")),
-                    "polar": bool(p.get("polar"))})
+                    "polar": bool(p.get("polar")),
+                    "dual": bool(p.get("dual"))})
     return json.dumps(res)
 
 
@@ -326,7 +327,7 @@ def evaluate(payload_json: str) -> str:
     return json.dumps(ui.evaluate_ui(expr, p.get("values") or {}, _digits(p),
                                      bool(p.get("si")), bool(p.get("approx")),
                                      str(p.get("domain", "")).strip().lower(),
-                                     conditions))
+                                     conditions, bool(p.get("dual"))))
 
 
 def mini_tool(payload_json: str) -> str:
@@ -380,7 +381,8 @@ def solve_equations(payload_json: str) -> str:
                                    _digits(p), bool(p.get("si")),
                                    bool(p.get("approx")), bool(p.get("units")),
                                    bool(p.get("real_only")), conditions,
-                                   str(p.get("domain", "")).strip().lower()))
+                                   str(p.get("domain", "")).strip().lower(),
+                                   bool(p.get("dual"))))
 
 
 def parse_book(text: str) -> str:

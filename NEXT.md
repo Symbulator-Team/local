@@ -1,5 +1,115 @@
 # Next build — accepted but not yet done
 
+## #175 — rounding: "exact and approx to n digits" — **done, cache v93**
+
+Antony García's suggestion, brought by Roberto on 30 Aug 2026: solve the
+circuit exactly, but show, for every answer that is a pure number, both the
+exact value and a numerical approximation.
+
+A fourth entry on the **Rounding** menu, using the same **n** box as
+*approximate to n significant digits*. Roberto chose the layout from three
+mock-ups: exact first, the approximation after it in brackets.
+
+    i_r1 = 3/500 A  (≈ 6 mA)
+    v_r1 = 6 V
+    v_o  = v·r2/(r1 + r2)
+
+The second and third lines are the rule that makes it readable. **An answer
+that is already a whole number gains no bracket** — "6 V (≈ 6 V)" is noise —
+and **a symbolic answer gets none either**, there being nothing to
+approximate. `_join_dual` drops the bracket whenever the two halves would
+print the same.
+
+Both formatters are *wrapped*, not rewritten: `fmt`/`fmt0` in `solve_ui`
+grew keyword parameters defaulting to the call's own flags, so `_dualise`
+runs each answer through the very same code twice — once with the rounding
+off, once with it on. The two halves therefore cannot drift apart in units,
+polar form, SI prefixes or the infinity spelling. SI prefixes land on the
+approximation only, which is what makes `3/500 A (≈ 6 mA)` read as it does.
+
+It applies in **Evaluate** and the **Solve** card too, not only Results: a
+setting that visibly did nothing in two of the three places answers arrive
+would read as a bug. Both took the same treatment; `evaluate_ui`'s two
+identical formatting tails became one `shown()` on the way past.
+
+Carried in the input file as `rounding: exact+4`. An older Symbulator
+reading that file falls through to plain n digits — wrong in the display,
+right in the arithmetic.
+
+Wired through `app.py` **and** `repos/local/bridge.py`: the offline build
+calls `symbulator_ui` directly, so a flag added to one and not the other
+works online and silently does nothing offline.
+
+---
+
+## #176 — a Show equations tick, and an Equations card — **done, cache v93**
+
+Antony García's second suggestion, same day. A tick in **Settings**, and
+when it is on, a card under Results headed **Equations** listing the system
+the solver assembled, set as mathematics with MathJax.
+
+Most of it was already there: `symbulator_ui` has built the equation list
+for the Export Output card's download all along. What is new is `system`, a
+grouped version of the same content carrying a LaTeX rendering per line —
+the stamped equations, the known values, expert-mode extras marked
+**Added in expert mode**, **Conditions**, and the unknowns at the foot.
+Roberto's call: the whole system, not equations and conditions alone.
+
+Three things worth knowing:
+
+- **The card needs both the tick and a system.** An empty card headed
+  "Equations" is worse than no card, so it stays hidden without both.
+  Ticking the box after a solve re-renders from `last.system` rather than
+  solving again.
+- **The unit step is shown `u(t)`, not `θ(t)`.** SymPy's LaTeX for
+  Heaviside is theta, which is not what the app's input language or the
+  tutorial calls it. The EqSheet export already rewrote it; the card does
+  the same now.
+- **`app.py` lists the payload keys by hand**, as its own comment warns, so
+  `system` had to be named there or the server variant would have dropped
+  it silently while the offline build worked. `bridge.py` returns the
+  payload whole and needed nothing.
+
+### The TR system was a chimera — fixed, and it predates the card
+
+Roberto, reading the first TR listing: a source appearing in the time
+domain. He wondered whether it was the calculator's **Impala mode** — the
+version 4 trick that stamps a placeholder for a time-varying source, solves,
+then substitutes the s-domain value and re-evaluates.
+
+It is not: **there is no Impala in version 9**, and the port never needed
+one. `laplace.tr()` moves the sources into s *before* stamping
+(`_sources_to_s`), solves that in FD, and inverts the answers — the same
+destination by the opposite route.
+
+The real cause was this code stamping the description **as typed** while
+`tr()` stamps the transformed one. Exactly one line differed, and it was
+the source's own defining equation — "the drop across it is its value" —
+which is precisely the line that shows which domain the value is in:
+
+    what was listed          what tr() actually solves
+      v_1 = 12*u(t)            v_1 = 12/s
+      v_1 - v_2 = 1000*i_r1    v_1 - v_2 = 1000*i_r1
+      i_e + i_r1 = 0           i_e + i_r1 = 0
+      -i_r1 + s*v_2/1e6 = 0    -i_r1 + s*v_2/1e6 = 0
+
+A system with the capacitor in s and the source in t is one nobody solves.
+The stamp now uses `_sources_to_s(desc)` for TR, and `_relations_to_s` for
+the expert extras, which `tr()` also transforms.
+
+**This is older than the card.** The flat `equations` list the Export Output
+card downloads was built from the same Circuit and has carried the same
+hybrid for every TR solve since it existed. Both are fixed, because both
+come off the one stamp.
+
+Verified afterwards: every one of the 18 example books through
+`tools/verify_lesson.py`, all reporting **0 entries with a problem** — the
+sole exception being Lesson 4's Bo2 Example 3.11, the failure that lesson
+teaches on purpose. The TR books (06a–d) and the FD book (12) were the ones
+Roberto asked for by name.
+
+---
+
 ## #174 — ribbon and card wording — **done, deployed everywhere**
 
 Roberto, 30 Aug 2026, in four separate notes while the PDF work ran.
