@@ -1,11 +1,17 @@
 # Next build — accepted but not yet done
 
-**#197 is done, 31 Aug 2026**: the app speaks nine languages. Built and
-verified on all three builds at cache **v102**; the two offline
-deployments are this session's to make, and
+**#197 is done and deployed, 31 Aug 2026**: the app speaks nine
+languages. `install.symbulator.com` and `symbulator.com/9/local.zip` are
+live at cache **v102**, both verified by fetching and hashing — the
+install page matches the local build byte for byte, and the ZIP is
+`de42e5ca3b919f67f1bdf459688b8659caeb398551c6631f8133f3e9571e8e4b`
+(17,743,392 bytes). Checked live in Portuguese and Esperanto, build stamp
+`2026-08-30 15:52 UTC`.
+
 **`symbulator.pythonanywhere.com` awaits Roberto's pull** — it carries
-#183, #196 and #197, `templates/index.html`, `templates/eqsheet.html` and
-the new `i18n/` folder, with no solver release involved.
+#183, #196 and #197: `templates/index.html`, `templates/eqsheet.html`,
+the new `i18n/` folder and `tools/i18n.py`, with no solver release
+involved, so `git pull` and **Reload** are the whole of it.
 
 **#184–#191 deployed 30 Aug 2026** to `learn.symbulator.com`,
 `install.symbulator.com` and the ZIP, at cache **v99**, and verified by
@@ -20,7 +26,7 @@ v9/main` — clean, no conflicts — pushed to `Symbulator-Team`, and live on
 
 ---
 
-## #197 — the app speaks nine languages — **done, cache v102; PyAn pending**
+## #197 — the app speaks nine languages — **done and deployed, cache v102; PyAn pending**
 
 Roberto, 30 Aug 2026, briefed as an overnight run: a language menu, and
 the interface translated into **Spanish, French, German, Portuguese,
