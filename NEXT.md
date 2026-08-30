@@ -1,5 +1,43 @@
 # Next build — accepted but not yet done
 
+## #191 — a box for the settings notes — **done, not deployed**
+
+Roberto, 30 Aug 2026: put the notes about the settings inside a rounded
+rectangle with a tag reading **A word about your settings**.
+
+Three treatments were mocked up in both themes against the app's own
+tokens — a legend straddling the border, a pill on a tinted panel, and a
+header strip. Roberto chose the **legend**, and was right to: I had argued
+for the tinted one because it makes a live message land, but the box is
+inert most of the time, and a permanent tint gives permanent weight to
+something usually saying nothing. That is the same argument that hid the
+RMS row rather than greying it (#183's precedent).
+
+What compensates for the missing tint: the dynamic line is set **bold**
+inside the box. It already carried `--note-warn`; bold is what makes it
+read as an event rather than more explanation. If that turns out not to
+catch the eye in use, tinting the box only *while* a message is present is
+a two-line change.
+
+**In the box:** `#siNote` (the live message) and `#settingsNote` (the
+standing explanation about SI prefixes and exact).
+
+**Not in the box:** the Rounding control's own note. There is a comment
+beside it saying a message about one control belongs under that control,
+not in a shared box at the foot of the card — a decision already taken,
+and folding it in would have undone it. Worth knowing that the SI-versus-
+exact conflict raises *either* note depending on which control you touched:
+ticking SI writes the Rounding one, choosing exact writes the one in here.
+
+The tag paints `var(--card)` over the border to make its notch, **not a
+fixed white** — in dark mode the card is `#1b212c` and a white notch would
+be a bright bar across the border. Verified in both themes: the notch
+matches the card exactly, the tag takes the accent (#2f5fa8 light,
+#5b96e0 dark), and a real message raised through the app's own handler
+sits bold and crimson above the standing text.
+
+---
+
 ## #189 — the showcase book is renamed — **done, not deployed**
 
 Roberto, 30 Aug 2026: in **Built-in Examples**, *A sample of what
