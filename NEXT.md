@@ -1,5 +1,65 @@
 # Next build — accepted but not yet done
 
+## #182 — two things that went wrong around loading an entry — **done, cache v98**
+
+Roberto, 30 Aug 2026, describing both from use. Both reproduced in the
+browser before anything was changed, and both fixed at the source.
+
+### A. Warned about unsaved changes nobody made
+
+Loading an entry asked *"Discard your unsaved changes to '...'?"* over a
+form the reader had not touched.
+
+The culprit was the **solver's own correction**. When a circuit carries a
+decimal value, "exact" rounding cannot be honoured, so the server returns
+`approx_forced` and the page moves the **Rounding** control to
+*approximate* and says so — a deliberate, self-explaining UI change. But
+`loadedSnapshot`, the baseline "what the inputs looked like when this was
+loaded", was left behind. From that moment `inputsDifferFromLoaded()` was
+true, and every guard built on it fired: the next load warned about an
+edit the app had made to itself.
+
+Reproduced exactly: load an entry, set Rounding to *exact*, solve
+`e1,1,0,12.5 / r1,1,0,2.2`, and the control flips to *approximate* while
+`differs` goes from false to true. Load the next entry and the warning
+appears.
+
+Fixed by absorbing that one key into the baseline where the switch
+happens — `loadedSnapshot.rounding = roundingLabel()` — not by
+re-snapshotting the lot, so a reader who **does** have unsaved edits is
+still told about them. Verified both ways: no warning after the
+auto-switch, and a warning still raised after genuinely typing into the
+circuit box.
+
+The SI-versus-exact auto-switches in the settings listeners are left
+alone deliberately. Those fire as a consequence of the reader ticking a
+box, so the resulting state really is their edit.
+
+### B. A solve out of the blue, and stale answers underneath it
+
+After loading an entry and before solving it, touching any setting ran a
+solve. Worse than reported, and found while reproducing it: **the
+previous circuit's answers stayed on screen**, under the newly loaded
+circuit, as though they were its own. Load B11's Example 5.7, solve it,
+load the next entry — and `v_1 = 36 V` from the first was still sitting
+in **Results**.
+
+One cause for both. `applyCircuit()` put a new circuit in the form
+without clearing the old results, so `last` — the record of the last
+solve — survived, and the settings listeners' `if (last) solve()` read
+it as "there is a result to refresh" and solved.
+
+`clearResults()` now runs at the top of `applyCircuit()`, which covers the
+picker, the `?lesson=&entry=` deep link and the session restore alike, and
+any caller added later. After a load: the card reads *no analysis run
+yet*, `last` is null, and touching a setting runs **zero** solves. Once
+the reader does solve, settings changes re-solve as before.
+
+Verified afterwards: the deep link still lands on the right entry with
+the form clean, and `/`, `/eqsheet/` and `/healthz` render through Flask.
+
+---
+
 ## #181 — exact-and-approx folds when there is no exact — **done, cache v97**
 
 Roberto, 30 Aug 2026, with a screenshot of **AS7's Example 19.2** in
