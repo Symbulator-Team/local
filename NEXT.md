@@ -1,5 +1,105 @@
 # Next build — accepted but not yet done
 
+## #184 — the Solve card says it is waiting — **done, not deployed**
+
+Roberto, 30 Aug 2026: make the fields in the **Solve** card inactive until
+a simulation has been run, the way Evaluate's are.
+
+Measured first, and they already were. All five controls carry `disabled`
+in the markup, and `clearResults()` and `activatePostSolve()` handle them
+in step with Evaluate's. What was missing was the *signal*:
+
+| field | placeholder while disabled |
+|---|---|
+| `evalExpr`, `evalConds` | *solve a circuit first…* |
+| `solveqEqs` | **(empty)** — `clearResults()` blanked it |
+| `solveqUnks` | **`x`** — its live hint, never swapped out |
+| `solveqConds` | **(empty)** — never had one |
+
+So a card that could not be used read as one that could, and one of its
+fields advertised a value you could not type. Evaluate looked right for
+one reason only: it says so on both of its fields.
+
+All three now carry Evaluate's wording while they wait, and
+`activatePostSolve()` puts the live hints back (`e.g. p_r2 = 0.05`, `x`,
+and nothing for Conditions). The text is a single constant,
+`WAITING_FOR_SOLVE`, because this item *was* the two cards drifting apart.
+
+Verified in a browser: before a solve, all five controls disabled and all
+three fields reading *solve a circuit first…*; after one, the live hints
+back.
+
+Not changed, and worth knowing: a disabled field on this page does not
+*look* disabled — `opacity: .55; cursor: not-allowed` is scoped to
+`#expertBox` alone, so everywhere else a disabled input keeps the same
+background and ink as a live one. Widening that rule would grey the Solve
+and Evaluate fields, and also `omega`, `vars`, `n1`, `n2` and `kind`
+whenever the analysis does not use them. That is a bigger visual change
+than was asked for; say if it is wanted.
+
+---
+
+## #185 — the Numerical Solver opens blank — **done, not deployed**
+
+Roberto, 30 Aug 2026: after **Clear all inputs**, opening the Numerical
+Solver still showed a set of equations. Why?
+
+Not a leak from the app. `templates/eqsheet.html` shipped a worked example
+hard-coded in its `#rules` textarea — a voltage divider and a thermal
+equation — so the page would not be empty for someone arriving at
+`/eqsheet/` cold. The app opens it with no payload whenever nothing has
+been solved (#136), and that sample was simply sitting there.
+
+It also contradicted the page's own tagline three lines above it: *"Arrives
+preloaded with the solved circuit's equation system and results."* What
+arrived was a system no Symbulator circuit would ever produce.
+
+Gone. The box is empty, with a placeholder naming the format instead:
+*one equation per line, e.g. Vout = Vin \* R2 / (R1 + R2)*.
+
+---
+
+## #186 — Clear all inputs, in the Numerical Solver — **done, not deployed**
+
+Roberto, same day: the solver should be able to clean its slate in one
+click, as the app can.
+
+Same control, same place, same class — `.subbar-action` in the ribbon,
+right of the spacer beside the theme toggle, with the two spellings the
+shared banner switches between at phone widths. That class was already
+styled in `eqsheet.html` and had no button using it.
+
+It empties everything derived from the equations, not just the text: the
+parsed rules, which of them are ticked, every variable's Known/Unknown
+status and value, the stored solution, the residuals and both status
+lines. Done locally rather than by re-parsing an empty box, so it needs no
+round trip and works with the server unreachable.
+
+**Deliberately kept:** the DC/AC mode and the rounding menu. Those are
+preferences about how the sheet works rather than inputs typed into it,
+and the rounding one is remembered in `localStorage` between visits.
+
+Verified: two equations and five variable rows in, one click, everything
+back to zero with both tables hidden.
+
+---
+
+## #187 — the SPICE card's buttons, centred — **done, not deployed**
+
+Roberto, same day: centre the two buttons in the **SPICE Translator**
+card, on one line, rather than aligning them left.
+
+`justify-content: center` on that one row, inline, **not** on `.actions` —
+four cards share that class and the other three are meant to line up with
+the text above them. Confirmed after the change that `inputsCard`,
+`miniCard` and `plotCard` still read `normal`.
+
+At 1200px the two sit on one line with 180px clear on each side. The row
+keeps `flex-wrap: wrap`, so at phone widths they stack — and each line is
+then centred in turn, which is the sensible reading of the request.
+
+---
+
 ## #183 — hide the polar phasors tick outside AC — **accepted, not done**
 
 Roberto, 30 Aug 2026, as a note for the to-do list: **Show AC answers as
