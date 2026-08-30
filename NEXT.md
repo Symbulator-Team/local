@@ -1,6 +1,6 @@
 # Next build — accepted but not yet done
 
-## #174 — ribbon and card wording — **done, cache v92; PyAn pending**
+## #174 — ribbon and card wording — **done, deployed everywhere**
 
 Roberto, 30 Aug 2026, in four separate notes while the PDF work ran.
 
@@ -33,9 +33,18 @@ refreshed from the new ZIP, then `install` and `zip`. Verified by fetching:
 and *Numerical Solver* on the cards, and `sw.js` reports `symbulator-v92`;
 `symbulator.com/9/local.zip` matches by hash.
 
-**`symbulator.pythonanywhere.com` still shows the old wording** until
-Roberto pulls — `templates/index.html` and `templates/eqsheet.html` both
-changed, so the pull matters beyond pip. No solver release is involved.
+**PythonAnywhere done the same day.** `/healthz` reports build
+`2026-08-30 04:36 UTC` running and on disk, `needs_reload: false`, solver
+0.5.22 — no release was involved, so 0.5.22 is correct rather than stale.
+Verified by fetching: the app's ribbon links are exactly *Local App* (to
+`#runLocallyCard`) and *Tutorial* (to learn), the cards read *Plotting Tools*
+and *Numerical Solver*, `Download App` appears nowhere, and `/eqsheet/` says
+*Tutorial* too.
+
+One thing a grep will trip over: `subbar-lbl">Documentation` still appears in
+both pages. It is inside the CSS comment that documents the two-spelling
+convention (#144), not a link — the illustration was left as it was rather
+than restamping every build to reword an example.
 
 ---
 
