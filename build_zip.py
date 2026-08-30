@@ -89,6 +89,13 @@ def collect(src: Path, skip_top_level_excludes: bool) -> dict[str, Path]:
             rel = full.relative_to(src).as_posix()
             if skip_top_level_excludes and rel in EXCLUDE_NAMES:
                 continue
+            # Every top-level .md is developer-facing; users get
+            # README.txt. Named exclusions alone were not enough: the
+            # #197 brief was committed to this repo as
+            # PROMPT_i18n_overnight.md and rode into the ZIP, and from
+            # there would have gone up to install.symbulator.com.
+            if skip_top_level_excludes and "/" not in rel and rel.endswith(".md"):
+                continue
             if name.endswith(".pyc"):
                 continue
             found[rel] = full

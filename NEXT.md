@@ -1,15 +1,234 @@
 # Next build — accepted but not yet done
 
+**#197 is done, 31 Aug 2026**: the app speaks nine languages. Built and
+verified on all three builds at cache **v102**; the two offline
+deployments are this session's to make, and
+**`symbulator.pythonanywhere.com` awaits Roberto's pull** — it carries
+#183, #196 and #197, `templates/index.html`, `templates/eqsheet.html` and
+the new `i18n/` folder, with no solver release involved.
+
 **#184–#191 deployed 30 Aug 2026** to `learn.symbulator.com`,
 `install.symbulator.com` and the ZIP, at cache **v99**, and verified by
 fetching: the settings box, the *approx (full precision)* label, the Solve
 card's waiting text, the centred SPICE row, the solver's Clear button and
 its blank sheet, the renamed showcase, `sw.js` at v99 and the ZIP matching
-by hash. **`symbulator.pythonanywhere.com` awaits Roberto's pull.**
+by hash.
 
 Version X has the same code: merged with `git fetch v9 && git merge
 v9/main` — clean, no conflicts — pushed to `Symbulator-Team`, and live on
 `symbulatorx.pythonanywhere.com`, verified the same way.
+
+---
+
+## #197 — the app speaks nine languages — **done, cache v102; PyAn pending**
+
+Roberto, 30 Aug 2026, briefed as an overnight run: a language menu, and
+the interface translated into **Spanish, French, German, Portuguese,
+Chinese, Japanese, Korean** and **Esperanto**. Nine with English.
+
+**All nine are done**, both pages, all three builds. What follows is why
+the scheme is the shape it is, and the four things that nearly went
+wrong.
+
+### It had to be a dictionary in the page
+
+There are three builds and only one of them has a server. `install` and
+the ZIP are static files with Pyodide in the tab; a Flask-Babel or
+`gettext` scheme would have translated the hosted app and left the
+downloaded one in English, and per-language templates would have forked
+the one-template property `CLAUDE.md` guards. So: **one client-side
+dictionary, applied in the page**, on the model of the theme switch —
+stored in `localStorage` under `symbulator-lang`, read by the same
+head script that applies Dark Mode before first paint.
+
+Roberto's note offering the server alone was not needed. It cost nothing
+to do all three: the dictionary that works on the server is the same file
+the offline page carries, and *excluding* the offline build would have
+been the extra work.
+
+**English is not in the dictionary.** The page's own markup is the
+English, so `applyLang` snapshots what it finds before writing anything
+and restores the snapshot for English. That halves the payload and, more
+usefully, makes it impossible for the English to drift from what the
+template says.
+
+### What is translated, and what is deliberately not
+
+**474 keys**: 265 units of markup, 169 strings the page's JavaScript
+writes at runtime, and 42 terms the maths engine names (element kinds,
+the quantities in the Results card, the twenty-odd two-port parameter
+descriptions), looked up on the way in through `tSrv()`.
+
+Never translated, and the reasons are not stylistic:
+
+* **The mathematics.** No decimal comma, no localised number formatting
+  — `toLocaleString` stays pinned to `'en-US'` where it appears, with a
+  comment saying why. `v_1 = 8` reads `v_1 = 8` in all nine, and it was
+  measured, not assumed (below).
+* **The syntax.** The Fields column of the elements table
+  (`name,n1,n2,value`), the two SI cells that spell alternatives
+  (`'k or 'K`), and the sample `.cir` file in the format card. Those are
+  what a reader types, and the tutorial spells them this way in every
+  language.
+* **The wordmark and the build stamp.** `notranslate`, both of them. The
+  stamp especially: `build_local.py` rewrites it with `STAMP_RE` and
+  expects exactly one in the file, so a copy inside a dictionary would
+  fail the build — which is the good outcome — or freeze the version a
+  reader is told they have.
+* **The tutorial, the landing page, the PDFs, and the 330 example
+  entries.** Out of scope by the brief, and rightly: the examples' titles
+  and `note:` lines are tied line by line to printed chapters.
+
+### The menu
+
+A native `<select>` in the ribbon, beside the theme toggle — the one
+control a phone renders as a proper picker, and this one has nine
+entries. Its options are the languages' own names for themselves, so it
+is `notranslate`; its accessible name comes from the dictionary instead.
+
+Roberto asked (31 Aug) that the ribbon never wrap, offering abbreviations
+if needed, and that *Clear all inputs* become **Clear inputs** to make
+room. Both done. The abbreviation is **decided by measurement, not by a
+breakpoint**: a breakpoint measured against English wording is wrong in
+eight other languages, so `syncLangMenu()` writes the names, looks at
+whether the row wrapped, and falls back to ISO codes if it did.
+
+Two things that taught: a `<select>` sized `width: auto` is as wide as
+its **widest** option, not the selected one, so all nine option texts
+have to change together for the control to shrink at all. And wrapping is
+not the only way the ribbon runs out of room — `banner.css` caps `<nav>`
+at one line-box and *clips* what wraps inside it, so a wide control next
+door does not push the row onto two lines, it silently takes the Tutorial
+link off the screen. German found that: *Eingaben löschen* is 36px wider
+than *Clear inputs*, enough at 375px to cost the reader the only link out
+of the app. The crowding test now asks the nav whether it had to clip, as
+well as counting rows.
+
+`banner.css` itself is untouched. The menu's styling is app-local, in the
+page's own `<style>`, because only these two pages speak nine languages.
+
+### The machinery
+
+`repos/server/tools/i18n.py`, documented in `tools/README.md`. It finds
+the translation units, tags them, packs the dictionaries into the
+templates between markers, and — the part that matters six months from
+now — **checks**. A translation is written into the page as innerHTML, so
+one that drops an `id`, an `href` or a `%{slot}` breaks the page
+silently; `check` fails on all three, on stale keys, on orphans, on a
+`t(key, …)` whose key is a variable (invisible to the extractor, so it
+would fall back to English in all eight languages with nothing to say
+so), and on a new element kind in `symbulator_ui.py` that no language has
+a word for yet.
+
+`pack` escapes `<`, `>`, `&` and `{` inside every string. That is not
+tidiness: `{#` inside an HTML comment took every server page down on
+30 Aug, and eight languages of prose none of us can proofread as code is
+a lot of new opportunity to do it again.
+
+The keys are a readable slug plus four hex of the English's SHA-1, so
+editing an English string mints a new key and the stale translation shows
+up as an orphan rather than staying on screen.
+
+### Verified
+
+* **A real solve in each of the nine**, twice — a DC ladder and an AC
+  circuit with polar phasors — comparing the rendered mathematics.
+  Byte-identical across all nine, both times.
+* **All 48 entries of Lesson 3 run through the real page** in English,
+  then Korean, then Spanish — each entry three times in a row, comparing
+  the rendered mathematics. Zero mismatches. (The first attempt at this
+  reported thirteen; every one was the harness racing a slow symbolic
+  solve, because it waited for a result row to appear rather than for the
+  Run button to go fresh. A measurement that can be wrong in only one
+  direction is not a measurement.)
+* `tools/verify_lesson.py` clean on Lesson 1, Lesson 3, Lesson 13 and the
+  Showcase — the API path is language-blind by construction, but the
+  templates changed and this is what says the answers did not.
+* **Loading an entry raises no phantom unsaved edit** in Korean. The
+  language is in `localStorage`, never in `inputsSnapshot()` or the
+  `.cir` file: it is a reader's preference like the theme, and #182's
+  warning compares that snapshot.
+* **The ribbon is one line in all nine at 375px and at 1280px**, with the
+  nav unclipped; screenshots in both themes.
+* **The offline build**, served and solved: Spanish applied before first
+  paint, all eight dictionaries present, Pyodide solving with translated
+  labels, and the server-only blocks correctly absent — the host notice
+  and the *Run Symbulator 9 locally* card are gone from the markup, and
+  no dictionary entry paints them back, because a unit spanning a
+  `server-only` marker is never a unit.
+* Flask renders `/`, `/eqsheet/` and `/healthz`; no console errors on
+  either page.
+
+### Found along the way
+
+`PROMPT_i18n_overnight.md`, the brief for this item, had been committed
+into `repos/local`, and `build_zip.py` swept it into the ZIP and from
+there would have put it on `install.symbulator.com`. Its exclusion list
+was by exact name; it now drops **every top-level `.md`** — users get
+`README.txt`, and the next working note will not need remembering.
+
+Three things worth knowing but not fixed tonight:
+
+* **The maths engine still speaks English.** The solver package's 31
+  `CircuitError` messages, `symbulator_ui.py`'s notes and warnings, and
+  the Numerical Solver's status line all reach the reader in English in
+  every language. Its closed vocabularies are translated (that is what
+  `tSrv` is for); its sentences are not. Written up as **#198**.
+* The `.cir` sample in the input-file card stays English. It is a file
+  listing whose keys (`title:`, `analysis`) are English keywords.
+* The app page is 660 KB now, 213 KB gzipped, against 270/85 before. Each
+  page carries only the keys it asks for — that took the Numerical Solver
+  from 475 KB to 90 KB — but the app really does use nearly all of them.
+
+### Lines a native speaker should check
+
+The Spanish is the one Roberto will read, and one decision in it is worth
+his eye more than the rest:
+
+* **`voltage` is rendered `voltaje`, not `tensión`**, throughout — chosen
+  for a Panamanian student audience over the more formal term. It is one
+  find-and-replace in `i18n/es.json` if he or Antony García prefers
+  `tensión`; the words that would move with it are *voltaje*, *fuente de
+  voltaje*, *caída de voltaje* and *Voltajes de nodo*.
+* **`two-port` is `cuadripolo`** (es), *quadripôle* (fr), *Zweitor* (de),
+  *quadripolo* (pt), *二端口* (zh), *二端子対* (ja), *2포트* (ko),
+  *duopordo* (eo). The Esperanto one is a coinage; the other eight are
+  the settled term.
+* **`Expert Mode`** is *Modo experto* (es) but *Modo avançado* (pt) and
+  *전문가 모드* (ko) — the Portuguese reads better as "advanced" and I
+  took that liberty.
+* The three group headings are spaced capitals —
+  `[ E N T R A D A S ]`, `[ H E R R A M I E N T A S ]` — and the longest
+  of them is the Spanish one. It fits at 375px; it is the first thing to
+  shorten if any wording grows.
+* Esperanto's *tensifonto* / *kurentfonto* are compounds rather than
+  *tensia fonto*; both are used.
+
+---
+
+## #198 — should the maths engine speak nine languages too? — **proposed**
+
+Raised by #197, not done. Three separate surfaces, in increasing cost:
+
+1. **`symbulator_ui.py`'s notes and errors** — about forty sentences,
+   several with values interpolated ("normalised 'x' to 'y' in r1"). This
+   file is byte-identical in the server and local repos and runs under
+   Pyodide offline, so a Python-side dictionary would work in all three
+   builds without a release. The page could also match them client-side
+   with patterns, which keeps one dictionary instead of two; that is the
+   cheaper design and the more fragile one.
+2. **`eqsheet.py`'s status line** — "solved (least-squares: 1 equations,
+   4 unknowns) — 29 evaluations". Server-only, so this one genuinely is
+   simple.
+3. **The solver package's 31 `CircuitError` messages** — `repos/solver`
+   is on PyPI and the server installs it by pin, so translating those
+   means a release and the deploy-order dance, for text a reader meets
+   only when something is wrong. Worth doing last, if at all.
+
+My recommendation: (1) and (2) as one item when Roberto wants it, and
+leave (3). A reader who has the interface in Korean and meets one English
+sentence when their circuit will not parse is in a better place than one
+who meets a Korean sentence that no longer matches the tutorial.
 
 ---
 

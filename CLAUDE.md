@@ -169,6 +169,48 @@ deliberate — an earlier silent no-op once shipped a build with no service
 worker at all. If a build fails with "matched 0 times, expected 1", the
 template changed and the script needs the same change.
 
+### The interface speaks nine languages, from a dictionary in the page
+
+Since #197 (31 Aug 2026) the app is available in English, Spanish, French,
+German, Portuguese, Chinese, Japanese, Korean and Esperanto, chosen from a
+`<select>` in the ribbon and remembered in `localStorage` under
+`symbulator-lang` — the same shape as the theme, and applied by the same
+head script before first paint.
+
+**It is a client-side dictionary, and it has to be.** Two of the three
+builds are static files with Pyodide in the tab and no Python outside it.
+Flask-Babel, `gettext` or a per-language template would translate the
+hosted app and leave the downloaded one in English, and would fork the
+one-template property this file exists to protect. If you find yourself
+reaching for a server-side scheme, you are about to break the offline
+builds.
+
+* The dictionaries are `repos/server/i18n/<lang>.json`, and they are
+  written into both templates between `BEGIN/END i18n dictionaries`
+  markers by `tools/i18n.py pack`. **Do not edit between the markers.**
+* **`en.json` is generated.** The English lives in the template markup and
+  in the fallback argument of every `t()` / `tv()` call. At runtime the
+  page snapshots its own markup and restores that for English, so English
+  is not in the shipped dictionary at all and cannot drift.
+* Every markup unit carries a `data-i18n` key; every runtime string goes
+  through `t('key', 'English')`, `tv(...)` for one with slots, or `tSrv()`
+  for a term the maths engine names.
+* `py tools/i18n.py check` is the guard, and it is not optional after
+  touching either template: it catches untagged units, stale keys,
+  orphans, a translation that dropped an `id` or a `%{slot}`, and a `t()`
+  call whose key is a variable. See `tools/README.md` for the full list.
+
+**The mathematics is never translated** — not the variable names, not the
+element letters, not the decimal point, not the unit symbols. The answers
+have to keep matching the tutorial's printed answers, and that agreement
+was verified entry by entry across all 330 examples. `toLocaleString` is
+pinned to `'en-US'` wherever it appears.
+
+**The language must never enter `inputsSnapshot()` or a `.cir` file.** It
+is a reader's preference, like the theme. #182 warns about unsaved edits
+by comparing that snapshot, so anything in it the reader did not type
+raises a phantom warning on every entry load.
+
 ### An answer may be several answers
 
 From solver 0.4.6 a circuit can come back with **more than one solution**. An
@@ -342,6 +384,25 @@ three requests take a minute. Watch for `{#`, `{%` and `{{` in comments
 and in JavaScript especially, since none of them look like template
 syntax to a reader.
 
+
+**A translation is innerHTML, so it can break the page silently.** The
+dictionary values are written straight into the elements they belong to.
+A translation that loses an `id="plotKeyLabel"` takes the element the app
+looks up with it; one that loses a `%{n}` slot loses the number the
+sentence was about. Neither throws. `tools/i18n.py check` compares the
+ids, links and slots of every translation against its English and fails on
+a mismatch — run it, and do not hand-edit inside the `BEGIN/END i18n`
+markers, which `pack` overwrites.
+
+**The ribbon must stay one line, and a breakpoint cannot know when it
+does.** What fits depends on the language: German's *Eingaben löschen* is
+36px wider than *Clear inputs*. Worse, `banner.css` caps `<nav>` at one
+line-box and *clips* what wraps inside it, so a crowded ribbon does not
+grow — it drops the Tutorial link off the screen without a trace.
+`syncLangMenu()` therefore measures: it writes the language names, asks
+whether the row wrapped **or the nav had to clip**, and falls back to ISO
+codes if either. A `<select>` sized `width: auto` is as wide as its widest
+option, not the selected one, so all nine option texts change together.
 
 **`CACHE_VERSION` in `sw.js`.** The service worker is cache-first. If you
 change app files without bumping it, returning visitors keep the old build

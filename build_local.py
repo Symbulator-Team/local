@@ -647,10 +647,14 @@ def build() -> str:
     #     the folder root (same convention as the favicon above). The logo
     #     image (banner) and the icon image (favicon/app icon) are two
     #     different files -- see logo.png vs icon.png in ASSETS. ---------
+    # Just the src, not the whole tag: since #197 the tag also carries a
+    # data-i18n-alt key whose value changes whenever the alt text is
+    # reworded, and matching on that would fail this build for a change
+    # that has nothing to do with the path.
     s = sub(
         s,
-        '<img src="/static/logo.png" alt="Symbulator logo" class="header-logo">',
-        '<img src="logo.png" alt="Symbulator logo" class="header-logo">',
+        '<img src="/static/logo.png"',
+        '<img src="logo.png"',
         label="header logo path",
     )
 
