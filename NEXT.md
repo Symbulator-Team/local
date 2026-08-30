@@ -1,5 +1,34 @@
 # Next build — accepted but not yet done
 
+## #178 — an Acknowledgements link in the About card — **done, cache v94**
+
+Roberto, 30 Aug 2026: at the end of the first paragraph of the **About
+Symbulator** card, the word **Acknowledgements**, linking to that part of
+the credits in the documentation.
+
+Added to the "What is Symbulator" paragraph, pointing at
+`https://learn.symbulator.com/9/credits#acknowledgements` — version 9's
+credits, this being version 9. The anchor is the
+`## Acknowledgements {#acknowledgements}` heading in `src/99-credits.md`,
+and it is a real `<h2 id="acknowledgements">` in the built page.
+
+An outward link, like the Tutorial one in the ribbon: it needs the
+internet, and the offline build keeps it rather than stripping it. A
+reader who is offline is better served by a link that waits than by no
+link at all.
+
+**On verifying it.** The fragment could not be confirmed by driving the
+browser pane — that pane would not scroll the credits page at all, not by
+`location.hash`, not by `scrollTo`, not by `scrollIntoView`, with
+`scrollY` pinned at 27 throughout. That is the pane, not the page: the
+built credits page contains **no scripts whatsoever**, `web/index.php`
+has nothing touching scroll or hashes, and the only relevant CSS is
+`html { scroll-behavior: smooth; scroll-padding-top: 1.25rem }`. So the
+anchor is an ordinary working fragment in a real browser. Worth a glance
+on a phone next time someone is in there, since it was not seen to jump.
+
+---
+
 ## #175 — rounding: "exact and approx to n digits" — **done, cache v93; PyAn pending**
 
 Antony García's suggestion, brought by Roberto on 30 Aug 2026: solve the
