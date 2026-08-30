@@ -153,6 +153,33 @@ BOOT_JS = """
 // ---------------------------------------------------------------------
 let pyodide = null, bridge = null, pyFailed = false;
 
+// The boot bar and the install bar are markup this script's own build
+// step injected, so the template's extractor never saw their words and
+// they arrive in English. Translate them here, through the same t() the
+// rest of the page uses; refreshDynamic() calls this again on a language
+// change (it looks the function up, so the server build, which has
+// neither bar, simply has nothing to call). #197.
+function syncOfflineBars() {
+  const boot = document.getElementById('boot');
+  if (boot && !boot.classList.contains('failed')) {
+    boot.innerHTML = t('js.local.booting', 'Starting the maths engine…')
+      + '\\n  <span class="hint">'
+      + t('js.local.typeNow', 'you can start typing a circuit now')
+      + '</span>';
+  }
+  const txt = document.getElementById('installtext');
+  if (txt && !txt.dataset.ios) {
+    txt.textContent = t('js.local.installText',
+      'Install Symbulator as an app — it then works offline, in its own '
+      + 'window, with no need to visit this page.');
+  }
+  const btn = document.getElementById('installbtn');
+  if (btn) btn.textContent = t('js.local.install', 'Install');
+  const no = document.getElementById('installno');
+  if (no) no.textContent = t('js.local.notNow', 'Not now');
+}
+syncOfflineBars();
+
 const pyReady = (async () => {
   try {
     pyodide = await loadPyodide({ indexURL: 'vendor/' });
@@ -187,7 +214,8 @@ _u.solve_ui("e1,1,0,1:r1,1,0,1", "dc", "", None, "solve", "", "", "z",
     pyFailed = true;
     const b = document.getElementById('boot');
     b.classList.add('failed');
-    b.textContent = 'The maths engine could not start: ' + e;
+    b.textContent = t('js.local.bootFailed',
+      'The maths engine could not start: ') + e;
     return false;
   }
 })();
@@ -205,12 +233,14 @@ async function py(fnName, payload) {
   // the one place that can reliably clean up after itself once boot is
   // done, no matter who triggered it.
   const setBooting = !bridge && !pyFailed;
-  if (setBooting) status.textContent = 'starting the maths engine…';
+  const booting = t('js.local.bootingLower', 'starting the maths engine…');
+  if (setBooting) status.textContent = booting;
   await pyReady;
-  if (setBooting && status.textContent === 'starting the maths engine…') {
+  if (setBooting && status.textContent === booting) {
     status.textContent = '';
   }
-  if (pyFailed) return { ok: false, error: 'The maths engine is not available.' };
+  if (pyFailed) return { ok: false,
+    error: t('js.local.noEngine', 'The maths engine is not available.') };
   const arg = (fnName === 'parse_book') ? payload : JSON.stringify(payload);
   const t0 = performance.now();
   const out = JSON.parse(bridge[fnName](arg));
@@ -288,8 +318,10 @@ if ('serviceWorker' in navigator) {
   var isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
               (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
   if (isIOS) {
-    txt.textContent = 'Install Symbulator as an app: tap Share, then "Add to Home Screen". ' +
-                      'It then works offline, in its own window.';
+    txt.dataset.ios = '1';
+    txt.textContent = t('js.local.installIos',
+      'Install Symbulator as an app: tap Share, then "Add to Home Screen". '
+      + 'It then works offline, in its own window.');
     btn.hidden = true;
     bar.classList.add('show');
   }
@@ -676,6 +708,11 @@ def build() -> str:
     s = sub(
         s,
         '<main class="wrap">',
+        # These two bars exist only in the offline builds, so the server
+        # template never sees them and tools/i18n.py cannot find them
+        # there. The English below is what the page is built with;
+        # syncOfflineBars() in BOOT_JS rewrites both through t() once the
+        # dictionary is up, and again whenever the language changes (#197).
         '<div class="wrap"><div id="boot" class="bootbar">Starting the maths engine…\n'
         '  <span class="hint">you can start typing a circuit now</span></div></div>\n\n'
         '<div class="wrap"><div id="installbar" class="installbar">\n'
@@ -862,7 +899,18 @@ def build() -> str:
     )
 
     # --- "could not reach the server" is the wrong words here ----------
-    s = s.replace("Could not reach the server.", "The maths engine failed.")
+    #
+    # Since #197 this swaps the KEY, not just the English. Rewriting only
+    # the fallback would have left the offline build saying "the maths
+    # engine failed" in English and "could not reach the server" in the
+    # other eight, which is the sort of thing nobody notices for months.
+    s = sub(
+        s,
+        "t('js.noServer', 'Could not reach the server.')",
+        "t('js.local.engineFailed', 'The maths engine failed.')",
+        count=2,
+        label="the offline wording for a failed engine",
+    )
 
     # --- service worker -------------------------------------------------
     s = sub(s, "</script>\n</body>", "</script>\n" + SW_JS, label="service worker")
