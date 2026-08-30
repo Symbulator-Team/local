@@ -82,8 +82,13 @@ Never translated, and the reasons are not stylistic:
   fail the build — which is the good outcome — or freeze the version a
   reader is told they have.
 * **The tutorial, the landing page, the PDFs, and the 330 example
-  entries.** Out of scope by the brief, and rightly: the examples' titles
-  and `note:` lines are tied line by line to printed chapters.
+  entries.** Out of scope by the brief — and **confirmed as a standing
+  decision by Roberto on 31 Aug 2026**: *"I'm fine leaving the notes in
+  the input files in English. At least for now."* So the examples' titles
+  and their `note:` lines stay English, in every language, until he says
+  otherwise. They are tied line by line to the printed chapters and were
+  verified entry by entry against them; translating them is not a
+  translation job but a second edition of the tutorial.
 
 ### The menu
 
@@ -360,8 +365,8 @@ by construction.
 
 ### What this does not buy
 
-The 330 examples and the tutorial stay English, by design and by the
-brief. This makes the **error path** multilingual. A Korean reader
+The 330 examples and the tutorial stay English — by design, by the
+brief, and by Roberto's decision of 31 Aug 2026 (above). This makes the **error path** multilingual. A Korean reader
 opening Lesson 3 still meets an English problem statement.
 
 ---
