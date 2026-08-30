@@ -1,3 +1,32 @@
+> # ⚠ This is version X, not version 9
+>
+> This repository is a fork, in the `Symbulator-Team` organisation, of
+> Roberto Perez-Franco's canonical Symbulator 9. Everything below was
+> written for version 9 and is still accurate about **how the code
+> works** — but not about where it goes.
+>
+> **Do not run any deploy in this file.** `deploy_symbulator.py`,
+> `install.symbulator.com`, `symbulator.com/9/local.zip`,
+> `learn.symbulator.com` and `symbulator.pythonanywhere.com` are all
+> version 9's, and publishing experimental work to them is the one
+> mistake this fork exists to prevent. Version X deploys to exactly one
+> place: the `SymbulatorX` PythonAnywhere account, from the `server`
+> repository. See `CLAUDE.md` there.
+>
+> **`NEXT.md` beside this file is version 9's record**, numbered #59 to
+> #182 and still running in version 9. Do not continue that sequence:
+> version X numbers its own items **X1, X2, X3…**
+>
+> **The offline build is not where version X's work happens.** X exists
+> to try ideas in the app, which is `templates/index.html`,
+> `symbulator_ui.py` and `app.py` in the `server` repository. This repo
+> only rebuilds those into a downloadable copy, and version X does not
+> publish one.
+>
+> A version 9 improvement comes in with `git fetch v9 && git merge
+> v9/main`; an experiment goes back as a pull request to
+> `Symbulator/local`, which Roberto reviews.
+
 # Symbulator — how the whole thing fits together
 
 Orientation for anyone (human or assistant) picking this up cold. It covers
