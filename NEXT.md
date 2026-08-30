@@ -8,10 +8,17 @@ install page matches the local build byte for byte, and the ZIP is
 (17,743,392 bytes). Checked live in Portuguese and Esperanto, build stamp
 `2026-08-30 15:52 UTC`.
 
-**`symbulator.pythonanywhere.com` awaits Roberto's pull** — it carries
-#183, #196 and #197: `templates/index.html`, `templates/eqsheet.html`,
-the new `i18n/` folder and `tools/i18n.py`, with no solver release
-involved, so `git pull` and **Reload** are the whole of it.
+**`symbulator.pythonanywhere.com` is done too** — Roberto's pull, same
+day, carrying #183, #196 and #197. Verified by fetching, not by report:
+`/healthz` gives build `2026-08-30 15:52 UTC` running *and* on disk,
+`needs_reload: false`, solver 0.5.22 (no release was involved). A real
+solve through `/api/solve` returns the expected answers with no notes,
+and in the browser the same circuit solved in English, Spanish and
+Japanese gives byte-identical mathematics with the interface in each.
+`/eqsheet/` checked in Korean: headings, variable-sheet columns and the
+DC/AC pair all translated, ribbon one line, no console errors.
+
+**All five sites are current.**
 
 **#184–#191 deployed 30 Aug 2026** to `learn.symbulator.com`,
 `install.symbulator.com` and the ZIP, at cache **v99**, and verified by
@@ -26,7 +33,7 @@ v9/main` — clean, no conflicts — pushed to `Symbulator-Team`, and live on
 
 ---
 
-## #197 — the app speaks nine languages — **done and deployed, cache v102; PyAn pending**
+## #197 — the app speaks nine languages — **done, deployed everywhere, cache v102**
 
 Roberto, 30 Aug 2026, briefed as an overnight run: a language menu, and
 the interface translated into **Spanish, French, German, Portuguese,
