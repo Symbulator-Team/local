@@ -1,5 +1,51 @@
 # Next build — accepted but not yet done
 
+## #183 — hide the polar phasors tick outside AC — **accepted, not done**
+
+Roberto, 30 Aug 2026, as a note for the to-do list: **Show AC answers as
+polar phasors** should be *hidden* when the analysis is not AC, not merely
+disabled as it is now.
+
+This finishes a decision already taken. On 28 Aug 2026 the **AC power
+convention** row faced the same question — grey it out, or hide it — and
+Roberto chose hiding, on the argument that a permanently greyed control is
+clutter that never becomes useful where it sits. `syncSettings()` already
+does that for RMS:
+
+    $('rmsRow').style.display = isAc ? '' : 'none';
+    $('useRms').disabled = !isAc;
+
+Polar was left on the older treatment three lines below, so the two
+settings that are AC-only behave differently on the same card:
+
+    $('polarPhasors').disabled = !isAc;
+    $('polarLine').style.opacity = isAc ? '1' : '.5';
+    $('polarLine').title = isAc ? '' : 'Applies to AC analysis only';
+
+### What makes this different from the RMS one
+
+**RMS has a row of its own; polar does not.** `#rmsRow` is a whole `.row`
+and can be hidden outright. `#polarLine` is one `.checkline` among several
+inside the Display block — *Show units*, *Use SI prefixes*, *Show AC
+answers as polar phasors*, *Show equations* — so what gets hidden is that
+one label, and the remaining ticks have to close up cleanly behind it.
+Worth a look at the card at phone width as well as desktop.
+
+The `opacity` and `title` lines go with it: both exist only to explain a
+greyed-out control, and neither means anything once it is gone.
+
+**Leave the value alone while it is hidden.** The RMS comment records why:
+nothing clears it, so an AC entry's choice comes back when the analysis
+returns to AC. The same must hold here — `polar` is saved in the `.cir`
+(and in `inputsSnapshot()`), so clearing it on a domain change would edit
+the reader's entry behind their back and, since #182, would rightly be
+reported as an unsaved edit.
+
+Check afterwards that loading an AC entry with `polar: yes` still shows
+the tick, and that switching that entry to DC and back leaves it ticked.
+
+---
+
 ## #182 — two things that went wrong around loading an entry — **done, cache v98**
 
 Roberto, 30 Aug 2026, describing both from use. Both reproduced in the
