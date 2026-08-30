@@ -1,6 +1,6 @@
 # Next build — accepted but not yet done
 
-## #174 — ribbon and card wording — built, awaiting a deploy
+## #174 — ribbon and card wording — **done, cache v92; PyAn pending**
 
 Roberto, 30 Aug 2026, in four separate notes while the PDF work ran.
 
@@ -26,10 +26,16 @@ updated with it, so a search for the label still finds the code that
 depends on it — the anchor into the collapsed *Run Symbulator 9 locally*
 card, which is server-only and which `build_local.py` strips.
 
-**Not deployed.** All four are in `repos/server/templates/`; the offline
-pair needs `build_local.py`, a `CACHE_VERSION` bump in `repos/local/sw.js`,
-and the two cPanel deploys, and PythonAnywhere needs your pull. Nothing
-about them touches the solver, so no release is involved.
+**Deployed 30 Aug 2026 to the two offline sites**, at cache **v92**:
+`build_local.py`, `build_zip.py --assets ../../local`, `install_site`
+refreshed from the new ZIP, then `install` and `zip`. Verified by fetching:
+`install.symbulator.com` serves *Tutorial* in the ribbon, *Plotting Tools*
+and *Numerical Solver* on the cards, and `sw.js` reports `symbulator-v92`;
+`symbulator.com/9/local.zip` matches by hash.
+
+**`symbulator.pythonanywhere.com` still shows the old wording** until
+Roberto pulls — `templates/index.html` and `templates/eqsheet.html` both
+changed, so the pull matters beyond pip. No solver release is involved.
 
 ---
 
