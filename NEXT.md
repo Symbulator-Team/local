@@ -183,7 +183,10 @@ up as an orphan rather than staying on screen.
 into `repos/local`, and `build_zip.py` swept it into the ZIP and from
 there would have put it on `install.symbulator.com`. Its exclusion list
 was by exact name; it now drops **every top-level `.md`** — users get
-`README.txt`, and the next working note will not need remembering.
+`README.txt`, and the next working note will not need remembering. The
+brief itself was deleted from the repo at Roberto's ask once the item
+was done (31 Aug 2026); it survives in this repo's history at `34084c8`
+and the rule in `build_zip.py` outlives it.
 
 Three things worth knowing but not fixed tonight:
 
