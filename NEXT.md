@@ -1,6 +1,19 @@
 # Next build — accepted but not yet done
 
-## #191 — a box for the settings notes — **done, not deployed**
+**#184–#191 deployed 30 Aug 2026** to `learn.symbulator.com`,
+`install.symbulator.com` and the ZIP, at cache **v99**, and verified by
+fetching: the settings box, the *approx (full precision)* label, the Solve
+card's waiting text, the centred SPICE row, the solver's Clear button and
+its blank sheet, the renamed showcase, `sw.js` at v99 and the ZIP matching
+by hash. **`symbulator.pythonanywhere.com` awaits Roberto's pull.**
+
+Version X has the same code: merged with `git fetch v9 && git merge
+v9/main` — clean, no conflicts — pushed to `Symbulator-Team`, and live on
+`symbulatorx.pythonanywhere.com`, verified the same way.
+
+---
+
+## #191 — a box for the settings notes — **done, cache v99; PyAn pending**
 
 Roberto, 30 Aug 2026: put the notes about the settings inside a rounded
 rectangle with a tag reading **A word about your settings**.
@@ -38,7 +51,7 @@ sits bold and crimson above the standing text.
 
 ---
 
-## #189 — the showcase book is renamed — **done, not deployed**
+## #189 — the showcase book is renamed — **done, cache v99; PyAn pending**
 
 Roberto, 30 Aug 2026: in **Built-in Examples**, *A sample of what
 Symbulator can do* becomes **Claude's sampler for Symbulator 9**.
@@ -52,7 +65,7 @@ intact and the book still reports its 12 entries.
 
 ---
 
-## #190 — the *approx* option names its precision — **done, not deployed**
+## #190 — the *approx* option names its precision — **done, cache v99; PyAn pending**
 
 The menu's **approx** becomes **approx (full precision)**. Roberto asked
 what the option actually does, having guessed "without rounding" or "12
@@ -67,7 +80,7 @@ since the tutorial line that names the option moved with it.
 
 ---
 
-## #184 — the Solve card says it is waiting — **done, not deployed**
+## #184 — the Solve card says it is waiting — **done, cache v99; PyAn pending**
 
 Roberto, 30 Aug 2026: make the fields in the **Solve** card inactive until
 a simulation has been run, the way Evaluate's are.
@@ -106,7 +119,7 @@ than was asked for; say if it is wanted.
 
 ---
 
-## #185 — the Numerical Solver opens blank — **done, not deployed**
+## #185 — the Numerical Solver opens blank — **done, cache v99; PyAn pending**
 
 Roberto, 30 Aug 2026: after **Clear all inputs**, opening the Numerical
 Solver still showed a set of equations. Why?
@@ -126,7 +139,7 @@ Gone. The box is empty, with a placeholder naming the format instead:
 
 ---
 
-## #186 — Clear all inputs, in the Numerical Solver — **done, not deployed**
+## #186 — Clear all inputs, in the Numerical Solver — **done, cache v99; PyAn pending**
 
 Roberto, same day: the solver should be able to clean its slate in one
 click, as the app can.
@@ -151,7 +164,7 @@ back to zero with both tables hidden.
 
 ---
 
-## #187 — the SPICE card's buttons, centred — **done, not deployed**
+## #187 — the SPICE card's buttons, centred — **done, cache v99; PyAn pending**
 
 Roberto, same day: centre the two buttons in the **SPICE Translator**
 card, on one line, rather than aligning them left.
@@ -167,7 +180,7 @@ then centred in turn, which is the sensible reading of the request.
 
 ---
 
-## #183 — hide the polar phasors tick outside AC — **accepted, not done**
+## #183 — hide the polar phasors tick outside AC — **done, cache v100; PyAn pending**
 
 Roberto, 30 Aug 2026, as a note for the to-do list: **Show AC answers as
 polar phasors** should be *hidden* when the analysis is not AC, not merely
@@ -210,6 +223,45 @@ reported as an unsaved edit.
 
 Check afterwards that loading an AC entry with `polar: yes` still shows
 the tick, and that switching that entry to DC and back leaves it ticked.
+
+### Done, 30 Aug 2026
+
+Three lines became two:
+
+    $('polarLine').style.display = isAc ? '' : 'none';
+    $('polarPhasors').disabled = !isAc;
+
+`disabled` stays, mirroring the RMS pair. A hidden control is out of the
+accessibility tree anyway, so it guards nothing a reader can reach — it
+guards the code: anything that reads the tick without asking the domain
+first still gets the right answer.
+
+**Measured, not eyeballed**, driving the real Flask render:
+
+| domain | tick shown | still ticked |
+|---|---|---|
+| ac | yes | yes |
+| dc | **no** | yes |
+| fd | **no** | yes |
+| tr | **no** | yes |
+| back to ac | yes | yes |
+
+The Display block closes up behind it: in DC the remaining three — *Show
+units*, *Use SI prefixes*, *Show equations* — keep their rhythm, and at
+375px the block loses exactly the 84px the two-line polar label occupied,
+with no gap left where it was.
+
+The value survives, as required. Loading Lesson 7's *AS7's Example 9.9*
+(`polar: yes`), switching to DC and back leaves `inputsSnapshot().polar`
+`true` throughout, and the entry loads and returns **clean** — no phantom
+unsaved edit. It does report an unsaved change *while* the domain is DC,
+which is right: the reader really did change the analysis type. That is
+#182's warning working, not misfiring.
+
+Live on both offline sites and hash-verified: the deployed page carries
+the `style.display` line and **zero** occurrences of `Applies to AC
+analysis only`, the string that only ever existed to apologise for a
+greyed control.
 
 ---
 
