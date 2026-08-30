@@ -212,29 +212,157 @@ his eye more than the rest:
 
 ---
 
-## #198 — should the maths engine speak nine languages too? — **proposed**
+## #198–#200 — the engine speaks in codes, the interface in words — **planned, 31 Aug 2026**
 
-Raised by #197, not done. Three separate surfaces, in increasing cost:
+Roberto's ruling, 31 Aug 2026, replacing the proposal that stood here
+overnight. I had recommended translating `symbulator_ui.py` and
+`eqsheet.py` and leaving the solver package alone. He asked for the
+opposite and for something better:
 
-1. **`symbulator_ui.py`'s notes and errors** — about forty sentences,
-   several with values interpolated ("normalised 'x' to 'y' in r1"). This
-   file is byte-identical in the server and local repos and runs under
-   Pyodide offline, so a Python-side dictionary would work in all three
-   builds without a release. The page could also match them client-side
-   with patterns, which keeps one dictionary instead of two; that is the
-   cheaper design and the more fragile one.
-2. **`eqsheet.py`'s status line** — "solved (least-squares: 1 equations,
-   4 unknowns) — 29 evaluations". Server-only, so this one genuinely is
-   simple.
-3. **The solver package's 31 `CircuitError` messages** — `repos/solver`
-   is on PyPI and the server installs it by pin, so translating those
-   means a release and the deploy-order dance, for text a reader meets
-   only when something is wrong. Worth doing last, if at all.
+> Let's standardise the error format. Let's modify the package this one
+> time, so that all messages, warnings, errors, etc, are returned in a
+> structured manner, with a message code and arguments. When I think
+> about the package, I do not worry about readability by humans. I do not
+> expect any human to use the package directly. The package is meant to
+> be under the hood. So, create a running list of all the messages shared
+> by the package, give each a number and a format for it to pass the
+> arguments (variables, numbers) needed to communicate this message to
+> the human, and let the interface do the work of putting the message
+> into words.
 
-My recommendation: (1) and (2) as one item when Roberto wants it, and
-leave (3). A reader who has the interface in Korean and meets one English
-sentence when their circuit will not parse is in a better place than one
-who meets a Korean sentence that no longer matches the tutorial.
+He is right, and for a reason beyond translation: it gives the package,
+`symbulator_ui.py` and `eqsheet.py` **one** mechanism where they have
+three, and the app **one** renderer where it would have had three.
+
+**And the pattern is already in the tree.** `eqsheet.py` does exactly
+this for its success line: Python returns `mode`, `n_eq`, `n_un` and
+`nfev` as fields, and `templates/eqsheet.html` composes "solved
+(least-squares: 1 equations, 4 unknowns) — 29 evaluations" from them.
+Only its *failures* come back as prose. This is finishing a job somebody
+already started at the one place they needed it.
+
+### The measured inventory
+
+| emitter | messages | carry a value | ships how |
+|---|---|---|---|
+| solver package `CircuitError` | 27 distinct, 33 raise sites (elements 19, engine 8, equiv 2, laplace 2, spice 2) | 22 | PyPI release |
+| solver package SPICE warnings | 17 sites — `spice()` returns `(netlist, warnings)` | most | same release |
+| `symbulator_ui.py` notes and errors | ~40 (35 `_err`, 4 note sites) | most | copied file, no release |
+| `eqsheet.py` | 12, plus the composed status line | 4 | server only |
+
+About 85 messages end to end. The SPICE warnings are the surface the
+first write-up missed, and they are the clearest case for the change:
+they are already prose assembled in the engine purely for the interface
+to display.
+
+**A risk that turned out not to exist:** no tutorial chapter quotes a
+solver message. Checked across `Sym Docum/Documentation/src`. So the
+English wording is not pinned by the printed answers and may be reworded
+as well as restructured — unlike every answer in the app.
+
+### The shape
+
+```python
+# symbulator/messages.py -- the one place the package's words live.
+E_TWOPORT_LIST_LEN = 214
+
+CATALOGUE = {
+    214: ("error",
+          "The parameter list of two-port '{name}' has {n} entries. "
+          "Exactly four are expected: [p11,p12,p21,p22]."),
+}
+```
+
+```python
+raise CircuitError(E_TWOPORT_LIST_LEN, name=el.name, n=len(items))
+```
+
+A named constant at the raise site so the code still reads; the **number**
+on the wire. `exc.code`, `exc.args_map` and `str(exc)` all available.
+Warnings become `{"code": …, "args": {…}}` in the list `spice()` already
+returns.
+
+**Severity is a field, not a number range**, so a warning and an error
+about the same thing need one code, not two.
+
+**Ranges by origin**, matching how the modules already divide:
+1xx parsing · 2xx elements · 3xx engine · 4xx Laplace and transient ·
+5xx equivalents and two-ports · 6xx SPICE · 8xx `symbulator_ui.py` ·
+9xx `eqsheet.py`. One renderer in the page serves all of them.
+
+**A code is permanent once published.** Never reused, never renumbered;
+retired codes stay retired. The same rule as the item numbers in this
+file, for the same reason: a reader quoting "E214" in a bug report should
+mean one thing forever.
+
+### The English stays in the package
+
+Roberto's premise — nobody should need to read the package — stands, and
+this does not contradict it. `str(exc)` keeps rendering the English from
+the catalogue for three reasons that have nothing to do with reading the
+package for pleasure:
+
+1. **It is the generation source.** `tools/i18n.py` generates `en.json`
+   from the English in the app rather than letting anyone hand-keep a
+   second copy, and `check` fails when the two drift. A catalogue in the
+   package generates the same way and gets the same guard. English living
+   only in `en.json`, against a numbered list in another repo, is exactly
+   the drift the scheme exists to prevent.
+2. **15 of the solver's tests assert on message wording** (of 36
+   `pytest.raises`, out of 272). They pass untouched. Migrating them to
+   assert on `.code` is better testing and worth doing later; it should
+   not gate the release.
+3. The `.txt` export, `review_schematics.py`, `verify_lesson.py` and a
+   traceback in a bug report all need something to write — and the About
+   card invites "circuits that break it".
+
+Cost of keeping it: one dict in the package.
+
+### Three items, in this order
+
+Ordered by cost, cheapest first, so the design is proved on the surface
+that cannot break anything before it reaches the one that can.
+
+**#198 — `eqsheet.py` speaks in codes (9xx).** Server-only: no wheel, no
+`vendor/` copy, no three pins, no cache bump, no offline build to think
+about. `eqsheet.py` and `templates/eqsheet.html` go up in the same
+PythonAnywhere pull. Twelve messages and the status line, eight
+languages. This is the end-to-end proof of the whole scheme for the price
+of an afternoon, and if the design is wrong we find out here.
+
+**#199 — the solver package speaks in codes (1xx–6xx).** The release
+train: PyPI publish → the same wheel into `repos/local/vendor/` → three
+pins (`build_local.py`'s `WHEEL`, `sw.js`'s cache list,
+`requirements.txt`) → cache bump → both offline deploys → the PyAn pull
+with `pip install --upgrade`. The interface reads `.code` and falls back
+to `str(exc)`, so nothing breaks in the window between the publish and
+the pull.
+
+**#200 — `symbulator_ui.py` joins (8xx).** A copied file, so no release;
+`app.py` must list the new response field by hand, which is the trap
+`repos/local/CLAUDE.md` already warns about.
+
+**Each item carries its own eight translations**, so none of them can
+land half-done and the app is never in a state where a code renders as a
+bare number.
+
+### Known, and resolved by #198
+
+The Numerical Solver's status line is assembled in the page from
+`d.message` plus English fragments — `(least-squares: N equations, M
+unknowns)`, `— N evaluations`. Those fragments are untranslated English
+that #197 shipped: the leftovers sweep missed them because the prose is
+split across `${}` boundaries, which its two-adjacent-words filter cannot
+see. Translating the fragments alone would give a half-English line,
+since `d.message` is English from the server regardless. Once the message
+is a code, the whole line renders in one `tv()` call and the gap closes
+by construction.
+
+### What this does not buy
+
+The 330 examples and the tutorial stay English, by design and by the
+brief. This makes the **error path** multilingual. A Korean reader
+opening Lesson 3 still meets an English problem statement.
 
 ---
 
