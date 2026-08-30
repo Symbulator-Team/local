@@ -98,6 +98,45 @@ that renders in English and then repaints in Korean will be noticed.
 `<html lang="en">` at line 2 must become whatever is selected, for
 screen readers and for CJK line-breaking.
 
+## Roberto's own note: the server alone is enough, if that helps
+
+He added, after reading the first draft of this brief: he had been thinking
+of the languages for **the server version only**, and said that if it makes
+the job simpler you may do the server alone.
+
+Take the permission, but understand what it is worth before spending it,
+because the honest answer is **it probably does not make anything simpler**:
+
+- The app is **one template**. `build_local.py` generates the offline page
+  from `repos/server/templates/index.html`; it is not a second codebase.
+- The scheme this brief calls for is a **client-side dictionary**, and the
+  server page is as static as the offline one once it has been rendered.
+  A dictionary that works on the server therefore works offline **at no
+  extra cost** — nothing needs porting.
+- Excluding the offline build is *work*: you would have to strip the menu
+  and the dictionary out of the generated page (there are markers for
+  server-only content — see how the property mark is handled), and keep
+  the two versions from drifting afterwards.
+
+So the sensible reading of his note is as a **relief valve, not a design
+choice**:
+
+- **Do** use it if the offline build fights back late in the night — a
+  failing `build_local.py` check, the ZIP, a Pyodide interaction. Ship the
+  server, leave the offline pair in English, say plainly that you did and
+  why. That is a good outcome and he has explicitly allowed it.
+- **Do not** use it as a reason to pick a **server-side** scheme
+  (Flask-Babel, `gettext`, per-language templates). That is the one path
+  that genuinely makes the job harder: it forks the app into two divergent
+  code paths, breaks the one-template property that
+  `repos/local/CLAUDE.md` guards, and throws away the offline languages
+  that the client-side design gives you free. If you find yourself
+  reaching for it, re-read the section above.
+
+If you do ship all three builds, the offline pair is the deploy you can do
+yourself; the server is Roberto's pull. Which is a second small argument
+for doing all three.
+
 ## Rules that are not negotiable
 
 **Never localise the mathematics.** No decimal comma, no thousands
@@ -184,9 +223,12 @@ The house rule is *verify by measurement, not by eye*. Specifically:
    480px and the property mark moves, and those thresholds were measured
    against *English* wording. Re-measure rather than trusting the numbers.
 5. **Both themes**, since you will be adding UI.
-6. **The offline build too**, not just the server: `build_local.py`, then
-   open the built page and switch languages there. The offline page has no
-   Flask, and a scheme that quietly depended on one fails exactly here.
+6. **The offline build too**, unless you have taken the server-only
+   fallback above: `build_local.py`, then open the built page and switch
+   languages there. The offline page has no Flask, and a scheme that
+   quietly depended on one fails exactly here — which is also the check
+   that tells you *whether* you need the fallback, so run it early rather
+   than at the end.
 
 ## When you are done
 
