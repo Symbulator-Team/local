@@ -309,6 +309,23 @@ if it fails identically, the browser is the cause, not the build.
 
 ## Things that will bite you
 
+**The preview tab caches `localhost` too, and it will lie to you about
+your own edit.** On #183 the first probe of a freshly started dev server
+reported the *old* JavaScript running, while `curl` against the same port
+returned the new file: the tab had come up on a copy of the page cached from
+an earlier session, no service worker involved (there was none registered,
+and the cache storage was empty). Two minutes went into suspecting the edit.
+The cheap settlement, in this order: `curl` the route and grep for the line
+you added — that separates "Flask is not serving it" from "the tab is not
+showing it" — then reload with a throwaway query (`/?cb=183`) and read the
+running function back with `(''+fn)` before believing anything the page says.
+
+And read that function back by matching the **exact** text you wrote. A
+loose test lies in the other direction: `(''+syncSettings).includes(
+"style.display")` came back true on the *old* code, because the RMS line
+three rows up has always used `style.display`. It reported the fix present
+when it was not.
+
 **A template change is not verified until Flask has rendered it.**
 `repos/server/templates/index.html` is a **Jinja** template; the offline
 builds are static HTML generated from it and never pass through Jinja. On
