@@ -1,6 +1,6 @@
 # Next build — accepted but not yet done
 
-## #179 — the Rounding menu, reordered and reworded — **done, cache v95**
+## #179 — the Rounding menu, reordered and reworded — **done, cache v95; PyAn pending**
 
 Roberto, 30 Aug 2026, giving the order and the wording verbatim:
 
