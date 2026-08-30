@@ -1,5 +1,38 @@
 # Next build — accepted but not yet done
 
+## #174 — ribbon and card wording — built, awaiting a deploy
+
+Roberto, 30 Aug 2026, in four separate notes while the PDF work ran.
+
+In the ribbon under the banner:
+
+- **Download App** → **Local App**. The short spelling stays `App`.
+- **Documentation** → **Tutorial**. Both spellings now read `Tutorial`:
+  the word is already short enough that a separate phone spelling would
+  only be a second thing to keep in step, and `Docs` no longer matches
+  the full label anyway.
+
+On the cards:
+
+- the **Explore Numerically** card is headed **Numerical Solver**
+- the **Plot** card is headed **Plotting Tools**
+
+The Tutorial rename was applied to `templates/eqsheet.html` as well as
+`templates/index.html`, so the Numerical Solver's own ribbon says the same
+word as the app's. Say if you would rather it stayed *Documentation* there.
+
+The two comments in `index.html` that quoted "Download App" by name were
+updated with it, so a search for the label still finds the code that
+depends on it — the anchor into the collapsed *Run Symbulator 9 locally*
+card, which is server-only and which `build_local.py` strips.
+
+**Not deployed.** All four are in `repos/server/templates/`; the offline
+pair needs `build_local.py`, a `CACHE_VERSION` bump in `repos/local/sw.js`,
+and the two cPanel deploys, and PythonAnywhere needs your pull. Nothing
+about them touches the solver, so no release is involved.
+
+---
+
 ## #169 + #170 — the reader-quiet examples pass — done overnight, cache v91
 
 Roberto, 29 Aug 2026, late: having caught two bugs by running library
