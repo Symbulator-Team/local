@@ -180,6 +180,79 @@ then centred in turn, which is the sensible reading of the request.
 
 ---
 
+## #196 — the SI note appears only when SI prefixes are on — **done, cache v101; PyAn pending**
+
+Roberto, 30 Aug 2026: the note reading *"SI prefixes apply to numeric
+answers only; a symbolic answer such as `x·vin/(r1 + x)` is left as it is.
+A prefixed value is a decimal, so SI prefixes and exact can't both
+apply."* is shown even when the SI prefixes box is unchecked, *"which does
+not make sense"*.
+
+It doesn't. The line is the standing explanation of what that tick does to
+an answer, and `si` is **off by default**, so the commonest state of the
+app was a paragraph explaining a setting nobody had asked for.
+
+### It is two changes, not one
+
+Hiding the line alone leaves a bordered box with *A word about your
+settings* on its border and nothing inside it — which reads as a bug. So
+the box (#191) hides too, whenever both of the lines it can hold are
+hidden. It holds exactly two: `#siNote`, the dynamic one, and
+`#settingsNote`, the standing one.
+
+The three ways in are covered by one function, because those two lines
+move independently:
+
+    function syncSetnote() {
+      $('settingsNote').hidden = !$('siUnits').checked;
+      $('setnoteBox').hidden = $('settingsNote').hidden && $('siNote').hidden;
+    }
+
+called from `syncSettings()` (an entry loading, a rounding change), from
+the `siUnits` handler (the tick itself, on **both** branches — the else
+branch never called `syncSettings`), and from the tail of
+`settingsNote()` (the dynamic line being raised or retired).
+
+### The CSS rule that would have silently defeated it
+
+`hidden` is only a UA-stylesheet `display: none`, and **any** author rule
+that sets `display` out-ranks it. The box already had one:
+
+    .setnote .hint:last-child { display: block; }
+
+`#settingsNote` matches that whenever the dynamic line is hidden — which
+is nearly always — so marking it `hidden` would have done nothing at all,
+and the markup would have looked right while the page ignored it. Fixed
+with an equal-specificity rule placed after it:
+
+    .setnote .hint[hidden] { display: none; }
+
+The note also carries `hidden` **in the markup**, not just from script, so
+it never flashes on screen before `syncSettings()` runs — with SI off by
+default that flash would be the common case.
+
+### Verified
+
+Through the real Flask render, seven states:
+
+| | box | standing line | dynamic line |
+|---|---|---|---|
+| load, SI off | **hidden** | — | — |
+| SI ticked | shown | shown | — |
+| SI unticked | **hidden** | — | — |
+| exact, SI off | **hidden** | — | — |
+| SI on while exact | shown | shown | — (the rounding note lives under Rounding) |
+| exact chosen while SI on | shown | — | shown |
+| SI back on | shown | shown | — |
+
+Lesson 1's *B11's Example 5.7* (`si: yes`) loads with the box and the
+standing line on screen, and loads **clean** — this is display only,
+touching no saved value, so no unsaved edit is raised.
+
+Live and hash-verified on install and the ZIP.
+
+---
+
 ## #183 — hide the polar phasors tick outside AC — **done, cache v100; PyAn pending**
 
 Roberto, 30 Aug 2026, as a note for the to-do list: **Show AC answers as
