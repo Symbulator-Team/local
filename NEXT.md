@@ -5,6 +5,16 @@ ribbon's language control shows the chosen language as two letters, a
 dot separates it from the Clear button, the Clear button abbreviates at
 phone widths, and Esperanto is third in the list. See its entry below.
 
+`install.symbulator.com` and `symbulator.com/9/local.zip` are live and
+verified by fetching — the install page hash-matches the local build, the
+ZIP is
+`d1da9ad3e7372c0d2417073f8a6f434d226be078d1e1d6aea44ba44b923c630a`
+(17,743,655 bytes), and the live host was checked in Spanish: face **ES**,
+*Limpiar entradas* / *Limpiar*, the dot present, Esperanto third, build
+stamp `2026-08-31 00:26 UTC`. **`symbulator.pythonanywhere.com` awaits
+Roberto's pull** — `templates/index.html`, `templates/eqsheet.html` and
+`i18n/es.json`, no solver release.
+
 **#197 is done and deployed, 31 Aug 2026**: the app speaks nine
 languages. `install.symbulator.com` and `symbulator.com/9/local.zip` are
 live at cache **v102**, both verified by fetching and hashing — the
