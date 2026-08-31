@@ -55,8 +55,16 @@ def solve(payload_json: str) -> str:
             return [str(x).strip() for x in raw if str(x).strip()]
         return [ln.strip() for ln in ui.re.split(r"[\r\n]+", str(raw)) if ln.strip()]
 
-    variables = [v.strip() for v in
-                 ui.re.split(r"[,\s]+", str(p.get("variables") or "")) if v.strip()]
+    # A list or a comma/space-separated string, because app.py takes
+    # both and these two files are not allowed to differ. str() on a
+    # list gives "['v 2']", which then splits into garbage -- found by
+    # verify_bridge.py on its first run, 31 Aug 2026. Not reachable from
+    # the page, which sends the Variables field's text, but the drift is
+    # the bug.
+    _vars = p.get("variables") or ""
+    if not isinstance(_vars, (list, tuple)):
+        _vars = ui.re.split(r"[,\s]+", str(_vars))
+    variables = [str(v).strip() for v in _vars if str(v).strip()]
     # Equations and conditions alike: one per line, or several on one
     # line joined with ` and ` -- "re = 12'k and ir3 = 6'm" is two
     # equations. Expanded before validating/solving, matching app.py's

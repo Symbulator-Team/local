@@ -60,6 +60,7 @@ EXCLUDE_NAMES = {
     "build_local.py",
     "build_zip.py",
     "vendor_pyodide.py",   # fetches vendor/ from the CDN; a user has it already
+    "verify_bridge.py",    # compares this build against the server's (#210)
     "CLAUDE.md",
     "NEXT.md",           # deferred-work list; developer-facing
     "banner.css",        # source of the inlined lockup; the page carries it

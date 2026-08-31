@@ -1,5 +1,7 @@
 # Next build — accepted but not yet done
 
+**#210 is done, 31 Aug 2026**, at cache **v112**: the offline path has a harness. `verify_bridge.py` runs every input through **both** front ends and compares them — 340 cases, **0 disagreements**. It exists because the day's shipped bug lived in `bridge.py`, which no check touched, and it found a second drift on its first run: `app.py` takes `variables` as a list or a string, `bridge.py` only a string. It needed one calibration, recorded in the entry — 201 of its first 201 findings were a benign shape, and a harness that cries wolf is one people stop running.
+
 **#200 is done, 31 Aug 2026**, at cache **v110**: `symbulator_ui.py` speaks in codes too — **forty-one of them, 801–877**, across the validators, plotting, Evaluate, the mini-tools, SPICE and the notes, in twelve languages. The trap its own entry predicted was real and one function higher than expected: `_run_in_process` flattened every failure to a string before any route could name its code. Only **#199** — the package, with the release train — is left of the three.
 
 **#198 is done, 31 Aug 2026**, at cache **v109**: **the Numerical Solver's engine speaks in codes** — seventeen of them, 901–924, with the page putting them into words. The status line that was four concatenated pieces (three of them untranslated English) is now one code and one `tv()` call: 已求解（最小二乘：3 个方程，2 个未知量） — 3 次求值. Roberto's design of that morning survived contact unchanged, which is what it was ordered first to find out; **#199** (the package, with the release train) and **#200** (`symbulator_ui.py`) can now follow it. The item's own costing had gone stale inside the day — #208 had put `eqsheet.py` into the offline builds, so 'server-only, no cache bump' was no longer true.
@@ -741,6 +743,90 @@ job is the words, not the markup.
 
 **Not gated by any of that:** whether the words are *right*. That still
 needs a speaker, which is the entire point of the item.
+
+---
+
+## #210 — the offline path gets a harness — **done, cache v112**
+
+Roberto, 31 Aug 2026, after the day's bug: *"Close that gap."*
+
+The gap: `tools/verify_lesson.py` checks that the app's answers still
+match the tutorial's printed ones, and it drives `app.py`. **Nothing
+drove `bridge.py`**, which is the other half of the same job — the
+offline builds call it instead of the Flask routes. On 31 Aug that cost
+a shipped bug: four sites in `bridge.py` rendering `[object Object]`
+where a definition failed, live on `install.symbulator.com` and in the
+ZIP for hours, while every check the project had stayed green. The sweep
+could not see it. It exercises the server.
+
+### `repos/local/verify_bridge.py`
+
+Every input through **both** front ends, compared field by field —
+`app.py` through the Flask test client, `bridge.py` called directly.
+
+    python3 verify_bridge.py                # every example book
+    python3 verify_bridge.py Lesson_03      # one book
+    python3 verify_bridge.py --errors       # the refusal paths only
+
+**No Pyodide, and none needed.** `bridge.py` imports `symbulator_ui` and
+`circuitbook` and nothing else, so it runs under ordinary CPython. That
+is what makes this cheap enough to run often, and it is the code that
+actually ships offline rather than a stand-in for it.
+
+Ten refusal cases lead the run, because that is where the two files are
+most likely to drift: each writes its own guards, and the 31 Aug bug was
+exactly there.
+
+### What "the same" means, and the calibration it needed
+
+`app.py` **lists its response fields by hand**, so it cannot be a byte
+comparison. Three rules:
+
+* every field the **server** returns must match the bridge's;
+* a field the **bridge** has and the server lacks is a **NOTICE** —
+  that is the hand-enumeration trap `CLAUDE.md` warns about, where a key
+  added in `symbulator_ui` reaches the offline build automatically and
+  is dropped by the server until someone names it;
+* a field the server sends as an **empty default** and the bridge omits
+  is also a notice, not a failure.
+
+That third rule was learned on the first full run, where it was **201 of
+201 findings**. `app.py` emits `eqsheet`, `system` and `solutions` on
+every solve, filled with `None` or `[]` when `symbulator_ui` produced
+nothing; the bridge has no such key. The page sees `null` on one build
+and `undefined` on the other, and every read of the three is guarded —
+`(data.solutions || []).length`. Checked, not assumed: the unguarded
+`data.solutions.length` reads are in the **solveq** handler, where
+`solveq_ui` always supplies the field.
+
+A harness that cries about a known-benign shape is a harness people stop
+running, so the reasoning is in the constant beside the rule.
+
+### It found a real one immediately
+
+`app.py` accepts `variables` as a list **or** a comma-separated string.
+`bridge.py` accepted only a string, and `str(["v 2"])` is `"['v 2']"`,
+which split into `["['v", "2']"]` — so the offline build answered
+``Invalid variable name: "['v"`` where the server said
+`Invalid variable name: 'v 2'`.
+
+Not reachable from the page, which sends the Variables field's text. But
+**the drift is the bug**: these two files exist so that the two front
+ends cannot differ, and the next caller to pass a list would have found
+it the hard way. Fixed.
+
+### Result
+
+**340 cases — 330 example entries and 10 refusal paths — 0
+disagreements, 201 notices**, all of them the one benign shape (67 each
+for `eqsheet`, `system`, `solutions`).
+
+### What it still does not cover
+
+The browser around `bridge.py`: the Pyodide boot, the fetch of the `.py`
+files, the service worker, the page's own rendering. That needs a real
+offline load, which is a different check and is still done by hand. The
+docstring says so, so nobody mistakes a green run for more than it is.
 
 ---
 

@@ -415,6 +415,27 @@ leaves them silently out of step.
 
 ---
 
+## The two harnesses
+
+`repos/server/tools/verify_lesson.py` checks the **answers** against the
+tutorial's printed ones, over all 330 examples. It drives `app.py`.
+
+`repos/local/verify_bridge.py` checks that the **two front ends agree**,
+over the same examples plus ten refusal paths. It drives `app.py` and
+`bridge.py` side by side.
+
+They cover different failures, and #210 exists because the second one
+did not. A bug in `bridge.py` shipped on 31 Aug 2026 — four sites
+rendering `[object Object]` where a definition failed — while
+`verify_lesson` stayed green, because `verify_lesson` never calls the
+file the offline builds use. Run both after touching `symbulator_ui.py`,
+`bridge.py` or `app.py`.
+
+`verify_bridge.py` needs no Pyodide: `bridge.py` runs under ordinary
+CPython. What it therefore does **not** cover is the browser around it —
+the boot, the fetch of the `.py` files, the service worker. A green run
+is not an offline test; it is a drift test.
+
 ## Verifying a deploy
 
 "The command didn't error" is not verification. What actually catches problems:
