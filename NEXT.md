@@ -816,10 +816,26 @@ So **twenty-one for #209**, three already spoken for.
 
 **The shape of the mistake is visible in the button statuses.** #125
 gave Solve, Plot and Schematic each its own status. #197 translated
-Solve's — `js.solved` exists and Ukrainian says *Розв'язано!* — and
-walked past the other two, because it was working from the markup and
-those live in script. Same feature, same day, three buttons, one
-translated.
+**all three of Solve's** and none of the other two's, because it was
+working from the markup and these live in script. Same feature, same
+day, three buttons, one done.
+
+Roberto asked on 31 Aug whether *Solving* and *Solved* would be
+translated. Most of that family already is — measured, not assumed:
+
+| | at rest | while busy | when done | on failure |
+|---|---|---|---|---|
+| **Solve** (app) | ✅ `run-symbulator.e67f` 运行 Symbulator | ✅ `js.busy.solving` 正在求解… | ✅ `js.solved` 已求解！ | ✅ `js.res.noVars` etc. |
+| **Plot** (app) | ✅ `run.b1b3` (markup) | — no busy label | ❌ `'Plotted!'` | ✅ via `t()` |
+| **Schematic** (app) | ✅ `draw-the-circuit-above.4fac` | ❌ `'drawing…'` | ❌ `'Drawn.'` | ❌ `'Could not draw it.'` |
+| **Solver** (eqsheet) | — | ❌ `'solving…'` | **#198** — `d.message` is the engine's | **#198** |
+
+So: the app's *Solving…* and *Solved!* have been translated since #197
+and were on screen in Chinese during the 31 Aug walkthrough (已求解！).
+What #209 adds is their four missing counterparts on the Plot and
+Schematic buttons, plus the Solver's `solving…`. The Solver's *solved*
+and *did not converge* stay English until **#198**, because they are the
+engine's words, not the page's.
 
 ### Two questions asked, both already answered in the tree
 
@@ -875,6 +891,17 @@ with a Cyrillic *es*, `Кінцева частота (Гц)`, `Частота (�
 логарифмічна шкала)`. That is ordinary Ukrainian practice and not a
 mistake — but it is not the rule just given.
 
+**And the app cannot follow Ukrainian all the way.** The unit symbols in
+the *answers* are not in the dictionary and cannot be: they come from
+`symbulator_ui._UNIT_SUFFIXES` — `VA, ohm, Ω, Hz, V, A, W, S, F, H` —
+under the rule that the mathematics is never translated. Measured live
+on 31 Aug: a Ukrainian reader solving a divider gets `Vin = 12 V`,
+`R1 = 2 kΩ`, `r_e1 = 3000 Ω`. So Ukrainian already shows Latin unit
+symbols on every screen that has an answer on it, and the Cyrillic
+`(Гц)` in the chrome contradicts the `Ω` two inches above it. That is
+not a style preference; it is the one language where the app disagrees
+with itself today.
+
 There are only two coherent endings, because the worst outcome is
 Ukrainian disagreeing **with itself** — the form reading `час (с)` and
 the axis beneath it `час (s)`:
@@ -882,7 +909,8 @@ the axis beneath it `час (s)`:
 * **(a) Apply the ruling everywhere.** The new string is `час (s)`, and
   the three shipped Ukrainian strings change from `(с)`/`(Гц)` to
   `(s)`/`(Hz)`. Consistent with the other eleven and with the ruling.
-  Three values, one line each. **Recommended.**
+  Three values, one line each. **Recommended — and chosen by Roberto,
+  31 Aug 2026.**
 * **(b) Let Ukrainian keep its own convention.** The new string is
   `час (с)`, nothing shipped changes, and Ukrainian is deliberately
   the one language that localises unit symbols — written down here so a
@@ -890,8 +918,8 @@ the axis beneath it `час (s)`:
   from a tidy-up by speaker count.
 
 Either is defensible; **(a)** is what the ruling says and what the
-other eleven do. It does mean editing translations that are already
-live, which is why it is a nod and not an assumption.
+other eleven do. It meant editing translations that are already live,
+which is why it was put to Roberto rather than assumed. He chose (a).
 
 **The Solver's status line is #198's, and #198 already says so.** Its
 entry carries a section headed *Known, and resolved by #198* naming
