@@ -122,7 +122,10 @@ def solve(payload_json: str) -> str:
         elements = parse_circuit(desc, expand_si=False)
         ambiguous = ambiguous_in_elements(elements)
     except Exception as exc:
-        return json.dumps({"ok": False, "error": ui._exc_text(exc)})
+        # _exc_msg, not _exc_text: this is the parse step, and it was
+        # the last place a CircuitError's code (#199) was flattened.
+        # app.py had the same gap; verify_bridge.py found this one.
+        return json.dumps(ui._err(ui._exc_msg(exc)))
 
     if ambiguous:
         if any(a["token"] not in choices for a in ambiguous):

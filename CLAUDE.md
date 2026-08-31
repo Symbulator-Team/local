@@ -306,8 +306,20 @@ pinned in three places that have to move together.
 
 1. Bump `symbulator/__init__.py`, write the CHANGELOG entry, run the tests.
 2. `python -m build`, then `python -m twine check dist/...`.
-3. **Publish to PyPI** — `python -m twine upload`. This is irreversible; a
-   version number cannot be reused.
+3. **Publish to PyPI** — `py -m twine upload dist/symbulator-<v>*`, from
+   `repos/solver`. **The twine credentials are on Roberto's machine, so
+   this runs from here** (his instruction, 31 Aug 2026) — it is not a
+   step to hand back to him. It does still wait for an explicit go, for
+   the one reason that matters: **it is irreversible, and a version
+   number can never be reused.** Have everything checkable checked
+   before you ask: the tests green, `twine check` passed, and both
+   harnesses clean.
+
+   Then verify what PyPI actually serves against the artefact you built,
+   by hash, at `https://pypi.org/pypi/symbulator/<version>/json` — the
+   next step copies that same file into `vendor/`, and "the bytes PyPI
+   serves and the bytes the offline build bundles are identical" is a
+   claim worth being able to make.
 4. Copy the *same wheel file* into `repos/local/vendor/` and delete the old
    one. Use the artefact you uploaded, so the bytes PyPI serves and the bytes
    the offline build bundles are identical — and verify that by hash.
