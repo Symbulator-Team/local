@@ -371,11 +371,13 @@ heads**, `eqsheet.py`, `eqbridge.py` and the scipy wheel by name (nothing
 links to those three), and the icon sizes Chrome requires. It refuses to
 produce a ZIP that fails those checks.
 
-**The ZIP is about 30 MB since #208**, up from 17.8. One published string
-states that size — the app's *Installing from a file* card, in the server
-template, so it appears on all three builds. The landing page and
-`README.txt` state no size, which is worth knowing before hunting for
-them.
+**The ZIP is about 30 MB since #208**, up from 17.8. Exactly one published
+string states that size, and it is easy to look for in the wrong places:
+the app's *Installing from a file* card, which lives inside a
+**`server-only` block**, so the sentence is on the server build alone and
+both offline builds strip it. The landing page and `README.txt` state no
+size at all. If the ZIP's size changes again, that one card is the whole
+job.
 
 ### Deploying each variant
 

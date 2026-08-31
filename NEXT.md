@@ -850,12 +850,19 @@ it in unparseable JSON is not.
 
 ### The published size string — one, not three
 
-The brief said three strings say "about 17 MB". Measured: **one**. It is
-in the app's own *Installing from a file* card, in the server template,
-which is why it appears on all three builds. The landing page and
-`README.txt` state no size at all. It now reads **about 30 MB** — the
-same MiB convention the old number used, and what a browser's download
-dialog will show.
+The brief said three strings say "about 17 MB". Measured: **one**, and
+it is narrower than that even sounds. It is in the app's *Installing
+from a file* card, which sits inside a **`server-only` block** — so it
+is on `symbulator.pythonanywhere.com` and on **neither offline build**,
+which strip it. That is right, and it is the point of the card: it
+tells a reader of the hosted app how big the download would be, and
+someone already running the download does not need telling. The
+landing page and `README.txt` state no size at all.
+
+It now reads **about 30 MB** — the same MiB convention the old number
+used, and what a browser's download dialog will show. Verified live on
+the server after the pull; the two offline builds correctly do not
+carry the sentence.
 
 Changing that English mints a new content-hash key, so the twelve
 translations were **migrated in place** rather than orphaned:
