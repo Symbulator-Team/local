@@ -1,5 +1,7 @@
 # Next build — accepted but not yet done
 
+**#207 is done, 31 Aug 2026**, at cache **v113**: the thirteen dictionaries are downloadable files at `/i18n/<lang>.json`, with a `/translate` page explaining what may be edited and what is machinery, and a Languages section in the About card linking out to it. Server-only by design. Corrections go to **translate@symbulator.com** or a GitHub pull request. **No native speaker has reviewed any of the twelve**, and today alone added about 1,200 unreviewed strings — this is the only route to fixing that.
+
 **#210 is done, 31 Aug 2026**, at cache **v112**: the offline path has a harness. `verify_bridge.py` runs every input through **both** front ends and compares them — 340 cases, **0 disagreements**. It exists because the day's shipped bug lived in `bridge.py`, which no check touched, and it found a second drift on its first run: `app.py` takes `variables` as a list or a string, `bridge.py` only a string. It needed one calibration, recorded in the entry — 201 of its first 201 findings were a benign shape, and a harness that cries wolf is one people stop running.
 
 **#200 is done, 31 Aug 2026**, at cache **v110**: `symbulator_ui.py` speaks in codes too — **forty-one of them, 801–877**, across the validators, plotting, Evaluate, the mini-tools, SPICE and the notes, in twelve languages. The trap its own entry predicted was real and one function higher than expected: `_run_in_process` flattened every failure to a string before any route could name its code. Only **#199** — the package, with the release train — is left of the three.
@@ -669,7 +671,7 @@ now guards all thirteen.
 
 ---
 
-## #207 — the dictionary as a file a translator can take away — **planned**
+## #207 — the dictionary as a file a translator can take away — **done, cache v113**
 
 Roberto, 31 Aug 2026: *"Could the dictionary be offered as a downloadable
 thing?"* Opened at his instruction as a write-up only; nothing is built.
@@ -682,6 +684,81 @@ and there is currently no way for one to. A dictionary someone can take
 away, correct and send back is the only route to that correction, and it
 is the difference between twelve translations and twelve *reviewed*
 translations.
+
+### As built, 31 Aug 2026
+
+**Version (1), and it needed less than the entry expected**, because
+#204 had already done half of it: the dictionaries were files by then,
+just the packed `.js` form the page loads rather than the JSON a person
+edits.
+
+* **`/i18n/<lang>.json`** serves all thirteen source dictionaries.
+  `en.json` is among them, for the reason this entry gives: half its keys
+  are markup the page could hand back at runtime, but the `js.*` half
+  lives as literal fallbacks inside `t()` calls and cannot be harvested
+  in a browser at all. A translator needs both halves or the template
+  looks broken. Not the same file as `/i18n/<lang>.js`, which is escaped,
+  stamped and machine-shaped.
+* **`/translate`** explains what to do with them.
+* **A Languages section in the About card** links out to it, the same
+  outward-link pattern as Acknowledgements.
+
+**Server-only, deliberately.** A translator has to send a file back,
+which needs a network anyway, so there is nothing for the offline builds
+to carry. 817 KB of source JSON in a 30 MB download whose readers cannot
+finish the job would be paying for it twice, and it would put install and
+local out of step, which this project does not do. Checked after the
+build: no `.json` reached `install_site`.
+
+### The page, and why it is the way it is
+
+**Not translated.** It is addressed to somebody about to translate, who
+reads English by definition — and a version in their own language
+would be a page written by the very machine whose work they came to
+check.
+
+**No dependencies.** No `banner.css`, no i18n runtime, no Pyodide, no
+Jinja beyond being rendered. It is the one page that must keep working
+while everything else is mid-deploy, and a translator arriving from an
+email should not meet a broken layout.
+
+It says four things the checker cannot say for itself:
+
+* **What is machinery, not words** — `%{slot}`, tags, `id=`, `href=`
+  — and that a checker refuses a file that has lost one, so a
+  translator can be aware rather than careful.
+* **What never translates** — the mathematics. Variable names,
+  element letters, the decimal point, unit symbols.
+* **Roberto's rule for a label carrying a unit**, stated as a rule:
+  *translate the word, keep the symbol*. `time (s)` becomes *Zeit (s)*,
+  *时间（s）*, *समय (s)*.
+* **That the terminology calls are open to being overruled.** #203's
+  transliteration split is named on the page as exactly the kind of
+  decision a native speaker should reverse. That is the point of the
+  whole item: it is the difference between twelve translations and
+  twelve *reviewed* ones.
+
+### One decision that was not mine
+
+The first draft put Roberto's personal email on the page as the route
+back. It came out again before anything shipped. This page invites
+strangers, a published address cannot be unpublished, and whose inbox
+takes that traffic is the decision of the person who owns the inbox.
+
+Asked, and answered: **translate@symbulator.com**, a role address on his
+own domain. It lives in `templates/translate.html` and nowhere else.
+GitHub pull requests are offered beside it for anyone who would rather
+work in the open.
+
+### Version (3) is still not built, and its warning still stands
+
+Upload-to-preview — a translator loading their edited file and seeing
+their own words in the live app — remains worth doing and remains
+unbuilt. **If it is ever built it must escape on load.** Dictionaries are
+written into the page as `innerHTML`, and `pack` escapes `<`, `>`, `&`
+and `{` at *build* time; a file loaded from a reader's own disk bypasses
+that entirely, and the wrapper that would have prevented stored XSS is a
+great deal harder to add once the loader exists.
 
 ### Three versions, increasing in value
 
