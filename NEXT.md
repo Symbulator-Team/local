@@ -492,7 +492,9 @@ it sat ahead of Arabic in the order.
 
 **Revised 31 Aug 2026, when #205 was deferred.** This item existed partly
 to clear the way for the right-to-left pass; with that shelved, only the
-payload argument is left. Thirteen languages now inline about 505 KB of
+payload argument is left — **and #207**, which wants the dictionaries as
+files for a quite different reason. Serving them once satisfies both, so
+do these two together and let #207 pay for the split. Thirteen languages now inline about 505 KB of
 dictionary — roughly 830 KB served, ~265 KB gzipped. That still works, and
 nothing is broken by it, so this is no longer blocking anything: do it when
 the page size starts to bother someone, or when the list grows again.
@@ -569,6 +571,83 @@ Cyrillic, left to right, no new machinery, no font question.
 is the first one whose *Local App* label was long enough to overflow. See
 #203 for that; the fix was the Ukrainian wording, and the corrected test
 now guards all thirteen.
+
+---
+
+## #207 — the dictionary as a file a translator can take away — **planned**
+
+Roberto, 31 Aug 2026: *"Could the dictionary be offered as a downloadable
+thing?"* Opened at his instruction as a write-up only; nothing is built.
+
+**Why this is worth doing, stated plainly: no native speaker has reviewed
+any of the twelve.** Claude wrote all of them. #203's terminology split —
+components transliterated, physics quantities in the native word — was
+flagged in that entry as the thing a native speaker should check first,
+and there is currently no way for one to. A dictionary someone can take
+away, correct and send back is the only route to that correction, and it
+is the difference between twelve translations and twelve *reviewed*
+translations.
+
+### Three versions, increasing in value
+
+**1. Serve the dictionaries as static files.** `i18n/*.json` stop being
+inlined text and become files the page fetches. Every URL is then a
+download — `install.symbulator.com/i18n/uk.json` — with no interface at
+all. **This is #204 doing double duty:** the payload split and the
+download feature are the same piece of work, which is why these two
+should be done together rather than in sequence.
+
+**2. A *Help translate* button** that builds a translator's working file
+in the browser: one row per key, carrying the English and the current
+translation, so a new language starts from a filled-in template instead
+of a blank file.
+
+**3. Download *and* upload-to-preview.** The translator loads their
+edited file and sees their own words in the live app before sending
+anything back. The app already has the upload pattern, for `.cir` files.
+
+**Recommendation: (1) with #204, (3) eventually, skip (2).** Once the
+files are served and `en.json` is among them, a button that merely links
+to them earns little.
+
+### The English is the one part that is not free
+
+Half of it is already in the page at runtime. `applyLang()` stores every
+translated element's original English `innerHTML` in the `i18nBase` map,
+keyed beside its `data-i18n` — see `templates/index.html`, `applyLang`.
+That is `en.json`'s markup half, available in the browser at no payload
+cost and with no drift risk, which is exactly why English is not shipped
+as a dictionary in the first place.
+
+**The other half is not reachable that way.** The runtime strings — the
+`js.*` keys, a large share of the 485 — live as literal fallback
+arguments inside `t('js.solved', 'Solved!')` calls, not in any map. A
+purely client-side harvest would hand a translator a half-empty template
+and look like a bug.
+
+So **ship the generated `en.json` as one of the static files** in (1).
+`i18n.py scan` already produces it; this costs a build step, not a
+decision.
+
+### One thing to build in at the start, not retrofit
+
+Dictionaries are written into the page as `innerHTML`, and `pack` escapes
+`<`, `>`, `&` and `{` inside every string **at build time**. A dictionary
+loaded from a reader's own file at runtime bypasses that entirely. If (3)
+is ever built, it must escape on load — otherwise a hostile dictionary
+file is stored XSS in the reader's tab, and the wrapper that would have
+prevented it is a great deal harder to add once the loader exists.
+
+### What already gates a contribution
+
+`i18n.py check` validates a returned file structurally: stale keys,
+orphans, a translation that dropped an `id`, an `href` or a `%{slot}`,
+and the `<script>`/`<style>` comparison against the English. So a file
+that comes back can be verified before it is trusted, and the reviewer's
+job is the words, not the markup.
+
+**Not gated by any of that:** whether the words are *right*. That still
+needs a speaker, which is the entire point of the item.
 
 ---
 
