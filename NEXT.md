@@ -1,5 +1,10 @@
 # Next build — accepted but not yet done
 
+**#201 is done and deployed, 31 Aug 2026**, at cache **v103**: the
+ribbon's language control shows the chosen language as two letters, a
+dot separates it from the Clear button, the Clear button abbreviates at
+phone widths, and Esperanto is third in the list. See its entry below.
+
 **#197 is done and deployed, 31 Aug 2026**: the app speaks nine
 languages. `install.symbulator.com` and `symbulator.com/9/local.zip` are
 live at cache **v102**, both verified by fetching and hashing — the
@@ -224,6 +229,118 @@ his eye more than the rest:
   shorten if any wording grows.
 * Esperanto's *tensifonto* / *kurentfonto* are compounds rather than
   *tensia fonto*; both are used.
+
+---
+
+## #201 — the ribbon's language control, reworked — **done, cache v103**
+
+Roberto, 31 Aug 2026, in four passes over the course of the morning:
+Esperanto third; the chosen language shown as two letters rather than its
+full name; a separator between *Clear inputs* and the language; and then
+the better idea that made the rest fit — abbreviate the Clear button
+itself when the screen narrows.
+
+### The chosen language is two letters; the list keeps the names
+
+A native `<select>` displays the **selected option's own text** when
+closed, so the closed control and the list cannot differ. That is the
+whole constraint. The construction:
+
+* the two-letter face is a `<span>` in normal flow and **defines the
+  width**;
+* the real `<select>` is stretched over it, `opacity: 0`, still taking
+  every click, key and mobile picker.
+
+The obvious version — make the select's own text transparent and leave it
+in flow — looks identical and **saves nothing**: a `<select>` sized
+`width: auto` is as wide as its *widest* option whatever colour its text
+is. Measured on the live ribbon: full name **79px**, transparent text
+**79px**, this construction **35px**. It is a good trap, and the sort
+that ships because the screenshot looks right.
+
+### Why not flags
+
+Mocked up and rejected, in this order of severity. **Windows does not
+render flag emoji at all** — on Roberto's own machine 🇪🇸 comes out as the
+letters ES in a box, so the flag variant silently becomes a worse version
+of the letters for every Windows reader. **Languages are not countries**:
+Spanish would fly Spain's flag at a Panamanian audience, our Portuguese
+is Brazilian, English has two candidates and Chinese three. And
+**Esperanto has no country by design** — its green star is not an emoji.
+
+### The dot
+
+`·`, at every width, between the Clear button and the language. Not a new
+mark: it is already this design's separator, used 38 times in the app —
+the footer's four links, `DC · real` and `AC · phasor` on the Numerical
+Solver's own ribbon. Sky at 55% so it sits under the labels it separates.
+
+### The Clear button abbreviates, and that is what made room
+
+The measurement that decided it. At 375px the usable row is **335px**,
+and with the full language name it was **completely full — zero slack**.
+Two letters gave 44px back, but not evenly: English, Spanish, Esperanto
+and the three CJK languages had 44px, while **French, German and
+Portuguese had none** — *Eingaben löschen* is half again the width of
+*Clear inputs* and ate the entire saving.
+
+So the button regained the `.subbar-lbl` / `.subbar-lbl-short` pair that
+banner.css already switches at 480px (#144), and three of the wide forms
+were shortened as well:
+
+| | wide (>480px) | narrow (≤480px) |
+|---|---|---|
+| en | Clear inputs | Clear |
+| es | Limpiar entradas | Limpiar |
+| eo | Vakigi enigojn | Vakigi |
+| fr | Tout effacer *(was "Effacer les entrées")* | Effacer |
+| de | Alles leeren *(was "Eingaben löschen")* | Leeren |
+| pt | Limpar tudo *(was "Limpar entradas")* | Limpar |
+| zh | 清空输入 | 清空 |
+| ja | 入力を消去 | 消去 |
+| ko | 입력 비우기 | 비우기 |
+
+Two wording notes. German moved from *löschen* to *leeren*: the button
+empties fields, it does not delete data, and *löschen* was the wrong
+promise as well as the wider word. Spanish is **Limpiar**, not *Borrar*,
+at Roberto's instruction — same distinction — and the confirm dialog and
+the tooltip that name the same action moved with it, since a button
+saying *Limpiar* that raises a dialog saying *¿Borrar…?* is two verbs for
+one act.
+
+### It deleted more code than it added
+
+`ribbonRows()`, `ribbonCrowded()`, `setLangOptionText()` and the resize
+listener are gone — about 45 lines, in both templates. All of it existed
+only because the closed control showed the full name and had to be
+measured and shrunk when the ribbon got crowded. With the face always two
+letters there is nothing to measure, and the Clear button abbreviates
+through a rule banner.css already had. The pixels were the ask; the
+simplification was the return.
+
+### Verified
+
+* **One row, and the Tutorial link unclipped, in all nine languages** at
+  375px, 481px, 520px and 1100px. The 481–520 band was the one to watch —
+  full two-word labels at the smallest viewport that shows them — and
+  Spanish's *Limpiar entradas* is the widest thing in it.
+* Answers **byte-identical** across English, Korean and Esperanto,
+  switched through the real menu; `<html lang>` follows; the choice
+  persists in `localStorage`.
+* Esperanto third in the list, native names throughout.
+* Both pages render through Flask; no console errors on either; the
+  offline build regenerates clean with no dead references.
+
+### A correction worth keeping
+
+Roberto read a 375px panel of the mockup as *dropping the Tutorial link
+to hold one line*, and praised the call. It was the opposite: banner.css
+caps `<nav>` at one line-box and **clips** what overflows, so a crowded
+ribbon does not grow — it takes the Tutorial link off the screen without
+a trace. That is the failure this whole item exists to prevent, and the
+static mockups showed it because they carry none of the page's logic. If
+a future reader sees the link missing at a narrow width, that is a bug,
+not a design.
 
 ---
 
