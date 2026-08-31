@@ -736,6 +736,117 @@ needs a speaker, which is the entire point of the item.
 
 ---
 
+## #208 — the Numerical Solver in the offline builds — **planned**
+
+Roberto, 31 Aug 2026: *"EqSheet is supposed to be also in the local
+versions. Can you fix that? The Numerical Solver (EqSheet) should be
+available in the locals, with the packages needed for it to run."*
+
+Today it is **server-only**. `build_local.py` reads `eqsheet.html` solely
+to check its banner; the offline builds have no such page, and the app's
+*Explore Numerically* card points at `/eqsheet/`, which does not exist
+once the app is downloaded.
+
+### The part that is not free: scipy
+
+`eqsheet.py` needs it, and not decoratively. Line ~409:
+
+    from scipy.optimize import root, least_squares
+
+* `root` — MINPACK hybr, for square systems.
+* `least_squares` — for rectangular systems **and for every bounded
+  solve**, which is all of #131's per-unknown restrictions (Positive,
+  Negative, Range). MINPACK's hybr does not take bounds.
+
+SymPy's `nsolve` is not a substitute: square systems only, no bounds, no
+least-squares. And the code around the call is tuned to *measured* `trf`
+behaviour — the comment recording that a guess started exactly on a bound
+gets nudged inward by ~1e-10 and then reports convergence without moving.
+Replacing scipy would change answers quietly, which is the worst way for
+them to change.
+
+**numpy is already vendored** (2.9 MB). scipy is not.
+
+### The number nobody has yet, and how to get it
+
+**scipy's wheel size for this Pyodide build is unmeasured.** It could not
+be looked up: `vendor/` holds a 2026 build (Python 3.14.2, abi
+`2026_0`, e.g. `numpy-2.4.6-cp314-cp314-pyemscripten_2026_0_wasm32.whl`)
+and nothing at `cdn.jsdelivr.net/pyodide/v<0.28…0.31>/full/` serves those
+filenames — every probe 404s. `vendor/pyodide-lock.json` names the exact
+file and its sha256:
+
+    scipy-1.18.0-cp314-cp314-pyemscripten_2026_0_wasm32.whl
+    sha256 8512aee3e4b36b5a79523628d97d0d34612a366aecbb5b44a08c7ae45dd50d57
+
+but carries no size field.
+
+**There is also no vendoring script in the repo** — nothing under
+`repos/local` fetches these files, so how `vendor/` was populated is not
+recorded anywhere. That is worth fixing on the way past, whatever happens
+to this item.
+
+**So the first task is provenance, not code:** find where that Pyodide
+distribution came from (ask Roberto, or match the lockfile against the
+pyodide GitHub release assets), get the scipy wheel, and *measure it*.
+
+**Then tell Roberto the number before bundling it.** The ZIP is 17.0 MB
+and the landing page, `README.txt` and the app's own "Run Symbulator 9
+locally" card all say so. scipy is the largest wheel in the Pyodide
+distribution by a wide margin. He has already chosen bundling over a
+lazy CDN fetch — "with the packages needed for it to run", and a fetch
+would break the no-internet promise for that one feature — but he chose
+it without the figure, and three published strings change with it.
+
+### The port itself
+
+1. **A generated offline `eqsheet.html`**, the way `build_local.py`
+   already generates `index.html`: strip `server-only` regions, rewrite
+   `/static/...` asset paths.
+   **Put it at the root as `eqsheet.html`, not `eqsheet/index.html`** —
+   then the `i18n/` base that #204 rewrites is identical for both pages
+   and needs no second rule.
+2. **`eqsheet.py` from Flask blueprint to in-tab Pyodide**, the way
+   `symbulator_ui.py` already runs through `bridge.py`. 470 lines,
+   mostly SymPy parsing plus the solve above. This is the bulk.
+3. **scipy into `vendor/`**, `sw.js`'s ASSETS, `build_zip.py`'s
+   cache-list check, and `install_site`.
+4. **Re-point the handover.** *Explore Numerically* opens `/eqsheet/`
+   today. Offline it must open the local page, and the oversized-payload
+   fallback (`numerical_system.json`, dropped onto the Solver page) has
+   to keep working.
+5. The three "about 17 MB" strings, if the wheel lands.
+
+### Translation: already done, and free
+
+`eqsheet.html` carries the full i18n runtime and **is already translated
+on the server** — verified 31 Aug in Ukrainian: *Рівняння, Змінні,
+Змінна, Результат*, and *DC · дійсні / AC · фазори*.
+
+Offline it costs nothing extra. #204 serves **one file per language
+carrying the whole dictionary**, not per-page subsets, and that choice
+was made partly for this: the twelve dictionaries are already in the
+service worker's cache list, so an offline Solver page picks up its
+translations with **no new files**. Keep it at the root (point 1) and
+even the base path is unchanged.
+
+### Traps, all of them already paid for once
+
+* **A stale service worker hides the whole thing.** Unregister the worker
+  and delete every cache before believing any offline measurement. On
+  31 Aug an offline page looked correct and was the *previous* build.
+* **Bump `CACHE_VERSION`.** New files that are not in a new cache version
+  reach nobody who has visited before.
+* **The i18n boot path is parser-blocking on purpose** (#204). If the new
+  page's head is assembled by hand, keep the generated block intact:
+  `applyLang()` must run before the page takes any element reference.
+* **A template change is not verified until it has been rendered through
+  Flask** — a `{#` inside an HTML comment is a Jinja comment-opener and
+  took every server page down on 30 Aug while the offline builds, which
+  never touch Jinja, stayed green.
+
+---
+
 ## #198–#200 — the engine speaks in codes, the interface in words — **planned, 31 Aug 2026**
 
 Roberto's ruling, 31 Aug 2026, replacing the proposal that stood here
