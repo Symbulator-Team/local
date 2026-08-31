@@ -10,7 +10,7 @@
  * Bump CACHE_VERSION whenever the app files change, so returning users
  * get the new build instead of the cached one.
  */
-const CACHE_VERSION = 'symbulator-v105';
+const CACHE_VERSION = 'symbulator-v106';
 
 const ASSETS = [
   './',
@@ -47,6 +47,20 @@ const ASSETS = [
   'examples/Showcase.cir',
   'examples/The_Monograph.cir',
   // ==== END examples ====
+  // ==== BEGIN i18n ==== written by build_local.py; do not edit
+  'i18n/bn.js',
+  'i18n/de.js',
+  'i18n/eo.js',
+  'i18n/es.js',
+  'i18n/fr.js',
+  'i18n/hi.js',
+  'i18n/id.js',
+  'i18n/ja.js',
+  'i18n/ko.js',
+  'i18n/pt.js',
+  'i18n/uk.js',
+  'i18n/zh.js',
+  // ==== END i18n ====
   'bridge.py',
   'symbulator_ui.py',
   'circuitbook.py',

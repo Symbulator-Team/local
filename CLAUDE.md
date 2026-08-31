@@ -186,9 +186,26 @@ one-template property this file exists to protect. If you find yourself
 reaching for a server-side scheme, you are about to break the offline
 builds.
 
-* The dictionaries are `repos/server/i18n/<lang>.json`, and they are
-  written into both templates between `BEGIN/END i18n dictionaries`
-  markers by `tools/i18n.py pack`. **Do not edit between the markers.**
+* The dictionaries are `repos/server/i18n/<lang>.json`. Since **#204**
+  they are **not** inlined into the page: `tools/i18n.py pack` generates
+  one file per language into `repos/server/i18n/dist/<lang>.js`, and the
+  page loads only the language actually in use. The block between the
+  `BEGIN/END i18n dictionaries` markers in each template's `<head>` is
+  now a *loader and a version stamp*, still generated — **do not edit
+  between the markers.**
+* **The boot path and the switch path are deliberately different.** Boot
+  uses a parser-blocking `<script>`; a language chosen later is fetched.
+  That is because `applyLang()` must run before the page takes any
+  element reference — it replaces `innerHTML`, and a deferred apply
+  leaves those references on detached nodes. If you ever "tidy" the boot
+  path into a fetch, that is the breakage, and it will not show up in a
+  screenshot.
+* The files must be in `sw.js`'s generated `BEGIN/END i18n` block, which
+  `build_local.py` writes. A dictionary that ships but is not precached
+  vanishes offline, dropping the reader back to English.
+* The server serves them at `/i18n/<lang>.js` (root-absolute: the app is
+  at `/`, the Numerical Solver at `/eqsheet/`); `build_local.py` rewrites
+  the base to a relative path for the offline builds.
 * **`en.json` is generated.** The English lives in the template markup and
   in the fallback argument of every `t()` / `tv()` call. At runtime the
   page snapshots its own markup and restores that for English, so English

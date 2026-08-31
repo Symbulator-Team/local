@@ -1,5 +1,7 @@
 # Next build — accepted but not yet done
 
+**#204 is done, 31 Aug 2026**, at cache **v106**: the dictionaries are files now, fetched only when a language is actually used. The app page dropped from **941,815 to 271,905 bytes** while the ZIP grew 19 KB, and an English reader now makes no i18n request at all. Boot uses a parser-blocking script and a later switch uses an injected one — see the entry for why those cannot be the same mechanism.
+
 **#203 and #206 are done and deployed, 31 Aug 2026**, at cache **v105**: the app speaks **thirteen** languages — **Hindi** and **Bengali** (terms of art transliterated into the reader's own script, per Roberto's ruling), and **Ukrainian**, which he asked for on political rather than reach grounds and which should not be tidied out of the list by speaker count. Ukrainian also exposed a real bug: a ribbon label long enough to wrap was being **clipped away silently**, and the test meant to catch that had been checking the wrong axis since #197. **#205 (Arabic and Urdu) is deferred at Roberto's instruction**; #204 is no longer a prerequisite for anything.
 
 **#202 is done and deployed, 31 Aug 2026**, at cache **v104** — `install.symbulator.com` and the ZIP verified by fetching (the install page hash-matches the local build; ZIP sha256 `69280ce33b2dafd0b8139729398bcb027dc0d277f27e8d399f0ee15da1dac344`, 17,758,663 bytes). **`symbulator.pythonanywhere.com` awaits one pull carrying #201 and #202 together.**  **Indonesian** is the tenth language — the cheapest of the five candidates and the one whose readers most plausibly need it, since Indonesian engineering is taught in Indonesian. #203–#205 open the rest of that plan: Hindi and Bengali, the dictionary split, then the right-to-left pass for Arabic and Urdu.
@@ -472,32 +474,115 @@ structural comparison of ids, links and `%{slots}` against the English.
 
 ---
 
-## #204 — split the dictionaries out of the page — **planned; no longer
-a prerequisite for anything**
+## #204 — the dictionaries are files, fetched on demand — **done, cache v106**
 
-Ten languages put 389 KB of dictionary inline in the app page: 700 KB
-served, ~225 KB gzipped. Five more would make it ~880 KB / 285 KB. That
-still works, but it is the point where inlining everything stops being
-obviously right.
+Roberto, 31 Aug 2026: *"Let's split the dictionary out of the page (#204)
+and have the app download it the moment the user tries to use a
+non-default language."*
 
-The fix is to load only the chosen language's dictionary. It is not free:
-the offline build is a page opened from a folder, so the file has to join
-`sw.js`'s cache list and be fetched at boot before first paint — which is
-exactly the flash `i18n-pending` exists to hide, now with a network round
-trip inside it. English needs none of it, since the page's own markup is
-the English.
+**The page went from 941,815 to 271,905 bytes** — 670 KB out of every
+load, for every reader, in every language. That is more than the ~505 KB
+this item estimated when it was only a payload argument; the estimate
+counted the JSON and not what escaping it into a script had cost.
 
-Worth doing **before** fourteen languages rather than after, which is why
-it sat ahead of Arabic in the order.
+The ZIP barely moved: 17,814,560 → 17,833,540 bytes, **+19 KB**. The
+dictionaries left the page and became twelve files inside the same
+archive, so the download is the same size and the app is lighter.
 
-**Revised 31 Aug 2026, when #205 was deferred.** This item existed partly
-to clear the way for the right-to-left pass; with that shelved, only the
-payload argument is left — **and #207**, which wants the dictionaries as
-files for a quite different reason. Serving them once satisfies both, so
-do these two together and let #207 pay for the split. Thirteen languages now inline about 505 KB of
-dictionary — roughly 830 KB served, ~265 KB gzipped. That still works, and
-nothing is broken by it, so this is no longer blocking anything: do it when
-the page size starts to bother someone, or when the list grows again.
+### One file per language, whole
+
+Not per-page subsets, which is what the inlined version did. Two reasons:
+the file is then byte-identical to what a translator would be handed
+(#207), and the Numerical Solver's saving — it uses about sixty of the
+keys — is not worth a second set of files to keep in step. The Solver
+fetches ~50 KB it mostly does not need, once, from cache thereafter.
+
+They are **.js, not .json**, because the file is loaded two ways and one
+format has to serve both. JSON would mean shipping every dictionary
+twice.
+
+### Two load paths, and why they are not the same
+
+**Boot** — a parser-blocking `<script>`, written into the head by the
+generated block. This is not a style choice. `applyLang()` runs at boot
+*before the page takes any element reference*, because it replaces
+`innerHTML` and would otherwise leave those references pointing at
+detached nodes. A `fetch` defers it past that line, and the app breaks in
+ways that would not show up in a screenshot.
+
+**A language chosen later** — an injected `<script>`, resolved through a
+promise, exactly as Roberto asked. Safe here precisely because the
+references are long taken by then.
+
+English does neither: it is the page's own markup and is never fetched at
+all, so an English reader's boot now makes **zero** i18n requests and is
+strictly faster than before this item.
+
+### Failure is English, never a hidden page
+
+A dictionary that 404s resolves to an empty one. The page paints, in
+English, and stays usable; `i18n-pending` is lifted either by the apply
+or by the 2s failsafe that has guarded it since #197. Tested by hiding
+`eo.js` and booting into Esperanto: visible immediately, English, app
+working.
+
+That test found a real flaw, now fixed: `<html lang>` went on claiming
+`eo` while the text was English, which would put a screen reader in the
+wrong voice. `applyLang` now sets the attribute to the language it could
+actually apply.
+
+### Where the files live
+
+`i18n/dist/<lang>.js`, generated by `python tools/i18n.py pack` from the
+`.json` sources — never edited by hand. The server serves them at
+`/i18n/<lang>.js` from a route with a year-long immutable cache; the
+offline builds carry them beside the page. The URL is root-absolute on
+the server (the app is at `/`, the Solver at `/eqsheet/`, so a relative
+path would resolve differently on the two) and rewritten to relative by
+`build_local.py`, where there is one page at the root of its folder.
+
+The `?v=` on the URL is a hash of every dictionary, so it changes exactly
+when a translation does. It does nothing offline — the service worker
+matches with `ignoreSearch: true` — where `CACHE_VERSION` governs as it
+does for everything else.
+
+### The service worker had to be taught about them
+
+`sw.js` gained a generated `BEGIN/END i18n` block beside the examples
+one, written by `build_local.py`. A dictionary that ships but is never
+precached is a dictionary that vanishes offline, which would silently
+drop a Ukrainian reader back to English the first time they opened the
+app without a network. `build_local.py --check` now fails on a stale or
+missing one, and `sw_i18n_lines()` refuses to build at all if the `dist`
+folder is empty rather than quietly shipping an English-only app.
+
+### Verified
+
+Server build: English boots with **zero** i18n requests; Hindi boots with
+exactly one and the page is Hindi before first paint; three switches
+fetch two files and returning to the first refetches nothing; `/eqsheet/`
+correctly resolves the root-absolute path; `/i18n/xx.js`, `/i18n/zzz.js`
+and `/i18n/en.js` all 404. Offline build: relative base, all **twelve**
+precached under `symbulator-v106`, a versioned request for a
+never-loaded language served from cache, a runtime switch to Korean
+working from the cache, and a real Pyodide solve byte-identical to
+English. Every inline script re-parses on both pages; `i18n.py check` and
+`build_local.py --check` clean; `build_zip.py`'s cache-list check passes
+with 63 files.
+
+**A note for whoever tests this next.** The first offline run appeared to
+work and did not: the service worker served the *previous* build from
+cache `symbulator-v105`, so the page was Bengali with no i18n request and
+none of the new globals. That combination — translated, but with nothing
+loaded — is the signature. Unregister the worker and delete the caches
+before believing anything the offline build tells you.
+
+### What this leaves for #207
+
+Most of it. The dictionaries are now files a translator can be pointed
+at. What is still missing is `en.json` among the served files, since the
+`js.*` English lives as literal fallbacks in `t()` calls and cannot be
+harvested in the browser.
 
 ---
 
