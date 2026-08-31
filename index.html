@@ -30,7 +30,7 @@ window.MathJax = { tex: { inlineMath: [['\\(', '\\)']] }, svg: { fontCache: 'glo
 //
 // The <script> written below is parser-blocking on purpose: see
 // pack_block() in tools/i18n.py for why it cannot be a fetch.
-window.SYMB_I18N_V = "c3017a611d";
+window.SYMB_I18N_V = "389f2ba69c";
 // Rewritten to a relative path by build_local.py: the offline page
 // sits at the root of its own folder, and the server serves the
 // app at / and the Numerical Solver at /eqsheet/, so only a
@@ -2184,7 +2184,7 @@ units: yes</pre>
   <a href="https://github.com/Symbulator" target="_blank" rel="noopener">GitHub</a> ·
   <a href="https://pypi.org/project/symbulator/" target="_blank" rel="noopener">PyPI</a></span><br>
   <span data-i18n="free-and-open-source.dd6c">Free and open-source software under the MIT licence · results are symbolic, powered by SymPy</span><br>
-  <span class="notranslate">Symbulator 9 version 2026-08-31 02:18 UTC</span>
+  <span class="notranslate">Symbulator 9 version 2026-08-31 04:03 UTC</span>
 </footer>
 
 <script>
@@ -5417,18 +5417,16 @@ $('sympyBtn').addEventListener('click', () => {
 // internal name) with this solve's equation system and answers
 // preloaded. The payload normally travels in the URL (base64url of its
 // JSON, the ?import= contract in eqsheet.py), so the new tab needs
-// nothing further from this page. The URL is absolute on purpose: the
-// offline builds carry this same script, and the solver needs SciPy, so
-// there is exactly one of it and it lives on the server -- like the
-// Documentation link, this is an outward link that works offline only
-// when the network does.
+// nothing further from this page. This build's Solver is the page
+// beside this one (#208): SciPy is bundled, so it needs no network
+// either.
 //
 // A very large circuit can push the URL past what the host's front end
 // accepts on a request line (~8 KB), so past a safe margin the payload
 // is saved as a system file instead and the page opens empty -- its
 // "Open a system file…" button reads the file back in. The margin
 // leaves the host room for headers on top of the URL itself.
-const EQSHEET_URL = 'https://symbulator.pythonanywhere.com/eqsheet/';
+const EQSHEET_URL = 'eqsheet.html';
 const EQSHEET_URL_MAX = 6000;
 $('whatifBtn').addEventListener('click', () => {
   $('whatifNote').hidden = true;

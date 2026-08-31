@@ -2,13 +2,15 @@
 """
 Regenerate the local version from the server version.
 
-Two things come across. **index.html**: there is exactly one interface,
+Three things come across. **index.html**: there is exactly one interface,
 written once, in ../server/templates/index.html, and the local version is
 that same page with the network taken out -- every `fetch('/api/...')`
 becomes a direct call into Python running in the tab, plus the boot code,
-the PWA tags and the service-worker registration. And **the shared
-modules**, symbulator_ui.py and circuitbook.py, which are one file each and
-are simply copied.
+the PWA tags and the service-worker registration. **eqsheet.html**, the
+Numerical Solver, the same way (#208): one page, one template, its two
+API calls rewired into Pyodide. And **the shared modules**,
+symbulator_ui.py, circuitbook.py and eqsheet.py, which are one file each
+and are simply copied.
 
 Doing either by hand is how the two front ends drift apart, so it is a
 script. Every substitution asserts that it matched -- a silent no-op is
@@ -18,8 +20,8 @@ Building also stamps the current UTC time into the footer of both the
 template and the generated page, so every release says when it was cut.
 --check does not stamp: it only compares.
 
-    python3 build_local.py            # stamps, then writes ./index.html
-    python3 build_local.py --check    # exit 1 if ./index.html is stale
+    python3 build_local.py            # stamps, then writes the two pages
+    python3 build_local.py --check    # exit 1 if either page is stale
 """
 
 from __future__ import annotations
@@ -34,6 +36,12 @@ HERE = Path(__file__).resolve().parent
 SERVER = HERE.parent / "server"
 TEMPLATE = SERVER / "templates" / "index.html"
 OUTPUT = HERE / "index.html"
+# The Numerical Solver's page (#208). Deliberately at the root of the
+# build as eqsheet.html rather than inside an eqsheet/ folder: the i18n
+# base path the generated block in each <head> carries is then the same
+# relative "i18n/" for both pages, and needs no second rewrite rule.
+EQ_TEMPLATE = SERVER / "templates" / "eqsheet.html"
+EQ_OUTPUT = HERE / "eqsheet.html"
 
 # The two modules that are one file each, shared verbatim with the server.
 #
@@ -49,7 +57,7 @@ OUTPUT = HERE / "index.html"
 # already generates index.html into this repository from the server's
 # template, and these are no different. bridge.py is not among them; it is
 # this build's own glue, with no server counterpart.
-SHARED = ("symbulator_ui.py", "circuitbook.py")
+SHARED = ("symbulator_ui.py", "circuitbook.py", "eqsheet.py")
 
 # The built-in examples: a folder of input files, each carrying its own
 # title. Same story as the modules above -- one source, in the server tree,
@@ -79,6 +87,21 @@ SW_I18N_BEGIN = "  // ==== BEGIN i18n ==== written by build_local.py; do not edi
 SW_I18N_END = "  // ==== END i18n ===="
 
 WHEEL = "symbulator-0.5.22-py3-none-any.whl"
+
+# The Numerical Solver's one expensive dependency (#208). eqsheet.py
+# calls scipy.optimize.root for a square system and least_squares for a
+# rectangular or a bounded one, and SymPy's nsolve substitutes for
+# neither: square systems only, no bounds, no least squares. So the
+# wheel ships, all 13.4 MB of it -- Roberto's call, 31 Aug 2026, made
+# against the measured figure. It is loaded lazily, by the Solver's
+# page alone, so a reader who never opens it never pays for it beyond
+# the download.
+#
+# It comes from the same Pyodide distribution as everything else in
+# vendor/ -- see vendor_pyodide.py, which fetches and hash-checks the
+# lot -- and its sha256 is in vendor/pyodide-lock.json, which is where
+# pyodide.loadPackage('scipy') looks the filename up.
+SCIPY_WHEEL = "scipy-1.18.0-cp314-cp314-pyemscripten_2026_0_wasm32.whl"
 
 # The build stamp in the page footer, the last line of the interface.
 # It lives in the template, so the server page and the offline build cut
@@ -670,6 +693,213 @@ def check_banner(template_text: str, where: str = "templates/index.html") -> Non
             "between the markers.")
 
 
+# ---------------------------------------------------------------------
+# The Numerical Solver's page (#208)
+#
+# Same idea as the app's page below, and deliberately much smaller: this
+# one has exactly two calls to rewire, because everything the Solver
+# asks the server is post('api/parse') and post('api/solve'). Replacing
+# the body of post() therefore ports the whole page, and every call site
+# is left exactly as the server's is.
+#
+# It boots its own Pyodide, not the app's: the two are separate
+# documents and share nothing but the service worker's cache. That is
+# also why it loads scipy and *not* the symbulator wheel, while the app
+# loads the wheel and not scipy -- neither page pays for the other's
+# dependency, and the shared cache means a reader who opens both
+# downloads each file once.
+# ---------------------------------------------------------------------
+
+EQ_BOOT_JS = """
+// ---------------------------------------------------------------------
+// The engine. Everything below runs Python in this tab -- there is no
+// server. Boot happens in the background so the page stays usable while
+// CPython, SymPy and SciPy load; the sheet's own controls all work
+// meanwhile, and the first parse waits for the engine rather than
+// failing in front of it.
+// ---------------------------------------------------------------------
+let pyodide = null, eqbridge = null, pyFailed = false;
+
+// The boot bar is markup this script's own build step injected, so the
+// template's extractor never saw its words and they arrive in English.
+// Translate it here through the same t() the rest of the page uses; the
+// language menu calls this again on a change. The keys are the app's,
+// because the sentence is the app's sentence.
+function syncBootBar() {
+  const boot = document.getElementById('boot');
+  if (!boot || boot.classList.contains('failed')) return;
+  boot.textContent = t('js.local.booting', 'Starting the maths engine…');
+}
+syncBootBar();
+
+const pyReady = (async () => {
+  try {
+    pyodide = await loadPyodide({ indexURL: 'vendor/' });
+    // scipy is what this page cannot do without: eqsheet.py's
+    // _run_solver calls root() for a square system and least_squares()
+    // for a rectangular or a restricted one. numpy comes with it, and
+    // is also what lambdify compiles the residuals against.
+    await pyodide.loadPackage(['sympy', 'numpy', 'scipy']);
+    // eqsheet.py is the server's own file, copied here verbatim by
+    // build_local.py; eqbridge.py is this build's glue.
+    for (const f of ['eqsheet.py', 'eqbridge.py']) {
+      const src = await (await fetch(f)).text();
+      pyodide.FS.writeFile('/home/pyodide/' + f, src);
+    }
+    await pyodide.runPythonAsync('import sys\\nsys.path.insert(0, "/home/pyodide")');
+    eqbridge = pyodide.pyimport('eqbridge');
+    // Both expensive imports, done while the reader is still typing
+    // rather than on their first click: SymPy's parser builds a lot of
+    // caches on first use, and scipy.optimize is a large import of its
+    // own -- eqsheet.py delays it to keep it off the server's circuit
+    // solve, which here would land it on the first Solve instead.
+    await pyodide.runPythonAsync('import sympy, scipy.optimize');
+    document.getElementById('boot').classList.add('ready');
+    return true;
+  } catch (e) {
+    pyFailed = true;
+    const b = document.getElementById('boot');
+    b.classList.add('failed');
+    b.textContent = t('js.local.bootFailed',
+      'The maths engine could not start: ') + e;
+    return false;
+  }
+})();
+"""
+
+# The two calls, and nothing else. The failure shapes matter: doParse
+# reads d.errors and d.rules unconditionally, and the solve path tests
+# d.solution -- so a dead engine has to answer in the shape each caller
+# already knows how to show, or the page throws instead of explaining.
+EQ_POST_JS = """async function post(url, body){
+  await pyReady;
+  if (pyFailed) {
+    const msg = t('js.local.noEngine', 'The maths engine is not available.');
+    return (url === 'api/parse')
+      ? { rules: [], errors: [{ line: 1, error: msg }] }
+      : { ok: false, message: msg };
+  }
+  const fn = (url === 'api/parse') ? 'eq_parse' : 'eq_solve';
+  return JSON.parse(eqbridge[fn](JSON.stringify(body)));
+}"""
+
+# The bar itself, on the tagline's own metrics so it lines up with the
+# column below rather than with the window.
+EQ_BOOTBAR_CSS = """  .bootbar{max-width:76rem;margin:1.1rem auto -0.4rem;padding:.5rem .9rem;
+    background:#fff9ec;border:1px solid #eadfc0;color:#6b5b34;
+    border-radius:8px;font-size:.88rem}
+  .bootbar.ready{display:none}
+  .bootbar.failed{background:var(--bad-bg);border-color:#ecc8c8;color:var(--bad)}
+"""
+
+EQ_SW_JS = """<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function () {
+    navigator.serviceWorker.register('sw.js').catch(function (err) {
+      console.warn('Service worker registration failed:', err);
+    });
+  });
+}
+</script>
+</body>"""
+
+
+def build_eqsheet() -> str:
+    """The Numerical Solver's page, with the network taken out."""
+    s = EQ_TEMPLATE.read_text(encoding="utf-8")
+    check_banner(s, where="templates/eqsheet.html")
+
+    # --- head: local icons, and no font that has to be fetched --------
+    #
+    # The Google Fonts pair goes. A downloaded copy has no network to
+    # fetch IBM Plex from, and a stylesheet link that cannot resolve is
+    # a render-blocking wait for a timeout before the fallback stack
+    # takes over -- which is where the page ends up either way. Same
+    # doctrine as the banner, which leaves Plex out of its stack on
+    # purpose so that every property renders identically.
+    s = sub(
+        s,
+        '<link rel="icon" href="/static/favicon.ico">\n'
+        '<link rel="preconnect" href="https://fonts.googleapis.com">\n'
+        '<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600'
+        '&family=IBM+Plex+Sans:wght@400;600;700&display=swap" rel="stylesheet">',
+        '<meta name="theme-color" content="#203864">\n'
+        '<link rel="icon" href="favicon.ico" sizes="any">\n'
+        '<link rel="icon" href="favicon-32x32.png" type="image/png" sizes="32x32">\n'
+        '<link rel="icon" href="favicon-16x16.png" type="image/png" sizes="16x16">\n'
+        '<link rel="apple-touch-icon" href="apple-touch-icon.png" sizes="180x180">',
+        label="the Solver's head assets")
+
+    # --- the Pyodide runtime, after the parser-blocking i18n block ----
+    s = sub(
+        s,
+        "<!-- END i18n dictionaries -->",
+        '<!-- END i18n dictionaries -->\n'
+        '<script src="vendor/pyodide.js"></script>',
+        label="the Solver's Pyodide tag")
+
+    # --- where the dictionaries live (#204), the app's rewrite --------
+    s = sub(
+        s,
+        'window.SYMB_I18N_BASE = "/i18n/";',
+        'window.SYMB_I18N_BASE = "i18n/";',
+        label="the Solver's dictionary path")
+
+    # --- the logo, at the root here as it is in the app ---------------
+    s = sub(s, '<img src="/static/logo.png"', '<img src="logo.png"',
+            label="the Solver's header logo path")
+
+    # --- the "starting up" notice, in the CSS and in the markup -------
+    marker = "  main{display:grid;"
+    if marker not in s:
+        raise SystemExit("build_local.py: could not find the Solver's main CSS rule.")
+    s = s.replace(marker, EQ_BOOTBAR_CSS + marker, 1)
+    s = sub(
+        s,
+        '<p class="tagline"',
+        # English on purpose: this markup exists only in the offline
+        # build, so tools/i18n.py never sees it in the template and it
+        # carries no data-i18n key. syncBootBar() rewrites it through
+        # t() as soon as the dictionary is up.
+        '<div id="boot" class="bootbar">Starting the maths engine\u2026</div>\n'
+        '<p class="tagline"',
+        label="the Solver's boot bar")
+
+    # --- every network call becomes a Python call ---------------------
+    s = sub(
+        s,
+        """async function post(url, body){
+  const r = await fetch(url,{method:'POST',
+    headers:{'Content-Type':'application/json'}, body:JSON.stringify(body)});
+  return r.json();
+}""",
+        EQ_BOOT_JS.strip() + "\n\n" + EQ_POST_JS,
+        label="the Solver's two API calls")
+
+    # --- the boot bar follows a language change -----------------------
+    s = sub(
+        s,
+        """    applyLang(next);
+    syncLangMenu();
+    syncThemeToggle();""",
+        """    applyLang(next);
+    syncLangMenu();
+    syncThemeToggle();
+    syncBootBar();""",
+        label="the Solver's boot bar, on a language change")
+
+    # --- service worker ------------------------------------------------
+    s = sub(s, "</script>\n</body>", "</script>\n" + EQ_SW_JS,
+            label="the Solver's service worker")
+
+    # --- sanity: nothing server-shaped left behind --------------------
+    for banned in ("{{ ", "url_for(", "/static/", "fonts.googleapis"):
+        if banned in s:
+            raise SystemExit(
+                f"build_local.py: {banned!r} survived into eqsheet.html.")
+    return s
+
+
 def build() -> str:
     """Read the server template and return the transformed local-version
     HTML as a string (the caller decides whether to write it to disk or
@@ -978,6 +1208,42 @@ def build() -> str:
         label="solveq fetch",
     )
 
+    # --- the Numerical Solver is on board too now (#208) ---------------
+    #
+    # The server build opens the one hosted Solver by absolute URL,
+    # because until #208 there was only one of it and it needed SciPy.
+    # The offline build now carries its own, so the handover points at
+    # the page beside this one -- and everything downstream of the URL
+    # is unchanged: the ?import= payload, the size ceiling, and the
+    # numerical_system.json fallback for a system too large for a link
+    # all work exactly as they do on the server.
+    s = sub(
+        s,
+        "const EQSHEET_URL = 'https://symbulator.pythonanywhere.com/eqsheet/';",
+        "const EQSHEET_URL = 'eqsheet.html';",
+        label="the Numerical Solver's address",
+    )
+
+    # The comment above that constant explains an absolute URL that is
+    # no longer absolute here, and says the Solver works offline only
+    # when the network does -- which is now the opposite of true.
+    s = sub(
+        s,
+        """// preloaded. The payload normally travels in the URL (base64url of its
+// JSON, the ?import= contract in eqsheet.py), so the new tab needs
+// nothing further from this page. The URL is absolute on purpose: the
+// offline builds carry this same script, and the solver needs SciPy, so
+// there is exactly one of it and it lives on the server -- like the
+// Documentation link, this is an outward link that works offline only
+// when the network does.""",
+        """// preloaded. The payload normally travels in the URL (base64url of its
+// JSON, the ?import= contract in eqsheet.py), so the new tab needs
+// nothing further from this page. This build's Solver is the page
+// beside this one (#208): SciPy is bundled, so it needs no network
+// either.""",
+        label="the Numerical Solver's address, in prose",
+    )
+
     # --- "could not reach the server" is the wrong words here ----------
     #
     # Since #197 this swaps the KEY, not just the English. Rewriting only
@@ -1019,12 +1285,17 @@ def main() -> int:
 
     if args.check:
         check_js(TEMPLATE.read_text(encoding="utf-8"), TEMPLATE.name)
+        check_js(EQ_TEMPLATE.read_text(encoding="utf-8"), EQ_TEMPLATE.name)
         built = build()
         check_js(built, OUTPUT.name)
+        eq_built = build_eqsheet()
+        check_js(eq_built, EQ_OUTPUT.name)
         current = OUTPUT.read_text(encoding="utf-8") if OUTPUT.exists() else ""
+        eq_current = (EQ_OUTPUT.read_text(encoding="utf-8")
+                      if EQ_OUTPUT.exists() else "")
         stale = [name for name, _ in stale_shared()]
         examples = stale_examples() + ["i18n/" + n for n in stale_i18n()]
-        if current != built or stale or examples:
+        if current != built or eq_current != eq_built or stale or examples:
             for name in stale:
                 print(f"{name} is STALE -- it differs from "
                       f"{SERVER / name}", file=sys.stderr)
@@ -1034,10 +1305,12 @@ def main() -> int:
                       file=sys.stderr)
             if current != built:
                 print("index.html is STALE", file=sys.stderr)
+            if eq_current != eq_built:
+                print("eqsheet.html is STALE", file=sys.stderr)
             print("run build_local.py", file=sys.stderr)
             return 1
-        print("index.html is up to date, and so are "
-              + " and ".join(SHARED) + " and the examples folder.")
+        print("index.html and eqsheet.html are up to date, and so are "
+              + ", ".join(SHARED) + " and the examples folder.")
         return 0
 
     # Stamp first, then build, so the generated page carries the same
@@ -1047,6 +1320,13 @@ def main() -> int:
     check_js(built, OUTPUT.name)
     OUTPUT.write_text(built, encoding="utf-8", newline="")
     print(f"index.html written, {built.count(chr(10)) + 1} lines, build {stamp}")
+    # The Numerical Solver's page (#208). It carries no build stamp --
+    # the template has none to stamp; index.html's footer is the one
+    # that says which build a site is running.
+    eq_built = build_eqsheet()
+    check_js(eq_built, EQ_OUTPUT.name)
+    EQ_OUTPUT.write_text(eq_built, encoding="utf-8", newline="")
+    print(f"eqsheet.html written, {eq_built.count(chr(10)) + 1} lines")
     moved = [f"copied {n} from ../server" for n in sync_shared()]
     moved += [(n if n.startswith("i18n/") else f"examples: {n}")
               for n in sync_examples()]
@@ -1058,8 +1338,11 @@ def main() -> int:
                   "roundingState", "Symbulator <span", "solveqReal",
                   "py('export_book'", "addToFileBtn", "downloadFileBtn",
                   "server-only", "Run it offline", "id=\"hostNotice\"",
-                  "showHostNotice"):
-        print(f"  {probe:<20} {built.count(probe)}")
+                  "showHostNotice", "EQSHEET_URL = 'eqsheet.html'"):
+        print(f"  {probe:<24} {built.count(probe)}")
+    for probe in ("loadPyodide", "'scipy'", "eqbridge", "sw.js",
+                  "fonts.googleapis", "fetch(url"):
+        print(f"  eqsheet: {probe:<15} {eq_built.count(probe)}")
     return 0
 
 
