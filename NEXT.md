@@ -1,6 +1,6 @@
 # Next build — accepted but not yet done
 
-**#209 is open, 31 Aug 2026, and not built** — Roberto has feedback coming before it is. Asking what the app looks like in Chinese turned up **nineteen reader-facing strings that never reach the dictionary**, the worst of them the line under every set of answers: *DC analysis · 12 result(s) · 0.06s*, English in all twelve languages. `tools/i18n.py check` is structurally unable to see them — it guards strings already in the scheme, and these never call `t()` at all. The scanner that closes that hole matters more than the nineteen.
+**#209 is open, 31 Aug 2026, and not built** — Roberto has feedback coming before it is. Asking what the app looks like in Chinese turned up **twenty-four reader-facing strings that never reach the dictionary** (twenty-one of them #209's; three are #198's), the worst of them the line under every set of answers: *DC analysis · 12 result(s) · 0.06s*, English in all twelve languages. `tools/i18n.py check` is structurally unable to see them — it guards strings already in the scheme, and these never call `t()` at all. Three widenings of the sweep each found more, which is the argument for the guard rather than for a fourth sweep.
 
 **#208 is done, 31 Aug 2026**, at cache **v107**: the **Numerical Solver ships in the offline builds** — its own page, its own Pyodide, SciPy bundled, solving with no network at all. The ZIP is **31,682,389 bytes (30.2 MB)**, up from 17.8 MB, which Roberto agreed to against the measured figure; the app's one published "about 17 MB" string now reads **about 30 MB** in English and in all twelve translations. Along the way: `vendor/`'s provenance was recovered and written down (Pyodide **v314.0.5** — the version scheme changed, which is why every earlier probe 404'd) as `vendor_pyodide.py`, and a **live server bug** was found and fixed — a NaN residual travelled as bare `NaN`, which no JSON parser accepts, and hung the hosted Solver on *solving…* for ever.
 
@@ -764,22 +764,35 @@ A string that never calls `t()` at all is **invisible to it**. There is
 no rule that can see it, because there is nothing to compare. That is
 the actual defect; the nineteen strings below are its symptoms.
 
-### The nineteen
+### The twenty-four
 
-Found by sweeping every literal assigned to `.textContent`,
-`.innerHTML`, `.placeholder`, `.title` or `.value`, or passed to
-`confirm` / `prompt` / `alert`, and subtracting everything inside a
-`t()` / `tv()` / `tSrv()` call.
+Found by sweeping every literal reaching a reader — assigned to
+`.textContent`, `.innerHTML`, `.placeholder`, `.title` or `.value`,
+passed to `confirm` / `prompt` / `alert`, or passed to the app's own
+`showNote()` — and subtracting everything inside a `t()` / `tv()` /
+`tSrv()` call.
 
-**`templates/index.html`**
+It took three passes to get here, and the reason is worth recording. The
+first pass wanted two adjacent English words, which walked past
+`'solving…'`. The second wanted three-letter words, which walked past
+`` `${data.key} vs. ${data.xname}` ``. The third missed `showNote()`
+entirely, because it is not a DOM sink — and three of its nineteen call
+sites turned out to be untranslated. **Every widening found more.** That
+is the argument for the guard, not for a fourth pass.
+
+**`templates/index.html` — sixteen**
 
 | line | string | where a reader meets it |
 |---|---|---|
-| 3867 | `` `Delete '${name}' from ${openFile.name}?` `` | a confirm dialog — the **only** one of eleven that skips `t()` |
+| 3337 | `'reading ' + file.name + '…'` | opening an input file |
+| 3826 | `` `Updated '${name}' in ${file}.` `` | after Update entry |
+| 3858 | `` `Renamed '${was}' to '${now}'.` `` | after Rename |
+| 3867 | `` `Delete '${name}' from ${file}?` `` | a confirm dialog — the **only** one of eleven that skips `t()` |
 | 4126 | `'Solution #' + (i+1)` | the multi-solution picker's options |
 | 4223 | `'Unknowns: '` | the Equations card |
 | 4397 | `'Copy'` | the copy button on the two-port parameter term (#166) |
 | 4435 | `` `${DOMAIN} analysis · ${n} result(s) · ${s}s` `` | **after every solve** |
+| 4776 | `` `${data.key} vs. ${data.xname}` `` | the sweep chart's title |
 | 4779 | `xLabel: 'time (s)'` | the time plot's x-axis |
 | 4789 | `` `${toolLabel} · ${n} point(s) · ${s}s` `` | after every plot |
 | 4791 | `'Plotted!'` | the Plot button's own status |
@@ -787,17 +800,19 @@ Found by sweeping every literal assigned to `.textContent`,
 | 5208, 5229 | `'drawing…'`, `'Drawn.'` | the Schematic button's own status |
 | 5223 | `'Could not draw it.'` | when the drawing fails |
 
-**`templates/eqsheet.html`**
+**`templates/eqsheet.html` — eight, of which three are #198's**
 
-| line | string |
-|---|---|
-| 1192 | `` `line ${e.line}: ${e.error}` `` |
-| 1301 | `'solving…'` |
-| 1305 | `` ` (least-squares: ${n} equations, ${m} unknowns)` `` |
-| 1306 | `' (restricted)'` |
-| 1307 | `` ` — ${d.nfev} evaluations` `` |
-| 1450 | `'system file: '` |
-| 1503, 1504 | `'import: '`, `'import link: '` |
+| line | string | |
+|---|---|---|
+| 1192 | `` `line ${e.line}: ${e.error}` `` | the `line N:` prefix is #209's; `e.error` is the engine's |
+| 1301 | `'solving…'` | #209 |
+| 1305 | `` ` (least-squares: ${n} equations, ${m} unknowns)` `` | **#198** |
+| 1306 | `' (restricted)'` | **#198** |
+| 1307 | `` ` — ${d.nfev} evaluations` `` | **#198** |
+| 1450 | `'system file: '` | #209 |
+| 1503, 1504 | `'import: '`, `'import link: '` | #209 |
+
+So **twenty-one for #209**, three already spoken for.
 
 **The shape of the mistake is visible in the button statuses.** #125
 gave Solve, Plot and Schematic each its own status. #197 translated
@@ -806,35 +821,51 @@ walked past the other two, because it was working from the markup and
 those live in script. Same feature, same day, three buttons, one
 translated.
 
-### Two judgement calls, for Roberto
+### Two questions asked, both already answered in the tree
 
-1. **`time (s)`**, the plot's x-axis label. The standing rule is that
-   the mathematics is never translated — names, element letters, the
-   decimal point, unit symbols. *time* is a word and `(s)` is a unit
-   symbol, so the reading that matches the rule is *时间 (s)*: translate
-   the word, leave the symbol. Worth saying out loud because it is the
-   first time the rule has had to cut a label in half.
+Both were raised for Roberto on 31 Aug and both were withdrawn the same
+day, because the answers were already written down. Recorded because a
+question that looks open and is not costs somebody a reply.
 
-2. **The Solver's status line is half the engine's.** `solved`,
-   `did not converge — try different guesses` and `unclassified
-   variables: c` come from `eqsheet.py`, and translating those is
-   **#198**, not this. So after #209 that line reads
-   `solved — 9 次求值`: an English word with a Chinese suffix, which is
-   worse to look at than either end of it. Three ways out —
-   *(a)* ship the mix and let #198 finish it; *(b)* do #198 first and
-   fold #209's eqsheet half into it; *(c)* give #209 a small
-   client-side map of eqsheet's eight engine messages as a stopgap,
-   knowing #198 throws it away. Roberto's call.
+**`time (s)` is not a judgement call.** It sits in a four-branch
+`if/else` where every sibling is already decided, twelve lines of code:
 
-### The part that outlives the nineteen
+```js
+xLabel: t('js.plot.freqAxis', 'frequency (Hz, log scale)'),   // Bode x
+yLabel: 'dB',                                                 // bare unit
+yLabel: t('js.plot.degrees', 'degrees'),                      // Bode phase y
+xLabel: data.xname,  yLabel: data.key,                        // sweep: names
+xLabel: 'time (s)',                                           // <- the miss
+```
+
+The rule is already applied and already shipped: a **unit symbol alone**
+stays (`dB`), and a **label containing one** goes to the translator
+whole, who decides per language. They have — Chinese kept the Latin
+symbol and used full-width brackets, 频率（Hz，对数刻度）; Ukrainian
+localised it, Частота (Гц, логарифмічна шкала).
+
+And the same phrase is *already translated on the same card*: the End
+time field above the plot is `end-time-s.801d`, zh 终止时间（s）, de
+Endzeit (s), uk Кінцевий час (с). The form says it in Chinese and the
+axis below says it in English.
+
+**The Solver's status line is #198's, and #198 already says so.** Its
+entry carries a section headed *Known, and resolved by #198* naming
+these exact fragments, and the reasoning: translating them alone leaves
+a half-English line, because `d.message` is English from the engine
+regardless. Once the message is a code the whole line renders in one
+`tv()` call. So #209 does not touch 1305–1307, and the ordering already
+in the file stands.
+
+### The part that outlives the twenty-four
 
 A scanner, in `tools/i18n.py check`: every literal reaching a reader-
 facing sink, minus everything inside a `t()`-family call, minus an
 explicit allowlist of the deliberate exceptions (mode values compared
 against, CSS, selectors, filenames, the mathematics). It is about forty
 lines and it is the only thing here that stops the class coming back —
-the nineteen are a day's work, the guard is why there is not a twentieth
-next month.
+the twenty-one are a day's work, the guard is why there is not a
+twenty-fifth next month.
 
 Seed the allowlist from the triage, and keep it **explicit**: an
 exception that has to be written down is an exception somebody has
@@ -842,7 +873,8 @@ looked at.
 
 ### Cost
 
-Nineteen strings, so nineteen new `js.*` keys, times twelve languages.
+Twenty-one strings, so twenty-one new `js.*` keys, times twelve
+languages.
 No solver release: two templates, `i18n/*.json` and `tools/i18n.py`, so
 one cache bump, the offline pair, and one PythonAnywhere pull.
 
@@ -1097,8 +1129,9 @@ that cannot break anything before it reaches the one that can.
 **#198 — `eqsheet.py` speaks in codes (9xx).** Server-only: no wheel, no
 `vendor/` copy, no three pins, no cache bump, no offline build to think
 about. `eqsheet.py` and `templates/eqsheet.html` go up in the same
-PythonAnywhere pull. Twelve messages and the status line, eight
-languages. This is the end-to-end proof of the whole scheme for the price
+PythonAnywhere pull. Twelve messages and the status line, twelve
+languages (the entry said eight when it was written, before #202, #203
+and #206 — the count moved under it). This is the end-to-end proof of the whole scheme for the price
 of an afternoon, and if the design is wrong we find out here.
 
 **#199 — the solver package speaks in codes (1xx–6xx).** The release
@@ -1113,7 +1146,7 @@ the pull.
 `app.py` must list the new response field by hand, which is the trap
 `repos/local/CLAUDE.md` already warns about.
 
-**Each item carries its own eight translations**, so none of them can
+**Each item carries its own twelve translations**, so none of them can
 land half-done and the app is never in a state where a code renders as a
 bare number.
 
