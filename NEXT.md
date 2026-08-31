@@ -1,5 +1,7 @@
 # Next build — accepted but not yet done
 
+**#209 is open, 31 Aug 2026, and not built** — Roberto has feedback coming before it is. Asking what the app looks like in Chinese turned up **nineteen reader-facing strings that never reach the dictionary**, the worst of them the line under every set of answers: *DC analysis · 12 result(s) · 0.06s*, English in all twelve languages. `tools/i18n.py check` is structurally unable to see them — it guards strings already in the scheme, and these never call `t()` at all. The scanner that closes that hole matters more than the nineteen.
+
 **#208 is done, 31 Aug 2026**, at cache **v107**: the **Numerical Solver ships in the offline builds** — its own page, its own Pyodide, SciPy bundled, solving with no network at all. The ZIP is **31,682,389 bytes (30.2 MB)**, up from 17.8 MB, which Roberto agreed to against the measured figure; the app's one published "about 17 MB" string now reads **about 30 MB** in English and in all twelve translations. Along the way: `vendor/`'s provenance was recovered and written down (Pyodide **v314.0.5** — the version scheme changed, which is why every earlier probe 404'd) as `vendor_pyodide.py`, and a **live server bug** was found and fixed — a NaN residual travelled as bare `NaN`, which no JSON parser accepts, and hung the hosted Solver on *solving…* for ever.
 
 **#204 is done, 31 Aug 2026**, at cache **v106**: the dictionaries are files now, fetched only when a language is actually used. The app page dropped from **941,815 to 271,905 bytes** while the ZIP grew 19 KB, and an English reader now makes no i18n request at all. Boot uses a parser-blocking script and a later switch uses an injected one — see the entry for why those cannot be the same mechanism.
@@ -735,6 +737,114 @@ job is the words, not the markup.
 
 **Not gated by any of that:** whether the words are *right*. That still
 needs a speaker, which is the entire point of the item.
+
+---
+
+## #209 — the strings that never reach the dictionary — **planned**
+
+Roberto asked, 31 Aug 2026, what the app looks like for a reader who
+wants it in Chinese. Answering it properly meant running it, and running
+it turned up a hole: **the line under every set of answers is English in
+all twelve languages.**
+
+    DC analysis · 12 result(s) · 0.06s
+
+`templates/index.html:4435` builds it as a bare template literal. No
+`t()`, so no dictionary, so no translation — and it is arguably the
+most-read line in the app after the answers themselves.
+
+### Why nothing caught it
+
+`tools/i18n.py check` catches an untagged **markup** unit, a key whose
+English no longer hashes to it, an orphan, a translation that dropped an
+`id` or a `%{slot}`, and a `t()` call whose key is a variable. Every one
+of those is about a string that is *already* in the scheme.
+
+A string that never calls `t()` at all is **invisible to it**. There is
+no rule that can see it, because there is nothing to compare. That is
+the actual defect; the nineteen strings below are its symptoms.
+
+### The nineteen
+
+Found by sweeping every literal assigned to `.textContent`,
+`.innerHTML`, `.placeholder`, `.title` or `.value`, or passed to
+`confirm` / `prompt` / `alert`, and subtracting everything inside a
+`t()` / `tv()` / `tSrv()` call.
+
+**`templates/index.html`**
+
+| line | string | where a reader meets it |
+|---|---|---|
+| 3867 | `` `Delete '${name}' from ${openFile.name}?` `` | a confirm dialog — the **only** one of eleven that skips `t()` |
+| 4126 | `'Solution #' + (i+1)` | the multi-solution picker's options |
+| 4223 | `'Unknowns: '` | the Equations card |
+| 4397 | `'Copy'` | the copy button on the two-port parameter term (#166) |
+| 4435 | `` `${DOMAIN} analysis · ${n} result(s) · ${s}s` `` | **after every solve** |
+| 4779 | `xLabel: 'time (s)'` | the time plot's x-axis |
+| 4789 | `` `${toolLabel} · ${n} point(s) · ${s}s` `` | after every plot |
+| 4791 | `'Plotted!'` | the Plot button's own status |
+| 4993 | `` `solution ${i} of ${n}` `` | the caption above each solution |
+| 5208, 5229 | `'drawing…'`, `'Drawn.'` | the Schematic button's own status |
+| 5223 | `'Could not draw it.'` | when the drawing fails |
+
+**`templates/eqsheet.html`**
+
+| line | string |
+|---|---|
+| 1192 | `` `line ${e.line}: ${e.error}` `` |
+| 1301 | `'solving…'` |
+| 1305 | `` ` (least-squares: ${n} equations, ${m} unknowns)` `` |
+| 1306 | `' (restricted)'` |
+| 1307 | `` ` — ${d.nfev} evaluations` `` |
+| 1450 | `'system file: '` |
+| 1503, 1504 | `'import: '`, `'import link: '` |
+
+**The shape of the mistake is visible in the button statuses.** #125
+gave Solve, Plot and Schematic each its own status. #197 translated
+Solve's — `js.solved` exists and Ukrainian says *Розв'язано!* — and
+walked past the other two, because it was working from the markup and
+those live in script. Same feature, same day, three buttons, one
+translated.
+
+### Two judgement calls, for Roberto
+
+1. **`time (s)`**, the plot's x-axis label. The standing rule is that
+   the mathematics is never translated — names, element letters, the
+   decimal point, unit symbols. *time* is a word and `(s)` is a unit
+   symbol, so the reading that matches the rule is *时间 (s)*: translate
+   the word, leave the symbol. Worth saying out loud because it is the
+   first time the rule has had to cut a label in half.
+
+2. **The Solver's status line is half the engine's.** `solved`,
+   `did not converge — try different guesses` and `unclassified
+   variables: c` come from `eqsheet.py`, and translating those is
+   **#198**, not this. So after #209 that line reads
+   `solved — 9 次求值`: an English word with a Chinese suffix, which is
+   worse to look at than either end of it. Three ways out —
+   *(a)* ship the mix and let #198 finish it; *(b)* do #198 first and
+   fold #209's eqsheet half into it; *(c)* give #209 a small
+   client-side map of eqsheet's eight engine messages as a stopgap,
+   knowing #198 throws it away. Roberto's call.
+
+### The part that outlives the nineteen
+
+A scanner, in `tools/i18n.py check`: every literal reaching a reader-
+facing sink, minus everything inside a `t()`-family call, minus an
+explicit allowlist of the deliberate exceptions (mode values compared
+against, CSS, selectors, filenames, the mathematics). It is about forty
+lines and it is the only thing here that stops the class coming back —
+the nineteen are a day's work, the guard is why there is not a twentieth
+next month.
+
+Seed the allowlist from the triage, and keep it **explicit**: an
+exception that has to be written down is an exception somebody has
+looked at.
+
+### Cost
+
+Nineteen strings, so nineteen new `js.*` keys, times twelve languages.
+No solver release: two templates, `i18n/*.json` and `tools/i18n.py`, so
+one cache bump, the offline pair, and one PythonAnywhere pull.
 
 ---
 
