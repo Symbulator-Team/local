@@ -169,11 +169,12 @@ deliberate — an earlier silent no-op once shipped a build with no service
 worker at all. If a build fails with "matched 0 times, expected 1", the
 template changed and the script needs the same change.
 
-### The interface speaks nine languages, from a dictionary in the page
+### The interface speaks thirteen languages, from a dictionary in the page
 
-Since #197 (31 Aug 2026) the app is available in English, Spanish, French,
-German, Portuguese, Chinese, Japanese, Korean and Esperanto, chosen from a
-`<select>` in the ribbon and remembered in `localStorage` under
+Since #197 (31 Aug 2026) the app is available in English, Spanish,
+Esperanto, French, German, Portuguese, Chinese, Japanese, Korean,
+Indonesian (#202), Hindi and Bengali (#203) and Ukrainian (#206), chosen
+from a `<select>` in the ribbon and remembered in `localStorage` under
 `symbulator-lang` — the same shape as the theme, and applied by the same
 head script before first paint.
 
@@ -199,6 +200,15 @@ builds.
   touching either template: it catches untagged units, stale keys,
   orphans, a translation that dropped an `id` or a `%{slot}`, and a `t()`
   call whose key is a variable. See `tools/README.md` for the full list.
+* **`check` knows nothing about pixels, and the ribbon is where a
+  translation actually breaks.** `banner.css` caps `.subbar nav` at one
+  line-box with `overflow: clip`: a label too wide for the row does not
+  wrap visibly and does not scroll — the overflow is silently gone, and it
+  usually takes the Tutorial link with it. Ukrainian shipped past the
+  first check this way (#203/#206). Measure `scrollHeight - clientHeight`
+  on the nav, per language, at 375/481/520/768/1100px; 481 is the band to
+  watch, being the narrowest that still shows the wide labels. The fix is
+  nearly always the wording.
 
 **The mathematics is never translated** — not the variable names, not the
 element letters, not the decimal point, not the unit symbols. The answers

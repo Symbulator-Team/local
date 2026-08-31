@@ -1,5 +1,7 @@
 # Next build — accepted but not yet done
 
+**#203 and #206 are done and deployed, 31 Aug 2026**, at cache **v105**: the app speaks **thirteen** languages — **Hindi** and **Bengali** (terms of art transliterated into the reader's own script, per Roberto's ruling), and **Ukrainian**, which he asked for on political rather than reach grounds and which should not be tidied out of the list by speaker count. Ukrainian also exposed a real bug: a ribbon label long enough to wrap was being **clipped away silently**, and the test meant to catch that had been checking the wrong axis since #197. **#205 (Arabic and Urdu) is deferred at Roberto's instruction**; #204 is no longer a prerequisite for anything.
+
 **#202 is done and deployed, 31 Aug 2026**, at cache **v104** — `install.symbulator.com` and the ZIP verified by fetching (the install page hash-matches the local build; ZIP sha256 `69280ce33b2dafd0b8139729398bcb027dc0d277f27e8d399f0ee15da1dac344`, 17,758,663 bytes). **`symbulator.pythonanywhere.com` awaits one pull carrying #201 and #202 together.**  **Indonesian** is the tenth language — the cheapest of the five candidates and the one whose readers most plausibly need it, since Indonesian engineering is taught in Indonesian. #203–#205 open the rest of that plan: Hindi and Bengali, the dictionary split, then the right-to-left pass for Arabic and Urdu.
 
 **#201 is done and deployed, 31 Aug 2026**, at cache **v103**: the
@@ -403,33 +405,75 @@ any length.
 
 ---
 
-## #203 — Hindi and Bengali — **planned**
+## #203 — Hindi and Bengali — **done, cache v105**
 
-Both are left-to-right and drop into the existing scheme with **no new
-machinery**: a dictionary file each, a line in `LANGS`, and the system
-Devanagari and Bengali faces (Nirmala UI on Windows, Noto elsewhere) —
-the same arrangement the CJK languages already rely on. Cost is the
-translation, ~485 keys apiece, and about 43 KB each on the page.
+Roberto, 31 Aug 2026: *"#203 I follow your advise."* The advice was
+option (2) of the three below — translate the chrome and the prose, leave
+the terms of art recognisable — so that question is settled and the item
+is built.
 
-**The open question is not technical, and it is Roberto's.** Indian
-engineering is taught almost entirely in English. Hindi and Bengali
-technical vocabulary exists — प्रतिरोधक for resistor, संधारित्र for
-capacitor — but a student who learned the subject in English may find a
-fully translated interface *harder*, not easier. Three ways to go:
+**What (2) turned out to mean in practice.** Not Latin script dropped
+into Devanagari mid-sentence, which reads as broken typesetting rather
+than as a technical term. It means **transliterating the term of art into
+the reader's own script**: रेज़िस्टर, not प्रतिरोधक; ক্যাপাসিটর, not
+ধারক. The reader meets the word they learned in English, and the sentence
+still reads as Hindi or Bengali. The rule applied throughout:
 
-1. translate everything, terms of art included;
-2. translate the chrome and prose, leave the terms of art in English
-   (*resistor*, *capacitor*) as the textbooks do;
-3. translate everything but gloss the term in English on first use.
+* **components and circuit-theory terms are transliterated** — रेज़िस्टर
+  / রেজিস্টর, कैपेसिटर / ক্যাপাসিটর, इंडक्टर / ইন্ডাক্টর, इम्पीडेंस /
+  ইম্পিড্যান্স, टू-पोर्ट / টু-পোর্ট, ऑप-ऐम्प / অপ-অ্যাম্প;
+* **ordinary physics quantities keep their standard native word**, because
+  every reader met those at school — वोल्टेज, धारा, शक्ति, प्रतिरोध;
+  ভোল্টেজ, কারেন্ট, পাওয়ার, রোধ.
 
-I lean to (2) for these two, which is the opposite of what was right for
-Spanish and Indonesian, and that asymmetry is the reason to ask rather
-than choose.
+That split is the whole of the judgement, and it is the thing a native
+speaker should check first.
+
+### Digits are Western in both
+
+Bengali was drafted with Bengali-script digits (নোড ১, ৫ অঙ্ক) and then
+converted: **58 of them, all to ASCII.** Hindi never had any. The reason
+is not typographic. `নোড ১` is a label for a node the reader *types* as
+`1`, and the rounding menu's `৫ অঙ্ক` names a digit count the app prints
+in Western figures — a label that disagrees with its own field is worse
+than a label in the wrong script. It also keeps the standing rule intact:
+the mathematics is never localised, and these labels are part of it.
+
+### The failure this found, which was real
+
+**Ukrainian lost the Tutorial link at 481px**, and would have shipped that
+way. `banner.css` caps `<nav>` at one line-box with `overflow: clip`, so a
+crowded ribbon does not grow or scroll — the overflow is simply gone.
+*Локальний застосунок* measures **149px** against English's 62px, which
+pushed *Підручник* onto a second line that was then clipped away.
+
+**And the check that was supposed to catch it did not**, because it tested
+the wrong axis: it asked whether the Tutorial link's right edge had passed
+the nav's right edge. A wrapped element is not to the right, it is
+*below*. The test now compares each child's bottom against
+`nav.clientHeight` and reads `scrollHeight - clientHeight`, which is what
+the failure actually looks like. The old test would have passed a clipped
+ribbon in any of the thirteen languages; it is worth assuming it did not
+catch things in #197 and #201 either, and the widths were re-swept for all
+thirteen on that basis.
+
+The fix was the wording, not the CSS: **Локальна версія** (124px) for the
+wide form, **Застосунок** for the narrow one.
+
+### Verified
+
+Thirteen languages at **375, 481, 520, 768 and 1100px**: one row, nothing
+clipped horizontally or vertically, in every one. The mathematics compared
+as the *glyph sequence MathJax actually draws*, not as text near it —
+identical in English, Hindi, Bengali, Ukrainian and Spanish, on the server
+build and again on the offline build. Both pages render through Flask;
+every inline script re-parses; `i18n.py check` clean, including the
+structural comparison of ids, links and `%{slots}` against the English.
 
 ---
 
-## #204 — split the dictionaries out of the page — **planned, and a
-prerequisite for #205**
+## #204 — split the dictionaries out of the page — **planned; no longer
+a prerequisite for anything**
 
 Ten languages put 389 KB of dictionary inline in the app page: 700 KB
 served, ~225 KB gzipped. Five more would make it ~880 KB / 285 KB. That
@@ -444,12 +488,24 @@ trip inside it. English needs none of it, since the page's own markup is
 the English.
 
 Worth doing **before** fourteen languages rather than after, which is why
-it sits ahead of Arabic in the order.
+it sat ahead of Arabic in the order.
+
+**Revised 31 Aug 2026, when #205 was deferred.** This item existed partly
+to clear the way for the right-to-left pass; with that shelved, only the
+payload argument is left. Thirteen languages now inline about 505 KB of
+dictionary — roughly 830 KB served, ~265 KB gzipped. That still works, and
+nothing is broken by it, so this is no longer blocking anything: do it when
+the page size starts to bother someone, or when the list grows again.
 
 ---
 
-## #205 — Arabic and Urdu, and the first right-to-left pass — **planned,
-after #204**
+## #205 — Arabic and Urdu, and the first right-to-left pass — **deferred
+at Roberto's instruction, 31 Aug 2026**
+
+Roberto, 31 Aug 2026: *"Let's leave the right to left languages out for
+now."* Not descoped and not rejected — **deferred**, with the measurement
+below kept intact so that whoever picks it up does not have to re-derive
+it. Nothing else waits on this.
 
 Not another dictionary: the first RTL layout the app has ever had. What
 the measurement found:
@@ -479,6 +535,40 @@ change that alters nothing visible on the landing page or on learn.
 so it is nearly free afterwards and expensive before. It prefers
 Nastaliq, and where Noto Nastaliq Urdu is absent it falls back to Naskh —
 legible to an Urdu reader, but wrong-looking.
+
+---
+
+---
+
+## #206 — Ukrainian — **done, cache v105**
+
+Roberto, 31 Aug 2026: *"For political reasons, I'd like to add
+Ukrainian."*
+
+**That reason is the entry.** Every language before this one was chosen by
+reach — the ranking of world languages by total speakers that produced
+Indonesian, Hindi and Bengali. Ukrainian is not on that list and is not
+close to it: roughly 40 million speakers, well outside the top ten, and
+its readers overwhelmingly have another language they could use. It is
+here because Roberto wants it here. **A later session tidying the roster
+by speaker count would remove it, and would be wrong to** — this
+paragraph exists so that does not happen.
+
+The cheapest language added so far, and the only one needing no vocabulary
+judgement at all: Ukrainian has a complete native technical vocabulary
+that Ukrainian engineering actually uses, so there was no
+translate-or-transliterate question of the kind #203 had to settle.
+напруга, струм, потужність, опір, конденсатор, котушка індуктивності,
+вузол, коротке замикання, **чотириполюсник** for two-port — the standard
+Slavic four-terminal-network term — and холостий хід / коротке замикання
+for the open- and short-circuit parameter families.
+
+Cyrillic, left to right, no new machinery, no font question.
+
+**It is also the language that found the clipped-ribbon bug**, because it
+is the first one whose *Local App* label was long enough to overflow. See
+#203 for that; the fix was the Ukrainian wording, and the corrected test
+now guards all thirteen.
 
 ---
 
