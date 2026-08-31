@@ -1,5 +1,57 @@
 # Next build — accepted but not yet done
 
+**#212 is done, 31 Aug 2026**, in the solver working tree (unreleased): **the schematics are drawn the way a textbook draws them.** Element names are set as a kind letter with a capitalised subscript — `rin` is Rₓₙ, `r1` is R₁ — inductors are coils of *loops* rather than rows of humps, and a controlled source is a diamond. Roberto's brief, with two textbook PDFs to work from; the grounding is written into the code, not just into this entry.
+
+**The naming.** One `<text>` per label, one `<tspan>` per run, the subscript carrying `class="sub"` and a baseline shift relative to the run before it — which is what lets a caption come back up to full size after `R₁ = `. An underscore is a separator, not a character to print (`r_a` is Rₐ), so the display is many-to-one: `rab`, `rAB` and `r_a_b` all read Rₐᵇ. That was already true of case, and it is confined to the drawing — the answers, the exports and the description keep the name as typed. Written up under LIMITATIONS.
+
+**The inductor.** The old body was `a r r 0 0 1 2r 0` four times: an exact semicircle over a chord of exactly 2r, which is a row of humps — a cursive `m`. A loop needs the arc to be *more* than a semicircle, so the chord has to be shorter than the diameter and the large-arc flag set: `a 7 7 0 1 1 11.5 0`, four times across the same 46px the zigzag spans. `2*IND_R > IND_STEP` is not a nicety but the condition for the arc to exist at all — at a chord of exactly 2r the two arcs coincide and the flag stops meaning anything. There is a test on that inequality.
+
+**The diamond.** *"Dependent sources are usually designated by diamond-shaped symbols"* — Sadiku & Alexander, Fig. 1.13. A source is controlled when its value refers to another quantity in the circuit, and the test is built from the circuit's own names and folded the way `spice._fold` folds them, because `i_r1`, `ir1` and `IR1` are one name to the solver since 0.5.19 — searching for an underscore would have missed two spellings out of three. A consequence worth knowing: `e1,1,0,vs` in a circuit that has a node `s` draws as a diamond, correctly, because that is what it solves as.
+
+**Also:** the resistor's peaks are mitred (the page's global `stroke-linejoin` is round, which turned each peak into a blob), and label placement now comes from each symbol's actual reach rather than one offset for every kind. The old fixed −11px cleared a resistor's 9px zigzag and ran *through* a capacitor's 13px plates; it would have run through the new coil too.
+
+### What it found
+
+**The review harness had never reviewed the working tree.** `review_schematics.py` computed its solver path with one `os.path.dirname` too many — `Symbulator/solver`, a directory that has never existed — so it silently fell back to the installed package. Every "clean run" since it was written was a clean run against whatever `pip` had. Fixed, and it now says so on stderr instead of falling back quietly. This is the schematic drawer's counterpart of the lesson #210 taught about `bridge.py`: **a guard nobody has watched fail is not yet a guard.**
+
+With the path fixed, the harness immediately reported 306 of 330 circuits with findings — from the two new checks, both of which were real:
+
+* **labels touching each other.** A vertical element's name and value were 15px apart, which the subscript's descent closed to nothing.
+* **labels touching symbols.** This one needed the canvas to record where each body actually draws (`_Canvas.ink` — deliberately *narrower* than the `obstacle` a wire must clear, since every value label sits 3px above its own body by design). The first pass recorded the whole segment as ink and produced 485 findings that were all a node name sitting over a *lead*; recording only the body's extent, leads excluded, took it to zero.
+
+Both are fixed, and the check is proved non-vacuous: forcing `GAP` to −14 makes it report the two labels it should.
+
+### Round two: the labels were still touching
+
+Roberto looked at the drawings and said labels were touching symbols. The harness said `with_issues=0`. **He was right and the harness was wrong**, and the gap between those two sentences is the most useful thing in this item.
+
+The check compared label boxes against `_Canvas.ink`, and every `REACH` entry was a **path centreline** figure. A stroke puts another half-width outside its path — and a *mitred* one puts far more: the peak of the zigzag runs past its own vertex by half the stroke over the sine of half the vertex angle, **2.2px** at these proportions. So `REACH["r"] = 9.0` understated the resistor's ink by a quarter, and the mitre that made the peaks sharp (this same item, an hour earlier) is what widened the error. Labels the geometry called 3px clear were **1px clear on screen**.
+
+Geometry could not catch this, so the fix was to stop asking geometry. **`tools/pixel_clearance.py`** renders each drawing with the labels forced to pure red and every stroke to pure blue, then grows the blue mask a ring at a time until it meets the red one. Real font, real glyphs, real stroke widths, no estimate anywhere. It put numbers on it immediately: 1.00px on the divider, the series RLC, the dependent-source circuit and the op-amp stage.
+
+Every `REACH` is an ink figure now — half a stroke wider than its path, the resistor `ZIG_AMP + _ZIG_MITRE` — `GAP` is 4px, and the vertical labels' two magic offsets (17 and 20) are `reach + GAP + 1.5`. Re-measured: the tightest of the samples is 4.00px, which is the 4px it was asked for.
+
+Two things the tool cost, worth writing down because both are easy to repeat:
+
+* **Read a pixel's ink from the channel it removes from white.** Red ink takes the blue channel down; blue ink takes the red channel down. Classifying by "are R and B close?" reads a faint antialiased red — `(255,243,243)`, 12/255 of red and no blue at all — as carrying *both* inks, and the first version duly reported all eight sample drawings as collisions, uniformly 0.00px. A checker that reports everything is as useless as one that reports nothing, and looks more convincing.
+* **Prove it can fail.** Forcing `GAP` to −14 must make it report the two labels it should. Both checks were run that way before either was believed.
+
+The fast harness keeps its estimate-based check — it is a second, not twenty minutes — but `tools/README.md` now says plainly that it estimates, and what it cannot see.
+
+### Round three: the sample was not the population
+
+Round two fixed the four-pixel gap on eight hand-picked circuits and I said so. Running the pixel checker over **all 330** said something else: **21 of them below 3px, the tightest at 1.00px.** The eight I had chosen were not representative, and "I measured it" is not the same claim as "I measured all of it".
+
+The offenders named themselves once the tool was made to report *which* label: `-2j`, `-4j`, `-5j`, `30j`, `1/gx`, `1/g4`, and the node names `ag`, `bg`, `cg` that the three-phase chapters use. Every one of them **hangs below its baseline**. Placement was computing "the label's baseline sits GAP above the symbol's ink" — but a baseline is not an edge. A `j`, a `g` or a `µ` descends past it and eats the whole gap.
+
+So the font's real extents were measured the same way everything else in this item was, by rendering them: **ascent 9.75, descent 3.12** at 13px `ui-sans-serif` — and capitals alone still descend **1.25**, which is Q's tail, so even a name and its capitalised subscript are not flush with their baseline. Those are `LABEL_ASCENT`, `LABEL_DESCENT` and `CAP_DESCENT` now, and every offset in `_draw_element`, the node names and the op-amp's label are expressed as *ink clears ink by GAP* rather than as a baseline distance. `review_schematics.py` and the unit tests read the same three constants, so the fast check no longer has the blind spot that hid this.
+
+Re-measured, the ten worst are 4.00-4.50px, which is the GAP they were asked for.
+
+**Two process notes, both paid for.** The tool crashed while printing its own findings — a value carrying `µ` through a console on a legacy code page — and took thirty-five minutes of results with it; it reconfigures its streams now. And it originally reported only a number per drawing, which is enough to know something is wrong and useless for fixing it: naming the label turned a guess into a five-minute diagnosis.
+
+**Where it stands.** 330 circuits, `failed=0 with_issues=0`, against the working tree this time. 317 solver tests pass, including six new ones for the naming, the loop condition, the diamond, the folding rule, and a unit-level version of the clearance check. **Nothing is deployed**: `schematic.py` is in the solver package, so this needs a PyPI release (0.5.24) before the hosted app sees it, and a rebuilt wheel for the two offline builds. No app-side file changed — `symbulator_ui.py` passes the SVG through untouched.
+
 **#199 is done, 31 Aug 2026**, at solver **0.5.23** and cache **v114**: the solver package speaks in codes too — **thirty-six of them, 2xx–6xx**, one range per module — and with it the batch Roberto ruled on that morning is complete. `CircuitError` carries a code and its arguments; a plain string still works, which is what let the two halves deploy in either order. It found two bugs on the way, both by tooling: `app.py` flattened the code in its own parse step, and **`verify_bridge.py` — one day old — found the mirror image in `bridge.py`**, which is exactly what #210 was built for.
 
 **#207 is done, 31 Aug 2026**, at cache **v113**: the thirteen dictionaries are downloadable files at `/i18n/<lang>.json`, with a `/translate` page explaining what may be edited and what is machinery, and a Languages section in the About card linking out to it. Server-only by design. Corrections go to **translate@symbulator.com** or a GitHub pull request. **No native speaker has reviewed any of the twelve**, and today alone added about 1,200 unreviewed strings — this is the only route to fixing that.
