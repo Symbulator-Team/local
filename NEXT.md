@@ -1685,6 +1685,85 @@ longer contradicts the `Ω` and `V` that the answers print beside it.
 
 ---
 
+### #199, as built
+
+**Thirty-six codes** in a new `symbulator/messages.py`, numbered by the
+module that raises them: 2xx `elements`, 3xx `engine`, 4xx `laplace`,
+5xx `equiv`, 6xx `spice`. `CircuitError` carries `code`, `args_map` and
+`severity`; `str(exc)` renders the English from the catalogue, which is
+why the nine tests that assert on wording pass untouched. Solver
+**0.5.23**, cache **v114**.
+
+**A plain string still works, and that is not a shim.**
+`CircuitError("a sentence")` sets `code` to None and behaves as before.
+It is how an exception re-raised from elsewhere keeps flowing through,
+and it is what let the package and the app deploy in either order
+instead of in lockstep — the same seam `_err()` has on the interface
+side.
+
+**Four messages became two codes apiece** rather than one code with a
+clause glued on, because the clause is prose a translator has to see
+whole: both `_diagnose_unsolvable` diagnoses with and without their
+*"and inductors, which are shorts in dc"* / *"and capacitors, which are
+open in dc"*, and "could not solve" with and without its extra-equation
+hint.
+
+**`laplace._check_transform` takes `fn`, not `origin`.** It used to be
+handed a ready-made English phrase — *"between brackets"*, *"as an
+argument to t2s()"* — and a phrase cannot be translated from inside
+an argument. It takes a function's name now, or None for the `{...}`
+shorthand, and the two forms are two codes apiece.
+
+### Two bugs, both found by tooling rather than by reading
+
+**`app.py` flattened the code in its own parse step.** It forwarded the
+worker's code correctly, so solve-time errors carried theirs while every
+*parse* error — bad name, duplicate, floating node, two-port list
+— silently lost it.
+
+**`bridge.py` had the mirror image, and `verify_bridge.py` found it** —
+one day after that harness was built for exactly this, reporting
+`1 disagreement: [unparseable circuit] .err: only the server has it`.
+Two of the day's items paying for each other: **#210** exists because
+#200's bug shipped, and it caught #199's before it could.
+
+### Verified
+
+* **311 solver tests pass**, the nine wording assertions among them.
+* Every path carries its code end to end — 204, 205, 211, 217, 304,
+  309 — with arguments, through both front ends.
+* `verify_bridge.py`: **340 cases, 0 disagreements**.
+* `i18n check: ok`; thirty-six codes times twelve languages.
+* The wheel `install.symbulator.com` serves is byte-identical to PyPI's:
+  152,782 b, sha256 `51c1714c...`.
+* Offline, in Chinese, with 0.5.23 in the tab: **二端口 'zz1' 的参数列表有
+  3 个条目** (211), **节点 2, 3 没有通向参考节点 0 的路径** (217),
+  **元件名 'r-x' 含有不能用于名称的字符** (204). The engine's own words,
+  in the reader's language, with no server — which is the point of
+  the whole batch.
+
+### What is not in it: #211
+
+**`spice.py`'s warnings.** Seventeen `append` sites are not seventeen
+messages: seven are `f"{el.name}: {why}"` with `why` built elsewhere,
+`skip()` alone has eight call sites with their own reasons, and the
+`described` map names eleven element kinds. Thirty-odd more codes.
+
+It is separate for a reason that is not size. **The SPICE translator is
+labelled beta in the app**, so its wording is the likeliest prose in the
+package to change, and **a code is permanent once published**. Rework
+the wording first, then code it.
+
+There is a handoff brief at
+`C:\Users\perez\Claude Code\PROMPT_211_spice_warnings.md`, written
+31 Aug 2026 at Roberto's ask: the measured chain from `to_spice()` to
+`note(w)` in the page, the four consequences of that shape, the design
+these three items proved, and the precondition above stated first.
+
+`si_prefix.py`'s `AmbiguousValueError` and `UnsafeExpressionError` are
+their own classes with their own contract, not `CircuitError`. The 1xx
+range is held for them.
+
 ## #191 — a box for the settings notes — **done, cache v99; PyAn pending**
 
 Roberto, 30 Aug 2026: put the notes about the settings inside a rounded
