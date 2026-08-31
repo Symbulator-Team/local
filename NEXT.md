@@ -1,5 +1,7 @@
 # Next build — accepted but not yet done
 
+**#202 is done and deployed, 31 Aug 2026**, at cache **v104**: **Indonesian** is the tenth language — the cheapest of the five candidates and the one whose readers most plausibly need it, since Indonesian engineering is taught in Indonesian. #203–#205 open the rest of that plan: Hindi and Bengali, the dictionary split, then the right-to-left pass for Arabic and Urdu.
+
 **#201 is done and deployed, 31 Aug 2026**, at cache **v103**: the
 ribbon's language control shows the chosen language as two letters, a
 dot separates it from the Clear button, the Clear button abbreviates at
@@ -351,6 +353,132 @@ a trace. That is the failure this whole item exists to prevent, and the
 static mockups showed it because they carry none of the page's logic. If
 a future reader sees the link missing at a narrow width, that is a bug,
 not a design.
+
+---
+
+## #202 — Indonesian, the tenth language — **done, cache v104**
+
+Roberto, 31 Aug 2026, after asking which languages lead the world by
+total speakers and what each would cost: *"Proceed as you advise."* The
+advice was Indonesian first, and this is it.
+
+**Why it was first, of the five candidates.** It is the cheapest — Latin
+script, left to right, no font question at all, no new machinery — and it
+is the one whose readers most plausibly need it. Indonesian engineering
+*is* taught in Indonesian, with settled vocabulary of its own: *tegangan*,
+*arus*, *daya*, *kapasitor*, *induktor*, *dua-port*. That is not true of
+every large language on the list, and it is the argument that ranked
+Indonesian above three languages with more speakers.
+
+485 keys, ~5,100 English words, one new `i18n/id.json` and one line in
+`LANGS` in each template and in `tools/i18n.py`. No machinery changed:
+this is exactly what #197's scheme was built to make routine, and it was.
+
+### Choices a native speaker should check
+
+* **berkas**, not *file*, for the input file — the formal Indonesian term,
+  as GNOME and other localisations use. If Roberto or a reader prefers
+  *file*, it is a find-and-replace in one file.
+* **Bersihkan masukan** / **Bersihkan** for Clear, following the #201
+  pair. At 123px the wide form is now the **widest of the ten** — Spanish
+  is 105px — so it is the label to watch if the ribbon ever tightens
+  again. Measured at 481px, the narrowest width that shows wide labels:
+  one row, nav unclipped.
+* **Perkakas** for Tools, **Pemecah numerik** for the Numerical Solver,
+  **Mode Pakar** for Expert Mode, **simpul** for node.
+* Headings are `[ M A S U K A N ]`, `[ K E L U A R A N ]`,
+  `[ P E R K A K A S ]`.
+
+### Verified
+
+One row and the Tutorial link unclipped in **all ten** at 375px and
+481px; a real solve in Indonesian returning mathematics byte-identical to
+English; `<html lang="id">`; the face reading **ID**; no console errors;
+`i18n.py check` clean, including the structural comparison of ids, links
+and slots against the English.
+
+Bahasa Indonesia is a long name for a menu, and it costs nothing: since
+#201 the closed control shows two letters, so the list can carry names of
+any length.
+
+---
+
+## #203 — Hindi and Bengali — **planned**
+
+Both are left-to-right and drop into the existing scheme with **no new
+machinery**: a dictionary file each, a line in `LANGS`, and the system
+Devanagari and Bengali faces (Nirmala UI on Windows, Noto elsewhere) —
+the same arrangement the CJK languages already rely on. Cost is the
+translation, ~485 keys apiece, and about 43 KB each on the page.
+
+**The open question is not technical, and it is Roberto's.** Indian
+engineering is taught almost entirely in English. Hindi and Bengali
+technical vocabulary exists — प्रतिरोधक for resistor, संधारित्र for
+capacitor — but a student who learned the subject in English may find a
+fully translated interface *harder*, not easier. Three ways to go:
+
+1. translate everything, terms of art included;
+2. translate the chrome and prose, leave the terms of art in English
+   (*resistor*, *capacitor*) as the textbooks do;
+3. translate everything but gloss the term in English on first use.
+
+I lean to (2) for these two, which is the opposite of what was right for
+Spanish and Indonesian, and that asymmetry is the reason to ask rather
+than choose.
+
+---
+
+## #204 — split the dictionaries out of the page — **planned, and a
+prerequisite for #205**
+
+Ten languages put 389 KB of dictionary inline in the app page: 700 KB
+served, ~225 KB gzipped. Five more would make it ~880 KB / 285 KB. That
+still works, but it is the point where inlining everything stops being
+obviously right.
+
+The fix is to load only the chosen language's dictionary. It is not free:
+the offline build is a page opened from a folder, so the file has to join
+`sw.js`'s cache list and be fetched at boot before first paint — which is
+exactly the flash `i18n-pending` exists to hide, now with a network round
+trip inside it. English needs none of it, since the page's own markup is
+the English.
+
+Worth doing **before** fourteen languages rather than after, which is why
+it sits ahead of Arabic in the order.
+
+---
+
+## #205 — Arabic and Urdu, and the first right-to-left pass — **planned,
+after #204**
+
+Not another dictionary: the first RTL layout the app has ever had. What
+the measurement found:
+
+* **22 physical-direction CSS declarations** to convert to logical ones —
+  16 in `templates/index.html`, 4 in `eqsheet.html`, 2 in `banner.css`.
+  All mechanical (`margin-left` → `margin-inline-start`, `border-left` →
+  `border-inline-start`, `text-align: left` → `start`); the stylesheets
+  are already part-way there.
+* **`dir="rtl"`** in `applyLang`, beside the `lang` it already sets.
+* **Pinning the mathematics to LTR** — the real work. 37 places render
+  answers, the LCD panels, MathJax output and the circuit textarea, and
+  every one must stay left-to-right inside a right-to-left page. So must
+  every `<code>` inside translated prose, or bidi reordering visually
+  scrambles `4.7'k` and flips parentheses.
+* **The digits stay Western.** `٠١٢٣` would break the rule that the
+  mathematics is never localised. Browsers do not substitute by default,
+  but it needs a test rather than an assumption.
+
+**And a coordination cost worth knowing before starting:** `banner.css`
+is the lockup shared by all five sites, so converting its two physical
+rules trips `build_local.py`'s `check_banner()` and `build.py --check`.
+An RTL pass therefore turns a two-site deploy into a five-site one, for a
+change that alters nothing visible on the landing page or on learn.
+
+**Urdu rides with Arabic and never alone**: same script, same direction,
+so it is nearly free afterwards and expensive before. It prefers
+Nastaliq, and where Noto Nastaliq Urdu is absent it falls back to Naskh —
+legible to an Urdu reader, but wrong-looking.
 
 ---
 
