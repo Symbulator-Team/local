@@ -1,5 +1,7 @@
 # Next build — accepted but not yet done
 
+**#198 is done, 31 Aug 2026**, at cache **v109**: **the Numerical Solver's engine speaks in codes** — seventeen of them, 901–924, with the page putting them into words. The status line that was four concatenated pieces (three of them untranslated English) is now one code and one `tv()` call: 已求解（最小二乘：3 个方程，2 个未知量） — 3 次求值. Roberto's design of that morning survived contact unchanged, which is what it was ordered first to find out; **#199** (the package, with the release train) and **#200** (`symbulator_ui.py`) can now follow it. The item's own costing had gone stale inside the day — #208 had put `eqsheet.py` into the offline builds, so 'server-only, no cache bump' was no longer true.
+
 **#209 is done, 31 Aug 2026**, at cache **v108**: **twenty-four reader-facing strings that never reached the dictionary** are in it, twenty-two new keys across twelve languages — the line under every set of answers among them, now *DC 分析 · 12 个结果*. The lasting part is the guard in `tools/i18n.py check`, which finds literals reaching a reader outside `t()`; it caught two more on its first run that three manual sweeps had missed. Its blind spot — strings thrown as exceptions — is written down rather than chased. `time (s)` follows Roberto's ruling: the word translates, the unit symbol does not, in Ukrainian too, which brings it back into line with the `Ω` its own answers print.
 
 **#208 is done, 31 Aug 2026**, at cache **v107**: the **Numerical Solver ships in the offline builds** — its own page, its own Pyodide, SciPy bundled, solving with no network at all. The ZIP is **31,682,389 bytes (30.2 MB)**, up from 17.8 MB, which Roberto agreed to against the measured figure; the app's one published "about 17 MB" string now reads **about 30 MB** in English and in all twelve translations. Along the way: `vendor/`'s provenance was recovered and written down (Pyodide **v314.0.5** — the version scheme changed, which is why every earlier probe 404'd) as `vendor_pyodide.py`, and a **live server bug** was found and fixed — a NaN residual travelled as bare `NaN`, which no JSON parser accepts, and hung the hosted Solver on *solving…* for ever.
@@ -1151,7 +1153,8 @@ dictionary.
 
 ---
 
-## #198–#200 — the engine speaks in codes, the interface in words — **planned, 31 Aug 2026**
+## #198–#200 — the engine speaks in codes, the interface in words
+## — **#198 done, cache v109; #199 and #200 planned**
 
 Roberto's ruling, 31 Aug 2026, replacing the proposal that stood here
 overnight. I had recommended translating `symbulator_ui.py` and
@@ -1262,10 +1265,19 @@ Cost of keeping it: one dict in the package.
 Ordered by cost, cheapest first, so the design is proved on the surface
 that cannot break anything before it reaches the one that can.
 
-**#198 — `eqsheet.py` speaks in codes (9xx).** Server-only: no wheel, no
-`vendor/` copy, no three pins, no cache bump, no offline build to think
-about. `eqsheet.py` and `templates/eqsheet.html` go up in the same
-PythonAnywhere pull. Twelve messages and the status line, twelve
+**#198 — `eqsheet.py` speaks in codes (9xx). Done, 31 Aug 2026, cache
+v109.** See the section below for what it came to.
+
+> **This paragraph's costing went stale within the day, and the way it
+> went stale is the point.** It said: server-only, no wheel, no
+> `vendor/` copy, no three pins, no cache bump, no offline build to
+> think about. That was true when it was written at 09:25. At 14:08
+> **#208 put `eqsheet.py` and `eqsheet.html` into both offline builds**,
+> so #198 needed a cache bump and both offline deploys after all. Still
+> no wheel and no PyPI release. A cost written down beside an item is
+> only true until another item moves under it.
+
+The original estimate follows. Twelve messages and the status line, twelve
 languages (the entry said eight when it was written, before #202, #203
 and #206 — the count moved under it). This is the end-to-end proof of the whole scheme for the price
 of an afternoon, and if the design is wrong we find out here.
@@ -1297,6 +1309,63 @@ see. Translating the fragments alone would give a half-English line,
 since `d.message` is English from the server regardless. Once the message
 is a code, the whole line renders in one `tv()` call and the gap closes
 by construction.
+
+### #198, as built
+
+**Seventeen codes, 901–924.** `eqsheet.py` carries a `CATALOGUE` mapping
+each to `(severity, English template)`, named constants at the call
+sites (`M_UNCLASSIFIED`, `M_SOLVED_LSQ`), and `msg(code, **args)`
+returning `{code, args, severity, text}`. The wire keeps **both**: `msg`
+for the page and `message` — the rendered English — for a traceback, a
+bug report, or a page older than the server.
+
+**The status line is one code now, not four pieces.** It was
+`d.message` + `(least-squares: …)` + `(restricted)` + `— N evaluations`,
+three of which #209 found untranslated and deliberately left here.
+`_status()` picks one of five codes and the page renders it in one
+`tv()` call:
+
+| | Chinese, measured |
+|---|---|
+| 920 | 已求解 — 13 次求值 |
+| 921 | 已求解（最小二乘：3 个方程，2 个未知量） — 3 次求值 |
+| 922 | 已求解（受限） — 6 次求值 |
+| 923 | 未收敛 — 请换一组初值（21 次求值） |
+| 924 | *no solution under the restrictions*, same shape |
+
+**The page's table is verbose on purpose.** `EQ_MESSAGES` is seventeen
+literal `t()`/`tv()` calls keyed by code, not a lookup built from the
+number, because `tools/i18n.py` harvests the English from the call
+itself and `check` refuses a variable key. A computed key would have
+been shorter and invisible to every guard in the file.
+
+**The deploy window is covered.** `eqMsg()` falls back to the message's
+own `text` when it meets a code it does not know — which is what a
+server ahead of its page sends. Tested: an unknown code renders the
+server's English, a payload with no code at all renders its prose, and
+`null` renders nothing rather than throwing.
+
+**SymPy's words stay English, as an argument.** Code 912 is *could not
+read that equation: %{error}*, and `%{error}` is the parser's own
+sentence. The frame translates and the library's text does not, which is
+honest: those words are not ours. Same for 907 and 910.
+
+**#209's three exceptions are deleted.** They were allowlisted in
+`NOT_FOR_READERS` with a comment saying to remove them when #198 landed.
+It landed; they are gone; the guard now watches that line again.
+
+Verified in Chinese on the offline build: the five status shapes above,
+every refusal code with its arguments substituted (未归类的变量：c,
+x 的范围为空 — “从”必须小于“到”), and the per-line parse errors, which
+used to be raw engine English and now read 第 1 行：每个方程需要且只需要
+一个 '='.
+
+**What it proves for #199 and #200.** The shape survived contact: named
+constant at the raise site, number on the wire, severity as a field,
+English kept in the catalogue as the generation source, arguments by
+name. Nothing about it wanted changing. #199 can take the same pattern
+into the package with the release train, and #200 into
+`symbulator_ui.py`.
 
 ### What this does not buy
 
