@@ -827,8 +827,18 @@ Both were raised for Roberto on 31 Aug and both were withdrawn the same
 day, because the answers were already written down. Recorded because a
 question that looks open and is not costs somebody a reply.
 
-**`time (s)` is not a judgement call.** It sits in a four-branch
-`if/else` where every sibling is already decided, twelve lines of code:
+**`time (s)` — Roberto's ruling, 31 Aug 2026:**
+
+> That should be translated. Use the corresponding word for "time" in the
+> target language and the unit of measure (s) which stands for second.
+
+So: the **word** translates, the **symbol** does not. Which is what
+eleven of the twelve dictionaries already do — see the Ukrainian note
+below for the twelfth.
+
+It was never really a judgement call to begin with. It sits in a
+four-branch `if/else` where every sibling is already decided, twelve
+lines of code:
 
 ```js
 xLabel: t('js.plot.freqAxis', 'frequency (Hz, log scale)'),   // Bode x
@@ -846,8 +856,42 @@ localised it, Частота (Гц, логарифмічна шкала).
 
 And the same phrase is *already translated on the same card*: the End
 time field above the plot is `end-time-s.801d`, zh 终止时间（s）, de
-Endzeit (s), uk Кінцевий час (с). The form says it in Chinese and the
-axis below says it in English.
+Endzeit (s). The form says it in Chinese and the axis below says it in
+English.
+
+#### The Ukrainian consequence, which needs Roberto's nod
+
+Measured across all twelve dictionaries, on the three shipped strings
+that carry a unit symbol (`end-time-s.801d`, `js.plot.endFreq`,
+`js.plot.freqAxis`):
+
+**Eleven of twelve keep the Latin symbol** — `(s)`, `(Hz)` — including
+Hindi and Bengali, which set every word in their own script and still
+write `s` and `Hz`. That is Roberto's rule, already in force, without
+anyone having stated it before now.
+
+**Ukrainian is the exception**, and consistently so: `Кінцевий час (с)`
+with a Cyrillic *es*, `Кінцева частота (Гц)`, `Частота (Гц,
+логарифмічна шкала)`. That is ordinary Ukrainian practice and not a
+mistake — but it is not the rule just given.
+
+There are only two coherent endings, because the worst outcome is
+Ukrainian disagreeing **with itself** — the form reading `час (с)` and
+the axis beneath it `час (s)`:
+
+* **(a) Apply the ruling everywhere.** The new string is `час (s)`, and
+  the three shipped Ukrainian strings change from `(с)`/`(Гц)` to
+  `(s)`/`(Hz)`. Consistent with the other eleven and with the ruling.
+  Three values, one line each. **Recommended.**
+* **(b) Let Ukrainian keep its own convention.** The new string is
+  `час (с)`, nothing shipped changes, and Ukrainian is deliberately
+  the one language that localises unit symbols — written down here so a
+  later tidy-up does not "fix" it, exactly as #206 had to be protected
+  from a tidy-up by speaker count.
+
+Either is defensible; **(a)** is what the ruling says and what the
+other eleven do. It does mean editing translations that are already
+live, which is why it is a nod and not an assumption.
 
 **The Solver's status line is #198's, and #198 already says so.** Its
 entry carries a section headed *Known, and resolved by #198* naming
