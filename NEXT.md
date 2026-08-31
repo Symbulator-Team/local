@@ -1372,12 +1372,12 @@ into the package with the release train, and #200 into
 
 ### #200, as built
 
-**Forty-one codes, 801\u2013877**, across six surfaces: the description
-and analysis validators (801\u2013810), added equations, conditions,
-unknowns and definitions (811\u2013816), plotting (820\u2013824),
-Evaluate and conditions (830\u2013833), the schematic drawer
-(840\u2013841), the mini-tools (850\u2013854), SPICE (860) and the
-**notes** (870\u2013877). Same `CATALOGUE` / `msg(code, **args)` shape
+**Fifty-five codes, 801–877**, across six surfaces: the description
+and analysis validators (801–810), added equations, conditions,
+unknowns and definitions (811–816), plotting (820–824),
+Evaluate and conditions (830–833), the schematic drawer
+(840–841), the mini-tools (850–854), SPICE (860) and the
+**notes** (870–877). Same `CATALOGUE` / `msg(code, **args)` shape
 as #198's, deliberately, so the page has one renderer for both engines
 rather than two.
 
@@ -1397,25 +1397,25 @@ if isinstance(message, dict) and "code" in message:
 return {"ok": False, "error": message}
 ```
 
-A string is what this file *forwards* rather than writes \u2014 a
+A string is what this file *forwards* rather than writes — a
 sentence out of the solver package, which has no codes until #199. So
 #199 and #200 could have landed in either order, and an uncoded message
 renders its English exactly as it did before. The page's `uiMsg()`
 mirrors it: a coded message is looked up, a plain string is its own
 answer, and an unknown code falls back to the `text` the engine sent
-\u2014 which is the deploy window, when the server is ahead of the page.
+— which is the deploy window, when the server is ahead of the page.
 
 ### The field nobody would have named
 
 `app.py` lists its response fields by hand, and the entry above predicted
 that as the trap. It was sharper than that: `_run_in_process` **flattened
-the failure to a string** before any route saw it \u2014
+the failure to a string** before any route saw it —
 
 ```python
 return False, result.get("error", "Unknown error.")
 ```
 
-\u2014 so the code was destroyed one function above the six places that
+— so the code was destroyed one function above the six places that
 would have had to name it. Naming a field in six routes is a field
 forgotten in the seventh. It returns the failure dict now, and one
 `_refusal(payload, **extra)` names `err` **once**.
@@ -1426,11 +1426,507 @@ around what is no longer a string.
 
 ### What is deliberately not coded
 
-* **Everything this file forwards from the solver package** \u2014
+* **Everything this file forwards from the solver package** —
   `_err(_exc_text(exc))` and friends. Those words are the package's and
-  get 1xx\u20136xx numbers in **#199**. Inventing 8xx numbers for
+  get 1xx–6xx numbers in **#199**. Inventing 8xx numbers for
   sentences about to acquire their own would have been work done twice.
-* **`app.py`'s own messages** \u2014 about twenty of them. They are
+* **`app.py`'s own messages** — about twenty of them. They are
+  server-only (the offline build validates in `bridge.py` instead), they
+  are not in this item's brief, and one of them is visible in the
+  measurements below: a bad SPICE direction is refused by `app.py`
+  before `symbulator_ui` sees it, so code 860 never fires on the server.
+  Worth an item if anyone wants it; not worth folding in silently.
+
+### The inventory grew four times, and the fourth found the rest
+
+**34, then 5, then 8, then 6 — fifty-five codes in all.** Each pass was
+sure it was the last, and each of the first three was wrong:
+
+* **34** from the first hand sweep: `_err()`, the validators, three notes.
+* **5** more found by running the app in Chinese and reading what was
+  still English — the TR step-source explanations and the "switched
+  Rounding to approximate" line, which live in helpers returning lists of
+  sentences and are reached by no `_err` and no validator.
+* **8** more found by grepping for a shape the sweep had not looked for:
+  `return {}, "..."`, a message in the second half of a tuple. All five of
+  `parse_defines`' refusals were there, plus the TR "cannot limit the
+  results" error and the mini-tools' one-number reader.
+* **6** more found by the guard below, after those three had finished:
+  two notes that refuse a name outright, the "did you mean" warning, the
+  complex-value refusal and the two no-solution notes.
+
+### The guard, which is the part worth keeping
+
+`uncoded_messages()` in `tools/i18n.py`, wired into `check` beside
+#209's `untranslated()`. It parses `symbulator_ui.py` and `eqsheet.py`,
+finds every string literal that reads like a sentence and is returned or
+appended where a message goes, and subtracts everything inside `msg()`,
+`_exc_text()` or `tSrv()`.
+
+Two exceptions are allowlisted with reasons: a comment line inside the
+SymPy export (a `.py` file the reader opens in an editor — its comments
+are code) and the port phrase `tSrv()` handles by regex (#168).
+
+**Three careful hand sweeps missed six messages; the guard found them in
+one run.** That is the whole argument for it, and it is #209's argument
+about the page in the other language. Grep finds what you thought to look
+for.
+
+It also caught something it was not aiming at. `srv_vocabulary()` reads
+its tables by finding a name and scanning to the next line beginning
+`}`, so the new `_QUANTITY_WORDS` — written with its brace tucked after
+the last entry — made it swallow the SI prefix table as engine
+vocabulary, and `check` started demanding translations for `k`, `M` and
+`p`. The brace sits at column 0 now, with a comment saying why.
+
+### One argument was engine vocabulary, and is now translated
+
+Message 837 says "`%{name}` is its %{what}", where `%{what}` is *voltage*,
+*reactive power*, *equivalent impedance* and six others. Those are the
+engine's words rather than that sentence's, so leaving them a plain
+argument would have put an English noun inside a translated sentence —
+which is not the SymPy case, where the words genuinely are not ours.
+
+They are `_QUANTITY_WORDS` now, module-level and listed in `SRV_SOURCES`,
+so `check` harvests them like the element kinds and demands their
+translations. The page's 837 entry passes that one argument through
+`tSrv()` before substituting it.
+
+### Verified in Chinese, offline, on the shipped build
+
+* the line that started it: **DC 分析 · 12 个结果 · 0.09 s**
+* the time plot: x-axis **时间（s）** — Roberto's ruling exactly, the word
+  translated and the unit symbol kept — with **时域图 · 300 个点 · 1.54 s**
+  under it and **已绘图！** beside the button
+* the Schematic button: **已绘制。**
+* the Solver: **正在求解…**, **第 1 行：…**, and a dropped bad file giving
+  **方程组文件：缺少 "equations" 列表**
+* the two placeholders: **例如 t = to**, **例如 p_r2 = 0.05**
+* mathematics unmoved throughout — `v_2`, `12 V`, `2 kΩ`
+* zero off-origin requests
+
+The one line still half-English is the Solver's `solved — 13
+evaluations`, which is #198's by design and by its own entry.
+
+### Ukrainian
+
+Ruling (a) applied: `Кінцевий час (s)`, `Кінцева частота (Hz)`,
+`Частота (Hz, логарифмічна шкала)`, and the new `час (s)`. Ukrainian no
+longer contradicts the `Ω` and `V` that the answers print beside it.
+
+---
+
+## #208 — the Numerical Solver in the offline builds — **done, cache v107**
+
+Roberto, 31 Aug 2026: *"EqSheet is supposed to be also in the local
+versions. Can you fix that? The Numerical Solver (EqSheet) should be
+available in the locals, with the packages needed for it to run."*
+
+It is. `eqsheet.html` now ships beside `index.html` in both offline
+builds, boots its own Pyodide with SciPy on board, and solves with no
+network at all — verified with the static server stopped.
+
+### The number, and where the distribution actually came from
+
+**scipy's Pyodide wheel is 14,029,768 bytes (13.4 MiB)**, and the ZIP
+went from 17,833,540 to **31,682,389 bytes (30.2 MiB)**. Roberto was
+given the figure before anything was bundled and chose to bundle it:
+*"with the packages needed for it to run"* was never going to be served
+by a lazy CDN fetch, which would break the no-internet promise for the
+one feature that most needs it.
+
+The entry that stood here said the wheel could not be found, that every
+probe of `cdn.jsdelivr.net/pyodide/v0.28…v0.31/full/` returned 404, and
+that the provenance of `vendor/` was unrecorded and unrecoverable.
+
+**It was recoverable, and the answer was inside `vendor/` the whole
+time.** `pyodide.js` carries its own version string, `var ee="314.0.5"`:
+Pyodide now tracks the CPython it ships (3.14) instead of counting up
+from 0.x, so the version scheme had changed underneath, not the URL.
+`https://cdn.jsdelivr.net/pyodide/v314.0.5/full/` serves every filename
+in `vendor/pyodide-lock.json`, and the scipy wheel fetched from it
+hash-matches the lockfile exactly. So do the sympy, mpmath and numpy
+wheels already on disk — checked, so the whole folder's provenance is
+now established rather than assumed.
+
+**`vendor_pyodide.py` is the answer written down where it can be
+re-run.** It fetches what is missing and hash-checks everything against
+the lockfile; `--check` verifies without downloading. #208 was the
+second time somebody needed this and the first time anyone recorded it.
+It is a dev script and is excluded from the ZIP.
+
+### What the port is
+
+* **`eqsheet.py` no longer imports Flask.** It was a Blueprint; the two
+  entry points are now `api_parse(data)` and `api_solve(data)`, plain
+  dict in, plain dict out. `eqsheet_web.py` is the Blueprint the server
+  mounts (three routes, no opinions), and `app.py` imports from there.
+  The module joined `SHARED` in `build_local.py`, so it is copied into
+  the offline build verbatim, exactly like `symbulator_ui.py`.
+* **`eqbridge.py`** is the offline glue, deliberately separate from
+  `bridge.py`: that one imports `symbulator_ui` at module level and
+  pulls the whole solver in with it. Apart, the Solver page never
+  fetches the symbulator wheel and the app page never fetches SciPy,
+  and the shared service-worker cache means a reader who opens both
+  downloads each file once.
+* **`build_local.py` generates `eqsheet.html`** the way it generates
+  `index.html`. It is a much smaller job: everything the Solver asks the
+  server is `post('api/parse')` and `post('api/solve')`, so replacing
+  the body of `post()` ports the entire page and every call site is left
+  as the server's. The page sits at the **root** as `eqsheet.html`, not
+  in an `eqsheet/` folder, so #204's `i18n/` base rewrite is the same
+  string for both pages.
+* **The Google Fonts pair is stripped** from the offline page. A
+  downloaded copy has no network to fetch IBM Plex from, and a
+  stylesheet link that cannot resolve is a render-blocking wait for a
+  timeout before the fallback stack takes over — which is where the page
+  lands either way. Measured after the port: the offline Solver makes
+  **zero off-origin requests**.
+* **The handover is re-pointed.** `EQSHEET_URL` is
+  `'eqsheet.html'` in the offline build. The `?import=` payload, the
+  6 KB URL ceiling and the `numerical_system.json` drop-file fallback
+  all work unchanged — all three were exercised offline.
+* **`sw.js` is at v107** and caches `eqsheet.html`, `eqsheet.py`,
+  `eqbridge.py` and the scipy wheel. `build_zip.py` now checks both
+  pages' heads (`src` as well as `href`) and checks those three by name,
+  since none of them is reachable from any tag.
+
+### It found a bug, and the bug was the server's
+
+A NaN residual travelled as a bare `NaN`, which `json.dumps` writes
+happily and **no JSON parser accepts**. Give the Solver every variable
+Unknown at a guess of zero — which is exactly what a fresh sheet starts
+with — and a divider equation evaluates 0/0 at the start point. The
+reply could not be read at all: the page sat on *solving…* for ever,
+with a `SyntaxError` in the console and nothing on screen.
+
+**This was live on `symbulator.pythonanywhere.com`, and had been since
+the Solver shipped.** The port only made it impossible to miss, because
+the offline page fails in the same tab you are looking at.
+`eqsheet.py` now sends `null` for any non-finite residual or answer (a
+phasor all-or-nothing, since "3 + j —" is not a partial answer), and the
+page draws an em dash. A failed solve is a normal thing to say; saying
+it in unparseable JSON is not.
+
+### Verified, not assumed
+
+* **24 payloads through both engines, 0 differing** — exact, bounded,
+  range-bounded, least-squares, AC complex, AC real-only, a Python
+  keyword as a variable name, the unit step, the non-converging case and
+  both error paths. Recorded from the live Flask routes, then replayed
+  through `eqbridge` in the tab and compared field by field.
+* **With the server stopped**: boot, parse, solve, `Vout = 4 V`.
+* **The handover**, offline: a 2k/1k divider solved in the app, its
+  system carried across in the link, `v1` flipped to Known and set to
+  24 V, and the sheet followed to `v2 = 8 V`, 8 mA.
+* **The drop-file fallback**, offline.
+* **Ukrainian**, offline, from the cache: the whole page translated, the
+  boot bar with it (`syncBootBar()` is hooked into the language-change
+  handler), and the mathematics byte-identical to English.
+* Both server pages re-rendered through Jinja after every template
+  change, and `tools/i18n.py check: ok`.
+
+### The published size string — one, not three
+
+The brief said three strings say "about 17 MB". Measured: **one**, and
+it is narrower than that even sounds. It is in the app's *Installing
+from a file* card, which sits inside a **`server-only` block** — so it
+is on `symbulator.pythonanywhere.com` and on **neither offline build**,
+which strip it. That is right, and it is the point of the card: it
+tells a reader of the hosted app how big the download would be, and
+someone already running the download does not need telling. The
+landing page and `README.txt` state no size at all.
+
+It now reads **about 30 MB** — the same MiB convention the old number
+used, and what a browser's download dialog will show. Verified live on
+the server after the pull; the two offline builds correctly do not
+carry the sentence.
+
+Changing that English mints a new content-hash key, so the twelve
+translations were **migrated in place** rather than orphaned:
+`works-on-windows-macos.f74e` → `.b9b9`, with `17` → `30` inside each
+value. Every language writes the number in Western digits (Bengali's
+were converted in #203), so nothing else moved. One line changed per
+dictionary.
+
+---
+
+## #198–#200 — the engine speaks in codes, the interface in words
+## — **#198 and #200 done, cache v110; #199 planned**
+
+Roberto's ruling, 31 Aug 2026, replacing the proposal that stood here
+overnight. I had recommended translating `symbulator_ui.py` and
+`eqsheet.py` and leaving the solver package alone. He asked for the
+opposite and for something better:
+
+> Let's standardise the error format. Let's modify the package this one
+> time, so that all messages, warnings, errors, etc, are returned in a
+> structured manner, with a message code and arguments. When I think
+> about the package, I do not worry about readability by humans. I do not
+> expect any human to use the package directly. The package is meant to
+> be under the hood. So, create a running list of all the messages shared
+> by the package, give each a number and a format for it to pass the
+> arguments (variables, numbers) needed to communicate this message to
+> the human, and let the interface do the work of putting the message
+> into words.
+
+He is right, and for a reason beyond translation: it gives the package,
+`symbulator_ui.py` and `eqsheet.py` **one** mechanism where they have
+three, and the app **one** renderer where it would have had three.
+
+**And the pattern is already in the tree.** `eqsheet.py` does exactly
+this for its success line: Python returns `mode`, `n_eq`, `n_un` and
+`nfev` as fields, and `templates/eqsheet.html` composes "solved
+(least-squares: 1 equations, 4 unknowns) — 29 evaluations" from them.
+Only its *failures* come back as prose. This is finishing a job somebody
+already started at the one place they needed it.
+
+### The measured inventory
+
+| emitter | messages | carry a value | ships how |
+|---|---|---|---|
+| solver package `CircuitError` | 27 distinct, 33 raise sites (elements 19, engine 8, equiv 2, laplace 2, spice 2) | 22 | PyPI release |
+| solver package SPICE warnings | 17 sites — `spice()` returns `(netlist, warnings)` | most | same release |
+| `symbulator_ui.py` notes and errors | ~40 (35 `_err`, 4 note sites) | most | copied file, no release |
+| `eqsheet.py` | 12, plus the composed status line | 4 | server only |
+
+About 85 messages end to end. The SPICE warnings are the surface the
+first write-up missed, and they are the clearest case for the change:
+they are already prose assembled in the engine purely for the interface
+to display.
+
+**A risk that turned out not to exist:** no tutorial chapter quotes a
+solver message. Checked across `Sym Docum/Documentation/src`. So the
+English wording is not pinned by the printed answers and may be reworded
+as well as restructured — unlike every answer in the app.
+
+### The shape
+
+```python
+# symbulator/messages.py -- the one place the package's words live.
+E_TWOPORT_LIST_LEN = 214
+
+CATALOGUE = {
+    214: ("error",
+          "The parameter list of two-port '{name}' has {n} entries. "
+          "Exactly four are expected: [p11,p12,p21,p22]."),
+}
+```
+
+```python
+raise CircuitError(E_TWOPORT_LIST_LEN, name=el.name, n=len(items))
+```
+
+A named constant at the raise site so the code still reads; the **number**
+on the wire. `exc.code`, `exc.args_map` and `str(exc)` all available.
+Warnings become `{"code": …, "args": {…}}` in the list `spice()` already
+returns.
+
+**Severity is a field, not a number range**, so a warning and an error
+about the same thing need one code, not two.
+
+**Ranges by origin**, matching how the modules already divide:
+1xx parsing · 2xx elements · 3xx engine · 4xx Laplace and transient ·
+5xx equivalents and two-ports · 6xx SPICE · 8xx `symbulator_ui.py` ·
+9xx `eqsheet.py`. One renderer in the page serves all of them.
+
+**A code is permanent once published.** Never reused, never renumbered;
+retired codes stay retired. The same rule as the item numbers in this
+file, for the same reason: a reader quoting "E214" in a bug report should
+mean one thing forever.
+
+### The English stays in the package
+
+Roberto's premise — nobody should need to read the package — stands, and
+this does not contradict it. `str(exc)` keeps rendering the English from
+the catalogue for three reasons that have nothing to do with reading the
+package for pleasure:
+
+1. **It is the generation source.** `tools/i18n.py` generates `en.json`
+   from the English in the app rather than letting anyone hand-keep a
+   second copy, and `check` fails when the two drift. A catalogue in the
+   package generates the same way and gets the same guard. English living
+   only in `en.json`, against a numbered list in another repo, is exactly
+   the drift the scheme exists to prevent.
+2. **15 of the solver's tests assert on message wording** (of 36
+   `pytest.raises`, out of 272). They pass untouched. Migrating them to
+   assert on `.code` is better testing and worth doing later; it should
+   not gate the release.
+3. The `.txt` export, `review_schematics.py`, `verify_lesson.py` and a
+   traceback in a bug report all need something to write — and the About
+   card invites "circuits that break it".
+
+Cost of keeping it: one dict in the package.
+
+### Three items, in this order
+
+Ordered by cost, cheapest first, so the design is proved on the surface
+that cannot break anything before it reaches the one that can.
+
+**#198 — `eqsheet.py` speaks in codes (9xx). Done, 31 Aug 2026, cache
+v109.** See the section below for what it came to.
+
+> **This paragraph's costing went stale within the day, and the way it
+> went stale is the point.** It said: server-only, no wheel, no
+> `vendor/` copy, no three pins, no cache bump, no offline build to
+> think about. That was true when it was written at 09:25. At 14:08
+> **#208 put `eqsheet.py` and `eqsheet.html` into both offline builds**,
+> so #198 needed a cache bump and both offline deploys after all. Still
+> no wheel and no PyPI release. A cost written down beside an item is
+> only true until another item moves under it.
+
+The original estimate follows. Twelve messages and the status line, twelve
+languages (the entry said eight when it was written, before #202, #203
+and #206 — the count moved under it). This is the end-to-end proof of the whole scheme for the price
+of an afternoon, and if the design is wrong we find out here.
+
+**#199 — the solver package speaks in codes (1xx–6xx).** The release
+train: PyPI publish → the same wheel into `repos/local/vendor/` → three
+pins (`build_local.py`'s `WHEEL`, `sw.js`'s cache list,
+`requirements.txt`) → cache bump → both offline deploys → the PyAn pull
+with `pip install --upgrade`. The interface reads `.code` and falls back
+to `str(exc)`, so nothing breaks in the window between the publish and
+the pull.
+
+**#200 — `symbulator_ui.py` joins (8xx). Done, 31 Aug 2026, cache
+v110.** See the section below. The trap this paragraph predicted was
+real and was worse than predicted: see *The field nobody would have
+named*.
+
+**Each item carries its own twelve translations**, so none of them can
+land half-done and the app is never in a state where a code renders as a
+bare number.
+
+### Known, and resolved by #198
+
+The Numerical Solver's status line is assembled in the page from
+`d.message` plus English fragments — `(least-squares: N equations, M
+unknowns)`, `— N evaluations`. Those fragments are untranslated English
+that #197 shipped: the leftovers sweep missed them because the prose is
+split across `${}` boundaries, which its two-adjacent-words filter cannot
+see. Translating the fragments alone would give a half-English line,
+since `d.message` is English from the server regardless. Once the message
+is a code, the whole line renders in one `tv()` call and the gap closes
+by construction.
+
+### #198, as built
+
+**Seventeen codes, 901–924.** `eqsheet.py` carries a `CATALOGUE` mapping
+each to `(severity, English template)`, named constants at the call
+sites (`M_UNCLASSIFIED`, `M_SOLVED_LSQ`), and `msg(code, **args)`
+returning `{code, args, severity, text}`. The wire keeps **both**: `msg`
+for the page and `message` — the rendered English — for a traceback, a
+bug report, or a page older than the server.
+
+**The status line is one code now, not four pieces.** It was
+`d.message` + `(least-squares: …)` + `(restricted)` + `— N evaluations`,
+three of which #209 found untranslated and deliberately left here.
+`_status()` picks one of five codes and the page renders it in one
+`tv()` call:
+
+| | Chinese, measured |
+|---|---|
+| 920 | 已求解 — 13 次求值 |
+| 921 | 已求解（最小二乘：3 个方程，2 个未知量） — 3 次求值 |
+| 922 | 已求解（受限） — 6 次求值 |
+| 923 | 未收敛 — 请换一组初值（21 次求值） |
+| 924 | *no solution under the restrictions*, same shape |
+
+**The page's table is verbose on purpose.** `EQ_MESSAGES` is seventeen
+literal `t()`/`tv()` calls keyed by code, not a lookup built from the
+number, because `tools/i18n.py` harvests the English from the call
+itself and `check` refuses a variable key. A computed key would have
+been shorter and invisible to every guard in the file.
+
+**The deploy window is covered.** `eqMsg()` falls back to the message's
+own `text` when it meets a code it does not know — which is what a
+server ahead of its page sends. Tested: an unknown code renders the
+server's English, a payload with no code at all renders its prose, and
+`null` renders nothing rather than throwing.
+
+**SymPy's words stay English, as an argument.** Code 912 is *could not
+read that equation: %{error}*, and `%{error}` is the parser's own
+sentence. The frame translates and the library's text does not, which is
+honest: those words are not ours. Same for 907 and 910.
+
+**#209's three exceptions are deleted.** They were allowlisted in
+`NOT_FOR_READERS` with a comment saying to remove them when #198 landed.
+It landed; they are gone; the guard now watches that line again.
+
+Verified in Chinese on the offline build: the five status shapes above,
+every refusal code with its arguments substituted (未归类的变量：c,
+x 的范围为空 — “从”必须小于“到”), and the per-line parse errors, which
+used to be raw engine English and now read 第 1 行：每个方程需要且只需要
+一个 '='.
+
+**What it proves for #199 and #200.** The shape survived contact: named
+constant at the raise site, number on the wire, severity as a field,
+English kept in the catalogue as the generation source, arguments by
+name. Nothing about it wanted changing. #199 can take the same pattern
+into the package with the release train, and #200 into
+`symbulator_ui.py`.
+
+### #200, as built
+
+**Forty-one codes, 801–877**, across six surfaces: the description
+and analysis validators (801–810), added equations, conditions,
+unknowns and definitions (811–816), plotting (820–824),
+Evaluate and conditions (830–833), the schematic drawer
+(840–841), the mini-tools (850–854), SPICE (860) and the
+**notes** (870–877). Same `CATALOGUE` / `msg(code, **args)` shape
+as #198's, deliberately, so the page has one renderer for both engines
+rather than two.
+
+**Severity earned its keep here.** #198 had errors and one success line;
+this range has eight **notes** sitting in the same catalogue as
+thirty-three errors, told apart by a field. Two number ranges would have
+meant two of everything.
+
+### The seam that makes a half-done state safe
+
+`_err()` takes a coded message **or** a bare string, and `error` is the
+English either way:
+
+```python
+if isinstance(message, dict) and "code" in message:
+    return {"ok": False, "error": message["text"], "err": message}
+return {"ok": False, "error": message}
+```
+
+A string is what this file *forwards* rather than writes — a
+sentence out of the solver package, which has no codes until #199. So
+#199 and #200 could have landed in either order, and an uncoded message
+renders its English exactly as it did before. The page's `uiMsg()`
+mirrors it: a coded message is looked up, a plain string is its own
+answer, and an unknown code falls back to the `text` the engine sent
+— which is the deploy window, when the server is ahead of the page.
+
+### The field nobody would have named
+
+`app.py` lists its response fields by hand, and the entry above predicted
+that as the trap. It was sharper than that: `_run_in_process` **flattened
+the failure to a string** before any route saw it —
+
+```python
+return False, result.get("error", "Unknown error.")
+```
+
+— so the code was destroyed one function above the six places that
+would have had to name it. Naming a field in six routes is a field
+forgotten in the seventh. It returns the failure dict now, and one
+`_refusal(payload, **extra)` names `err` **once**.
+
+The same shape was needed in `bridge.py` and at five validator call
+sites in `app.py`, where `{"ok": False, "error": err}` was built by hand
+around what is no longer a string.
+
+### What is deliberately not coded
+
+* **Everything this file forwards from the solver package** —
+  `_err(_exc_text(exc))` and friends. Those words are the package's and
+  get 1xx–6xx numbers in **#199**. Inventing 8xx numbers for
+  sentences about to acquire their own would have been work done twice.
+* **`app.py`'s own messages** — about twenty of them. They are
   server-only (the offline build validates in `bridge.py` instead), they
   are not in this item's brief, and one of them is visible in the
   measurements below: a bad SPICE direction is refused by `app.py`
@@ -1440,7 +1936,7 @@ around what is no longer a string.
 ### The inventory grew twice while being built
 
 The first sweep found 34 sites. Building them surfaced five more notes
-that no `_err` and no validator contained \u2014 the TR step-source
+that no `_err` and no validator contained — the TR step-source
 explanations and the "switched Rounding to approximate" line, which live
 in helpers that return lists of sentences. They were found by running
 the thing in Chinese and reading what was still English, which is the
@@ -1458,8 +1954,8 @@ missed.
 * and through Flask, codes on the wire for 801, 805, 806, 807, 812, 841,
   plus notes 870, 873 and 877.
 
-`i18n check: ok` at 565 keys. **41 codes \u00d7 12 languages = 492
-translations**, none of them reviewed by a native speaker \u2014 which
+`i18n check: ok` at 565 keys. **41 codes × 12 languages = 492
+translations**, none of them reviewed by a native speaker — which
 is what **#207** is for, and this item alone moved that from 51 unreviewed
 strings today to 543.
 

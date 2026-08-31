@@ -73,7 +73,7 @@ def solve(payload_json: str) -> str:
     # in a bare "1k" is questioned exactly as an inline one would be.
     defines, define_err = ui.parse_defines(lines("defines"))
     if define_err:
-        return json.dumps({"ok": False, "error": define_err})
+        return json.dumps(ui._err(define_err))
     define_notices = []
     if defines:
         define_notices = ui.define_shadow_notices(defines, desc)
@@ -235,7 +235,7 @@ def plot(payload_json: str) -> str:
     # leaned on the Define box failed on symbols the solve had accepted.
     defines, define_err = ui.parse_defines(lines("defines"))
     if define_err:
-        return json.dumps({"ok": False, "error": define_err})
+        return json.dumps(ui._err(define_err))
     if defines:
         desc = ui.expand_defines_in_desc(desc, defines)
         extra_equations = [ui.expand_defines(e, defines) for e in extra_equations]
@@ -311,7 +311,7 @@ def evaluate(payload_json: str) -> str:
         return json.dumps({"ok": False, "error": "Enter an expression to evaluate."})
     defines, define_err = ui.parse_defines(p.get("defines") or "")
     if define_err:
-        return json.dumps({"ok": False, "error": define_err})
+        return json.dumps(ui._err(define_err))
     # The Conditions box (#96). The server splits and guards it in app.py;
     # here symbulator_ui does the reading, and the guards that matter are
     # its own -- there is no untrusted caller on this side of the wire.
@@ -372,7 +372,7 @@ def solve_equations(payload_json: str) -> str:
     conditions = ui._expand_and(conditions)
     defines, define_err = ui.parse_defines(p.get("defines") or "")
     if define_err:
-        return json.dumps({"ok": False, "error": define_err})
+        return json.dumps(ui._err(define_err))
     if defines:
         equations = [ui.expand_defines(e, defines) for e in equations]
         conditions = [ui.expand_defines(c, defines) for c in conditions]
