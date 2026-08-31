@@ -1,6 +1,6 @@
 # Next build — accepted but not yet done
 
-**#202 is done and deployed, 31 Aug 2026**, at cache **v104**: **Indonesian** is the tenth language — the cheapest of the five candidates and the one whose readers most plausibly need it, since Indonesian engineering is taught in Indonesian. #203–#205 open the rest of that plan: Hindi and Bengali, the dictionary split, then the right-to-left pass for Arabic and Urdu.
+**#202 is done and deployed, 31 Aug 2026**, at cache **v104** — `install.symbulator.com` and the ZIP verified by fetching (the install page hash-matches the local build; ZIP sha256 `69280ce33b2dafd0b8139729398bcb027dc0d277f27e8d399f0ee15da1dac344`, 17,758,663 bytes). **`symbulator.pythonanywhere.com` awaits one pull carrying #201 and #202 together.**  **Indonesian** is the tenth language — the cheapest of the five candidates and the one whose readers most plausibly need it, since Indonesian engineering is taught in Indonesian. #203–#205 open the rest of that plan: Hindi and Bengali, the dictionary split, then the right-to-left pass for Arabic and Urdu.
 
 **#201 is done and deployed, 31 Aug 2026**, at cache **v103**: the
 ribbon's language control shows the chosen language as two letters, a
