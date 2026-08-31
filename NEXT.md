@@ -1,5 +1,7 @@
 # Next build — accepted but not yet done
 
+**#200 is done, 31 Aug 2026**, at cache **v110**: `symbulator_ui.py` speaks in codes too — **forty-one of them, 801–877**, across the validators, plotting, Evaluate, the mini-tools, SPICE and the notes, in twelve languages. The trap its own entry predicted was real and one function higher than expected: `_run_in_process` flattened every failure to a string before any route could name its code. Only **#199** — the package, with the release train — is left of the three.
+
 **#198 is done, 31 Aug 2026**, at cache **v109**: **the Numerical Solver's engine speaks in codes** — seventeen of them, 901–924, with the page putting them into words. The status line that was four concatenated pieces (three of them untranslated English) is now one code and one `tv()` call: 已求解（最小二乘：3 个方程，2 个未知量） — 3 次求值. Roberto's design of that morning survived contact unchanged, which is what it was ordered first to find out; **#199** (the package, with the release train) and **#200** (`symbulator_ui.py`) can now follow it. The item's own costing had gone stale inside the day — #208 had put `eqsheet.py` into the offline builds, so 'server-only, no cache bump' was no longer true.
 
 **#209 is done, 31 Aug 2026**, at cache **v108**: **twenty-four reader-facing strings that never reached the dictionary** are in it, twenty-two new keys across twelve languages — the line under every set of answers among them, now *DC 分析 · 12 个结果*. The lasting part is the guard in `tools/i18n.py check`, which finds literals reaching a reader outside `t()`; it caught two more on its first run that three manual sweeps had missed. Its blind spot — strings thrown as exceptions — is written down rather than chased. `time (s)` follows Roberto's ruling: the word translates, the unit symbol does not, in Ukrainian too, which brings it back into line with the `Ω` its own answers print.
@@ -1154,7 +1156,7 @@ dictionary.
 ---
 
 ## #198–#200 — the engine speaks in codes, the interface in words
-## — **#198 done, cache v109; #199 and #200 planned**
+## — **#198 and #200 done, cache v110; #199 planned**
 
 Roberto's ruling, 31 Aug 2026, replacing the proposal that stood here
 overnight. I had recommended translating `symbulator_ui.py` and
@@ -1290,9 +1292,10 @@ with `pip install --upgrade`. The interface reads `.code` and falls back
 to `str(exc)`, so nothing breaks in the window between the publish and
 the pull.
 
-**#200 — `symbulator_ui.py` joins (8xx).** A copied file, so no release;
-`app.py` must list the new response field by hand, which is the trap
-`repos/local/CLAUDE.md` already warns about.
+**#200 — `symbulator_ui.py` joins (8xx). Done, 31 Aug 2026, cache
+v110.** See the section below. The trap this paragraph predicted was
+real and was worse than predicted: see *The field nobody would have
+named*.
 
 **Each item carries its own twelve translations**, so none of them can
 land half-done and the app is never in a state where a code renders as a
@@ -1366,6 +1369,99 @@ English kept in the catalogue as the generation source, arguments by
 name. Nothing about it wanted changing. #199 can take the same pattern
 into the package with the release train, and #200 into
 `symbulator_ui.py`.
+
+### #200, as built
+
+**Forty-one codes, 801\u2013877**, across six surfaces: the description
+and analysis validators (801\u2013810), added equations, conditions,
+unknowns and definitions (811\u2013816), plotting (820\u2013824),
+Evaluate and conditions (830\u2013833), the schematic drawer
+(840\u2013841), the mini-tools (850\u2013854), SPICE (860) and the
+**notes** (870\u2013877). Same `CATALOGUE` / `msg(code, **args)` shape
+as #198's, deliberately, so the page has one renderer for both engines
+rather than two.
+
+**Severity earned its keep here.** #198 had errors and one success line;
+this range has eight **notes** sitting in the same catalogue as
+thirty-three errors, told apart by a field. Two number ranges would have
+meant two of everything.
+
+### The seam that makes a half-done state safe
+
+`_err()` takes a coded message **or** a bare string, and `error` is the
+English either way:
+
+```python
+if isinstance(message, dict) and "code" in message:
+    return {"ok": False, "error": message["text"], "err": message}
+return {"ok": False, "error": message}
+```
+
+A string is what this file *forwards* rather than writes \u2014 a
+sentence out of the solver package, which has no codes until #199. So
+#199 and #200 could have landed in either order, and an uncoded message
+renders its English exactly as it did before. The page's `uiMsg()`
+mirrors it: a coded message is looked up, a plain string is its own
+answer, and an unknown code falls back to the `text` the engine sent
+\u2014 which is the deploy window, when the server is ahead of the page.
+
+### The field nobody would have named
+
+`app.py` lists its response fields by hand, and the entry above predicted
+that as the trap. It was sharper than that: `_run_in_process` **flattened
+the failure to a string** before any route saw it \u2014
+
+```python
+return False, result.get("error", "Unknown error.")
+```
+
+\u2014 so the code was destroyed one function above the six places that
+would have had to name it. Naming a field in six routes is a field
+forgotten in the seventh. It returns the failure dict now, and one
+`_refusal(payload, **extra)` names `err` **once**.
+
+The same shape was needed in `bridge.py` and at five validator call
+sites in `app.py`, where `{"ok": False, "error": err}` was built by hand
+around what is no longer a string.
+
+### What is deliberately not coded
+
+* **Everything this file forwards from the solver package** \u2014
+  `_err(_exc_text(exc))` and friends. Those words are the package's and
+  get 1xx\u20136xx numbers in **#199**. Inventing 8xx numbers for
+  sentences about to acquire their own would have been work done twice.
+* **`app.py`'s own messages** \u2014 about twenty of them. They are
+  server-only (the offline build validates in `bridge.py` instead), they
+  are not in this item's brief, and one of them is visible in the
+  measurements below: a bad SPICE direction is refused by `app.py`
+  before `symbulator_ui` sees it, so code 860 never fires on the server.
+  Worth an item if anyone wants it; not worth folding in silently.
+
+### The inventory grew twice while being built
+
+The first sweep found 34 sites. Building them surfaced five more notes
+that no `_err` and no validator contained \u2014 the TR step-source
+explanations and the "switched Rounding to approximate" line, which live
+in helpers that return lists of sentences. They were found by running
+the thing in Chinese and reading what was still English, which is the
+same way #209's twenty-fourth string was found, and the same lesson:
+the sweep tells you where to look, the running page tells you what you
+missed.
+
+### Verified in Chinese, offline, on the shipped build
+
+* **请输入电路描述。** (801)
+* **AC 分析需要角频率（omega）。** (807)
+* **`{...}` 简写只在 FD 中允许。…请去掉花括号。** (806)
+* a note with its arguments filled in: **值为 12 的源 'e1'
+  按阶跃源仿真：12*u(t)。** (873)
+* and through Flask, codes on the wire for 801, 805, 806, 807, 812, 841,
+  plus notes 870, 873 and 877.
+
+`i18n check: ok` at 565 keys. **41 codes \u00d7 12 languages = 492
+translations**, none of them reviewed by a native speaker \u2014 which
+is what **#207** is for, and this item alone moved that from 51 unreviewed
+strings today to 543.
 
 ### What this does not buy
 

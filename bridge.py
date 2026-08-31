@@ -92,7 +92,7 @@ def solve(payload_json: str) -> str:
         elif not (n1 and n2):
             err = "Give the two port nodes (n1 and n2) for this tool."
     if err:
-        return json.dumps({"ok": False, "error": err})
+        return json.dumps(ui._err(err))
 
     # --- i / I / j all mean the imaginary unit in AC; settle on j, and
     # say so -- outside AC those letters are ordinary variables, so this
@@ -263,7 +263,7 @@ def plot(payload_json: str) -> str:
     if not err and tool != "bode_tf":
         err = ui._validate_extras(extra_equations, extra_unknowns, extra_conditions)
     if err:
-        return json.dumps({"ok": False, "error": err})
+        return json.dumps(ui._err(err))
 
     if tool == "time":
         t_min, t_max, rng_err = _clean_range(p, 0.0, 1.0)
