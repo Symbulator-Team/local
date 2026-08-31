@@ -1,6 +1,6 @@
 # Next build — accepted but not yet done
 
-**#209 is open, 31 Aug 2026, and not built** — Roberto has feedback coming before it is. Asking what the app looks like in Chinese turned up **twenty-four reader-facing strings that never reach the dictionary** (twenty-one of them #209's; three are #198's), the worst of them the line under every set of answers: *DC analysis · 12 result(s) · 0.06s*, English in all twelve languages. `tools/i18n.py check` is structurally unable to see them — it guards strings already in the scheme, and these never call `t()` at all. Three widenings of the sweep each found more, which is the argument for the guard rather than for a fourth sweep.
+**#209 is done, 31 Aug 2026**, at cache **v108**: **twenty-four reader-facing strings that never reached the dictionary** are in it, twenty-two new keys across twelve languages — the line under every set of answers among them, now *DC 分析 · 12 个结果*. The lasting part is the guard in `tools/i18n.py check`, which finds literals reaching a reader outside `t()`; it caught two more on its first run that three manual sweeps had missed. Its blind spot — strings thrown as exceptions — is written down rather than chased. `time (s)` follows Roberto's ruling: the word translates, the unit symbol does not, in Ukrainian too, which brings it back into line with the `Ω` its own answers print.
 
 **#208 is done, 31 Aug 2026**, at cache **v107**: the **Numerical Solver ships in the offline builds** — its own page, its own Pyodide, SciPy bundled, solving with no network at all. The ZIP is **31,682,389 bytes (30.2 MB)**, up from 17.8 MB, which Roberto agreed to against the measured figure; the app's one published "about 17 MB" string now reads **about 30 MB** in English and in all twelve translations. Along the way: `vendor/`'s provenance was recovered and written down (Pyodide **v314.0.5** — the version scheme changed, which is why every earlier probe 404'd) as `vendor_pyodide.py`, and a **live server bug** was found and fixed — a NaN residual travelled as bare `NaN`, which no JSON parser accepts, and hung the hosted Solver on *solving…* for ever.
 
@@ -740,7 +740,7 @@ needs a speaker, which is the entire point of the item.
 
 ---
 
-## #209 — the strings that never reach the dictionary — **planned**
+## #209 — the strings that never reach the dictionary — **done, cache v108**
 
 Roberto asked, 31 Aug 2026, what the app looks like for a reader who
 wants it in Chinese. Answering it properly meant running it, and running
@@ -943,12 +943,76 @@ Seed the allowlist from the triage, and keep it **explicit**: an
 exception that has to be written down is an exception somebody has
 looked at.
 
-### Cost
+### What it came to
 
-Twenty-one strings, so twenty-one new `js.*` keys, times twelve
-languages.
-No solver release: two templates, `i18n/*.json` and `tools/i18n.py`, so
-one cache bump, the offline pair, and one PythonAnywhere pull.
+**Twenty-four strings wrapped, twenty-two new keys, twelve languages.**
+Two of the twenty-four reuse a key the app already had: `js.copy`, and
+`js.busy.solvingLower` — the Solver page had been showing `solving…` in
+English beside an app that had translated that exact word twelve times.
+`en.json` went 485 → 507.
+
+Two of them were found **by the guard, on its first run**, after the
+three manual sweeps had finished: `$('evalConds').placeholder` and
+`$('solveqEqs').placeholder`, both sitting directly under
+`$('evalExpr').placeholder = t('js.eval.hint', …)`. Same function, same
+six lines, one wrapped and two not — the button-status mistake again, in
+a second place, and neither eye nor regex had caught it.
+
+One more was found by **reading the page in Chinese** after the guard
+was green: `throw new Error('missing "equations" list')`, which the
+reader meets two functions away as the tail of an already-translated
+prefix — 方程组文件：missing "equations" list. See the blind spot below.
+
+**A collision worth recording.** `js.draw.fail` already existed, with
+*"Could not draw that circuit."*, on the error panel. The status line
+beside the button wanted *"Could not draw it."* — a second English under
+one key, which is precisely what `check` catches and what it caught. The
+short one became `js.draw.failShort`. Two messages that differ only in
+length still differ.
+
+### The guard, and what it cannot see
+
+`untranslated()` in `tools/i18n.py`, wired into `check`. Every literal
+reaching a reader — `.textContent`, `.innerHTML`, `.placeholder`,
+`.title`, `.alt`, `.value`, `confirm`, `alert`, `prompt`, and the app's
+own `showNote()` — minus everything inside a `t()`/`tv()`/`tSrv()` call,
+minus an explicit `NOT_FOR_READERS` allowlist.
+
+The allowlist is **short and reasoned on purpose**: state values compared
+against, the mathematics, markup fragments, and the three Solver status
+fragments that belong to **#198**, which carry a comment saying to delete
+them when #198 lands.
+
+**Its blind spot, stated so nobody assumes otherwise: it watches sinks,
+not values that travel to a sink.** A string thrown as an exception and
+displayed by a `catch` three functions away is invisible to it — which is
+how `missing "equations" list` survived a green run. Widening it to
+follow `throw new Error(...)` was considered and not done: nearly
+everything arriving that way is the browser's own English (`atob`,
+`JSON.parse`), which is not ours to translate, and a guard that cries
+about strings nobody can fix is a guard people switch off.
+
+### Verified in Chinese, offline, on the shipped build
+
+* the line that started it: **DC 分析 · 12 个结果 · 0.09 s**
+* the time plot: x-axis **时间（s）** — Roberto's ruling exactly, the word
+  translated and the unit symbol kept — with **时域图 · 300 个点 · 1.54 s**
+  under it and **已绘图！** beside the button
+* the Schematic button: **已绘制。**
+* the Solver: **正在求解…**, **第 1 行：…**, and a dropped bad file giving
+  **方程组文件：缺少 "equations" 列表**
+* the two placeholders: **例如 t = to**, **例如 p_r2 = 0.05**
+* mathematics unmoved throughout — `v_2`, `12 V`, `2 kΩ`
+* zero off-origin requests
+
+The one line still half-English is the Solver's `solved — 13
+evaluations`, which is #198's by design and by its own entry.
+
+### Ukrainian
+
+Ruling (a) applied: `Кінцевий час (s)`, `Кінцева частота (Hz)`,
+`Частота (Hz, логарифмічна шкала)`, and the new `час (s)`. Ukrainian no
+longer contradicts the `Ω` and `V` that the answers print beside it.
 
 ---
 
