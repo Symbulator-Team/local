@@ -120,7 +120,7 @@ v9/main` — clean, no conflicts — pushed to `Symbulator-Team`, and live on
 
 ---
 
-## #219 — an `image:` field on an input-file entry — **done, cache v119**
+## #219 — an `image:` field on an input-file entry — **done, cache v120**
 
 Roberto's brief, 1 Sep 2026. An optional `image:` line on a `.cir` entry
 names a picture of its circuit; when the entry is picked, the picture
@@ -266,6 +266,32 @@ which it believes — from a transport failure, which it reports as "could
 not reach" rather than as a broken link. All 248 verified live.
 
 ### Shipped
+
+**Two placement rounds after the first live look**, both cheap because the
+feature was one block of markup. v118 put the picture in a headingless card
+of its own between the input file and the description; v119 moved it to the
+foot of the **Input File** card; v120 moved the *"About input file (.cir)
+format"* reference **above** *Built-in Examples*, so that card now reads
+Upload/Download/Create new → the format reference → Built-in Examples →
+the entries picker → its note → the picture. The last two were pure
+markup reorders: no wording changed, so no i18n key was regenerated and
+all thirteen dictionaries stand untouched.
+
+**#219 crossed to version X on 1 Sep 2026.** `git fetch v9 && git merge
+v9/main` ran clean on `SymbulatorX/repos/server` and `repos/local` (the
+solver needed nothing), and both are pushed to `Symbulator-Team`. X now
+differs from v9 by its own orientation `CLAUDE.md` files **and nothing
+else**, which is the state that keeps future merges clean.
+
+Worth knowing for the next crossing: X's `build_local.py --check` reports
+`i18n/zh.js` STALE straight after a merge, and it is **not** stale. The
+dist dictionaries are near-single-line JS; git checks them out with LF
+while `build_local.py` writes CRLF, so the four line endings make a 4-byte
+difference and a byte-for-byte check calls it stale. The content is
+identical. **Do not "fix" it by running `build_local.py` in X** — that
+re-stamps the build time into `templates/index.html`, which diverges X
+from v9 on a line every future merge would then conflict on. Leave it.
+
 
 **A zero measurement means the viewport, not the bug.** Verifying the moved
 picture on the live install site, the image measured **2px tall** with
