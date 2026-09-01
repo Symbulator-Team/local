@@ -120,6 +120,123 @@ v9/main` — clean, no conflicts — pushed to `Symbulator-Team`, and live on
 
 ---
 
+## #218 — the three passive symbols, redrawn — **done, solver 0.5.26**
+
+Roberto's brief, 1 Sep 2026, from reference images rather than words:
+the resistor's peaks rounded, the inductor a single line that loops, the
+capacitor with one bowed plate. Settled one parameter at a time against
+rendered strips — the working method his conventions already ask for,
+and the only one that would have worked here, because every one of these
+was a shape nobody could describe accurately enough to build blind.
+
+**The resistor.** Each corner is a quadratic whose control point is the
+old vertex, leaving the straight run `ZIG_ROUND` back along one arm and
+rejoining it the same distance along the next. A quadratic leaves its
+first control point along the line to the second, so the curve is
+tangent to both arms and there is no join to see. `stroke-linejoin
+="round"` was the free alternative and is a different thing: its radius
+is fixed at half a stroke, 0.85px, which is the blob #212 rejected.
+
+**Rounding a corner cuts it off**, so the drawn peak is 6.51px against
+the 7.20 amplitude, and *that* is the number a label has to clear. REACH
+is built from the drawn peak, not the amplitude, and the resistor's
+labels moved 2px closer (9.37 → 7.36). A 10% size reduction was also
+tried, measured clean across all 330, and then withdrawn — the size is
+unchanged.
+
+**The inductor took three shapes to get right, and the first two were
+wrong in ways only measurement showed.**
+
+* *Arcs between two points on a line cannot cross their own chord.* The
+  large-arc flag takes the major arc, over the top; the far side of the
+  circle lies on the minor arc. I built it, lifted it above the leads to
+  make the loops dip, and the sampler came back **0.00 below the leads**
+  on every variant. On eye alone I would have shipped it.
+* *A row of whole ellipses* does cross the line, but reads as separate
+  rings rather than one wire, which is what Roberto said when he saw it.
+* What it is now: a **projected helix**, the prolate trochoid
+  `x = A·t − B·sin t`, `y = −H·cos t`, emitted as cubic Béziers fitted
+  to the analytic derivative. It loops exactly when `B > A` — that is
+  when `dx/dt` changes sign and the line doubles back. At `B == A` it is
+  a sine wave with no crossings. `IND_RATIO` is that ratio and the only
+  number that decides it; the test walks the emitted curve counting
+  reversals rather than trusting the constant.
+
+The span carries an **extra half turn**, so one end dives into a loop
+and the other rises out of an arch. `IND_PHASE` decides which end, and
+it took two goes — the first put the arch at the near end. Worth
+knowing: flipping the phase changes the advance, because the endpoints
+must stay `BODY` apart and the B term moves them relative to each other
+in opposite directions at the two phases. A went 2.501 → 1.692 across
+the flip and the retune to `IND_RATIO 2.6`.
+
+**The capacitor.** The bowed plate's ends stay on the old chord and its
+middle comes in by `CAP_BOW`, so the plates are 7.5px apart at the
+middle against 11 at the corners. The lead runs in to the **apex**: the
+arc's chord is no longer on the axis, so a lead stopping there leaves a
+visible gap between the wire and the curve it is supposed to meet —
+which is exactly what Roberto spotted in the first mockup. The radius
+comes from the sagitta, so the bow is the depth asked for.
+
+**The capacitor keeps its straight plates.** A bowed one was built and
+drawn for a few hours, and Roberto withdrew it on the reason rather than
+the look: a curved plate conventionally marks a **polarised** capacitor,
+and Symbulator's are not — `c1,2,0,1'u` has no + end and the engine never
+treats one terminal differently from the other. There is a test on the
+plates being straight so it cannot drift back.
+
+**A reversed transformer says it once.** `t,2,3,1,-2` draws as `1 : 2`
+with the dots opposed — the dots carry the polarity and the printed ratio
+shows magnitudes. It shipped for a few hours saying it *twice*, sign and
+dots both, until Roberto asked whether the inversion was deliberate or a
+double count. It was a double count: the engine sets `v(n1)/turns1 =
+v(n2)/turns2`, so a reader applying both reversals reads AS7's Example
+13.8 as `+2`. There is a test, and it covers `-1,-2` — two negatives are
+the *same* polarity — and the symbolic `1 : n`, which has no sign to read
+and so keeps its dots level.
+
+**The two-port stopped being an element in a branch.** It was a labelled
+box in line between its two nodes, which implied a single series current
+the element does not carry — its two port currents differ, the difference
+going to ground. It is a square block now, four terminals, upper pair on
+the node row and lower pair on the rail, with its four parameters written
+inside it. Nothing else on the drawing said what a `z` or an `h` block
+does; the reader had to go back to the description for `[40,20j,30j,50]`
+and remember that the order is 11, 12, 21, 22.
+
+Its height is written `ROW_H + 2*PORT_BOX_OVER` rather than the literal
+174, because that is the only value that lands the lower terminals on the
+rail and lets their leads run out unbent — a literal would have quietly
+brought the bend back the first time anyone touched the band.
+
+**One ground symbol per run of rail**, which is a rule rather than a
+special case: a block that grounds itself says so mid-gap and the rail's
+own far-left symbol is dropped, and a two-port ends up with two symbols
+not by exception but because it *cuts* the rail and each half is a run.
+The node's name moved from beside the bars to under them, which retired
+the `side` argument that existed only because a symbol set left of a
+block had the box hard against it.
+
+### How this one was actually done
+
+Nine rounds of rendered strips, and the reason it took nine is worth
+keeping: **every one of these was a shape nobody could describe
+accurately enough to build blind.** "Less tall" turned out to mean less
+tall *relative to the width* and then, two rounds later, genuinely
+shorter than the band. The measurements settled it each time —
+Roberto's reference at w/h 1.10 against a drawing at 0.72 is a fact; "it
+looks too tall" is not something either of us could have acted on.
+
+Two mistakes are worth naming because measurement caught both and eyes
+would not have. The lifted-arc coil measured **0.00 below the leads** on
+every variant, which is what proved that construction cannot cross its
+own chord. And when the two-port's grounds were moved to the midpoints
+of their gaps they came out at 56 and 323 instead of 86 and 294 — the
+*legs* had moved and the symbols were still offset thirty pixels from
+where the legs used to be.
+
+---
+
 ## #217 — an SI prefix is a decimal shift, so it is done in decimal — **done, shipped in 0.5.25**
 
 Roberto, 1 Sep 2026: `js,0,d,397.3'm` translated to SPICE as
