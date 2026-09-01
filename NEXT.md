@@ -277,7 +277,7 @@ the entries picker → its note → the picture. The last two were pure
 markup reorders: no wording changed, so no i18n key was regenerated and
 all thirteen dictionaries stand untouched.
 
-Version 9's PythonAnywhere pass for v120 is **done** (1 Sep 2026): `/healthz` build `2026-09-01 12:03 UTC` running *and* on disk, `needs_reload: false`, solver 0.5.26 — the served card ordering checked (upload row → format reference → Built-in Examples → entries → note → picture) and the picture hit-tested live at 798×540. X's own account still needs its pull.
+Version 9's PythonAnywhere pass for v120 is **done** (1 Sep 2026): `/healthz` build `2026-09-01 12:03 UTC` running *and* on disk, `needs_reload: false`, solver 0.5.26 — the served card ordering checked (upload row → format reference → Built-in Examples → entries → note → picture) and the picture hit-tested live at 798×540. X's account followed the same day: `symbulatorx.pythonanywhere.com` reports the same build `2026-09-01 12:03 UTC` running and on disk, with the card ordering, the picture (798×540, hit-tested) and a real DC solve all verified live — so the merge carried #219 across without breaking X's engine.
 
 **#219 crossed to version X on 1 Sep 2026.** `git fetch v9 && git merge
 v9/main` ran clean on `SymbulatorX/repos/server` and `repos/local` (the
