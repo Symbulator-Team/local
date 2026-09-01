@@ -55,8 +55,16 @@ def solve(payload_json: str) -> str:
             return [str(x).strip() for x in raw if str(x).strip()]
         return [ln.strip() for ln in ui.re.split(r"[\r\n]+", str(raw)) if ln.strip()]
 
-    variables = [v.strip() for v in
-                 ui.re.split(r"[,\s]+", str(p.get("variables") or "")) if v.strip()]
+    # A list or a comma/space-separated string, because app.py takes
+    # both and these two files are not allowed to differ. str() on a
+    # list gives "['v 2']", which then splits into garbage -- found by
+    # verify_bridge.py on its first run, 31 Aug 2026. Not reachable from
+    # the page, which sends the Variables field's text, but the drift is
+    # the bug.
+    _vars = p.get("variables") or ""
+    if not isinstance(_vars, (list, tuple)):
+        _vars = ui.re.split(r"[,\s]+", str(_vars))
+    variables = [str(v).strip() for v in _vars if str(v).strip()]
     # Equations and conditions alike: one per line, or several on one
     # line joined with ` and ` -- "re = 12'k and ir3 = 6'm" is two
     # equations. Expanded before validating/solving, matching app.py's
@@ -73,7 +81,7 @@ def solve(payload_json: str) -> str:
     # in a bare "1k" is questioned exactly as an inline one would be.
     defines, define_err = ui.parse_defines(lines("defines"))
     if define_err:
-        return json.dumps({"ok": False, "error": define_err})
+        return json.dumps(ui._err(define_err))
     define_notices = []
     if defines:
         define_notices = ui.define_shadow_notices(defines, desc)
@@ -92,7 +100,7 @@ def solve(payload_json: str) -> str:
         elif not (n1 and n2):
             err = "Give the two port nodes (n1 and n2) for this tool."
     if err:
-        return json.dumps({"ok": False, "error": err})
+        return json.dumps(ui._err(err))
 
     # --- i / I / j all mean the imaginary unit in AC; settle on j, and
     # say so -- outside AC those letters are ordinary variables, so this
@@ -114,7 +122,10 @@ def solve(payload_json: str) -> str:
         elements = parse_circuit(desc, expand_si=False)
         ambiguous = ambiguous_in_elements(elements)
     except Exception as exc:
-        return json.dumps({"ok": False, "error": ui._exc_text(exc)})
+        # _exc_msg, not _exc_text: this is the parse step, and it was
+        # the last place a CircuitError's code (#199) was flattened.
+        # app.py had the same gap; verify_bridge.py found this one.
+        return json.dumps(ui._err(ui._exc_msg(exc)))
 
     if ambiguous:
         if any(a["token"] not in choices for a in ambiguous):
@@ -235,7 +246,7 @@ def plot(payload_json: str) -> str:
     # leaned on the Define box failed on symbols the solve had accepted.
     defines, define_err = ui.parse_defines(lines("defines"))
     if define_err:
-        return json.dumps({"ok": False, "error": define_err})
+        return json.dumps(ui._err(define_err))
     if defines:
         desc = ui.expand_defines_in_desc(desc, defines)
         extra_equations = [ui.expand_defines(e, defines) for e in extra_equations]
@@ -263,7 +274,7 @@ def plot(payload_json: str) -> str:
     if not err and tool != "bode_tf":
         err = ui._validate_extras(extra_equations, extra_unknowns, extra_conditions)
     if err:
-        return json.dumps({"ok": False, "error": err})
+        return json.dumps(ui._err(err))
 
     if tool == "time":
         t_min, t_max, rng_err = _clean_range(p, 0.0, 1.0)
@@ -311,7 +322,7 @@ def evaluate(payload_json: str) -> str:
         return json.dumps({"ok": False, "error": "Enter an expression to evaluate."})
     defines, define_err = ui.parse_defines(p.get("defines") or "")
     if define_err:
-        return json.dumps({"ok": False, "error": define_err})
+        return json.dumps(ui._err(define_err))
     # The Conditions box (#96). The server splits and guards it in app.py;
     # here symbulator_ui does the reading, and the guards that matter are
     # its own -- there is no untrusted caller on this side of the wire.
@@ -372,7 +383,7 @@ def solve_equations(payload_json: str) -> str:
     conditions = ui._expand_and(conditions)
     defines, define_err = ui.parse_defines(p.get("defines") or "")
     if define_err:
-        return json.dumps({"ok": False, "error": define_err})
+        return json.dumps(ui._err(define_err))
     if defines:
         equations = [ui.expand_defines(e, defines) for e in equations]
         conditions = [ui.expand_defines(c, defines) for c in conditions]

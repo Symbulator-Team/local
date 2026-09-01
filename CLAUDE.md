@@ -64,10 +64,12 @@ code**. Everything below is detail hanging off these.
    purpose was installing.
 
 4. **You cannot build a release from the repos alone.** The Pyodide runtime,
-   the sympy, mpmath and numpy wheels, the Python stdlib and MathJax — about
-   22 MB — are deliberately not in git. A release needs an extracted copy of a
-   *recent* ZIP to draw them from, passed as `--assets`. See the note under
-   "Making a release" about numpy, which older ZIPs do not have.
+   the sympy, mpmath, numpy and scipy wheels, the Python stdlib and MathJax —
+   about 36 MB — are deliberately not in git. A release needs an extracted copy
+   of a *recent* ZIP to draw them from, passed as `--assets`, **or** a run of
+   `vendor_pyodide.py`, which fetches the lot from the CDN and hash-checks every
+   file against `vendor/pyodide-lock.json`. See the note under "Making a
+   release" about numpy and scipy, which older ZIPs do not have.
 
 5. **A stale service worker hides everything you deploy.** `sw.js` is
    cache-first. Without a `CACHE_VERSION` bump, returning visitors keep the old
@@ -123,6 +125,32 @@ python3 build_local.py --check    # exit 1 if index.html is stale
 **Never hand-edit `local/index.html`.** It is generated. Edit the server
 template and re-run the script.
 
+### There are two pages, not one
+
+Since **#208** (31 Aug 2026) the offline build carries the **Numerical
+Solver** as well: `templates/eqsheet.html` becomes `eqsheet.html`, beside
+`index.html`, by the same script and the same rules. Everything above about
+generation applies to it identically.
+
+Three things about it are worth knowing before touching either page:
+
+* **It is at the root, as `eqsheet.html`, not `eqsheet/index.html`.** That
+  is what makes #204's `i18n/` base rewrite one string instead of two. The
+  server serves the app at `/` and the Solver at `/eqsheet/`, which is why
+  the template's own path has to be root-absolute.
+* **It boots its own Pyodide, and a different set of packages.** The Solver
+  loads sympy, numpy and **scipy**; the app loads sympy, numpy and the
+  **symbulator wheel**. Neither loads the other's, because they are separate
+  documents that share only the service worker's cache — so a reader who
+  opens both downloads each file exactly once, and one who never opens the
+  Solver never pays SciPy's import cost.
+* **`eqsheet.py` must never import Flask.** It is a shared module now
+  (`SHARED` in `build_local.py`, alongside `symbulator_ui.py` and
+  `circuitbook.py`), copied verbatim and imported by Pyodide inside the tab.
+  `eqsheet_web.py` in the server repo is the Blueprint; keep it thin, because
+  a check added there alone guards the hosted Solver and leaves the
+  downloaded one without it.
+
 ### The build stamp
 
 The last line of the interface reads `Symbulator 9 version 2026-08-22 09:25
@@ -175,6 +203,12 @@ code and boot bar (`BOOT_JS`, `BOOTBAR_CSS`), the service-worker
 registration (`SW_JS`), and the install bar (`INSTALLBAR_CSS` plus the
 markup in the "first .wrap div" substitution).
 
+The Numerical Solver's page has its own smaller set of the same kind:
+`EQ_BOOT_JS`, `EQ_POST_JS`, `EQ_BOOTBAR_CSS` and `EQ_SW_JS`. Its boot bar
+carries the app's own wording through the app's own `t()` keys, so the two
+pages say the same sentence in thirteen languages without a second string
+to translate.
+
 The **install bar** is worth knowing about. It offers an Install button in
 the page, because the browser's own affordance is close to undescribable:
 desktop puts an icon in the address bar, Android hides it in a menu whose
@@ -197,6 +231,75 @@ loudly rather than silently dropping the icons or the service worker. That is
 deliberate — an earlier silent no-op once shipped a build with no service
 worker at all. If a build fails with "matched 0 times, expected 1", the
 template changed and the script needs the same change.
+
+### The interface speaks thirteen languages, from a dictionary in the page
+
+Since #197 (31 Aug 2026) the app is available in English, Spanish,
+Esperanto, French, German, Portuguese, Chinese, Japanese, Korean,
+Indonesian (#202), Hindi and Bengali (#203) and Ukrainian (#206), chosen
+from a `<select>` in the ribbon and remembered in `localStorage` under
+`symbulator-lang` — the same shape as the theme, and applied by the same
+head script before first paint.
+
+**It is a client-side dictionary, and it has to be.** Two of the three
+builds are static files with Pyodide in the tab and no Python outside it.
+Flask-Babel, `gettext` or a per-language template would translate the
+hosted app and leave the downloaded one in English, and would fork the
+one-template property this file exists to protect. If you find yourself
+reaching for a server-side scheme, you are about to break the offline
+builds.
+
+* The dictionaries are `repos/server/i18n/<lang>.json`. Since **#204**
+  they are **not** inlined into the page: `tools/i18n.py pack` generates
+  one file per language into `repos/server/i18n/dist/<lang>.js`, and the
+  page loads only the language actually in use. The block between the
+  `BEGIN/END i18n dictionaries` markers in each template's `<head>` is
+  now a *loader and a version stamp*, still generated — **do not edit
+  between the markers.**
+* **The boot path and the switch path are deliberately different.** Boot
+  uses a parser-blocking `<script>`; a language chosen later is fetched.
+  That is because `applyLang()` must run before the page takes any
+  element reference — it replaces `innerHTML`, and a deferred apply
+  leaves those references on detached nodes. If you ever "tidy" the boot
+  path into a fetch, that is the breakage, and it will not show up in a
+  screenshot.
+* The files must be in `sw.js`'s generated `BEGIN/END i18n` block, which
+  `build_local.py` writes. A dictionary that ships but is not precached
+  vanishes offline, dropping the reader back to English.
+* The server serves them at `/i18n/<lang>.js` (root-absolute: the app is
+  at `/`, the Numerical Solver at `/eqsheet/`); `build_local.py` rewrites
+  the base to a relative path for the offline builds.
+* **`en.json` is generated.** The English lives in the template markup and
+  in the fallback argument of every `t()` / `tv()` call. At runtime the
+  page snapshots its own markup and restores that for English, so English
+  is not in the shipped dictionary at all and cannot drift.
+* Every markup unit carries a `data-i18n` key; every runtime string goes
+  through `t('key', 'English')`, `tv(...)` for one with slots, or `tSrv()`
+  for a term the maths engine names.
+* `py tools/i18n.py check` is the guard, and it is not optional after
+  touching either template: it catches untagged units, stale keys,
+  orphans, a translation that dropped an `id` or a `%{slot}`, and a `t()`
+  call whose key is a variable. See `tools/README.md` for the full list.
+* **`check` knows nothing about pixels, and the ribbon is where a
+  translation actually breaks.** `banner.css` caps `.subbar nav` at one
+  line-box with `overflow: clip`: a label too wide for the row does not
+  wrap visibly and does not scroll — the overflow is silently gone, and it
+  usually takes the Tutorial link with it. Ukrainian shipped past the
+  first check this way (#203/#206). Measure `scrollHeight - clientHeight`
+  on the nav, per language, at 375/481/520/768/1100px; 481 is the band to
+  watch, being the narrowest that still shows the wide labels. The fix is
+  nearly always the wording.
+
+**The mathematics is never translated** — not the variable names, not the
+element letters, not the decimal point, not the unit symbols. The answers
+have to keep matching the tutorial's printed answers, and that agreement
+was verified entry by entry across all 330 examples. `toLocaleString` is
+pinned to `'en-US'` wherever it appears.
+
+**The language must never enter `inputsSnapshot()` or a `.cir` file.** It
+is a reader's preference, like the theme. #182 warns about unsaved edits
+by comparing that snapshot, so anything in it the reader did not type
+raises a phantom warning on every entry load.
 
 ### An answer may be several answers
 
@@ -232,11 +335,26 @@ pinned in three places that have to move together.
 
 1. Bump `symbulator/__init__.py`, write the CHANGELOG entry, run the tests.
 2. `python -m build`, then `python -m twine check dist/...`.
-3. **Publish to PyPI** — `python -m twine upload`. This is irreversible; a
-   version number cannot be reused.
+3. **Publish to PyPI** — `py -m twine upload dist/symbulator-<v>*`, from
+   `repos/solver`. **The twine credentials are on Roberto's machine, so
+   this runs from here** (his instruction, 31 Aug 2026) — it is not a
+   step to hand back to him. It does still wait for an explicit go, for
+   the one reason that matters: **it is irreversible, and a version
+   number can never be reused.** Have everything checkable checked
+   before you ask: the tests green, `twine check` passed, and both
+   harnesses clean.
+
+   Then verify what PyPI actually serves against the artefact you built,
+   by hash, at `https://pypi.org/pypi/symbulator/<version>/json` — the
+   next step copies that same file into `vendor/`, and "the bytes PyPI
+   serves and the bytes the offline build bundles are identical" is a
+   claim worth being able to make.
 4. Copy the *same wheel file* into `repos/local/vendor/` and delete the old
    one. Use the artefact you uploaded, so the bytes PyPI serves and the bytes
    the offline build bundles are identical — and verify that by hash.
+   (`vendor_pyodide.py` does **not** touch this one: it is a PyPI release, not
+   part of the Pyodide distribution, and the script says so when it lists what
+   else it found in `vendor/`.)
 5. Update the three pins: `WHEEL` in `build_local.py`, the cache list in
    `sw.js`, and `symbulator>=` in `repos/server/requirements.txt`.
 6. **Bump `CACHE_VERSION` in `sw.js`.** Without it, returning visitors keep
@@ -267,18 +385,40 @@ The ZIP is three things glued together:
    version control**. `--assets` points at any extracted copy of a previous
    ZIP; these files only change when Pyodide, MathJax or numpy is upgraded.
 
-   > **numpy joined the bundle in Aug 2026.** An `--assets` folder taken from
-   > a ZIP older than that will not contain it, and the build fails its own
-   > check (`sw.js` caches a file the ZIP has not got). Use a current ZIP, or
-   > copy the numpy wheel across. It is required because
-   > `symbulator.plotting` imports numpy lazily: without it the Plot card
-   > fails at the point of use with a bare `No module named 'numpy'` — which
-   > is how the offline build shipped until it was caught.
+   > **numpy joined the bundle in Aug 2026, scipy in #208.** An `--assets`
+   > folder taken from an older ZIP will not contain them, and the build fails
+   > its own check (`sw.js` caches a file the ZIP has not got). Use a current
+   > ZIP, run `vendor_pyodide.py`, or copy the wheels across. numpy is
+   > required because `symbulator.plotting` imports it lazily: without it the
+   > Plot card fails at the point of use with a bare `No module named
+   > 'numpy'` — which is how the offline build shipped until it was caught.
+   > scipy is required because `eqsheet.py` solves with
+   > `scipy.optimize.root` and `least_squares`, and nothing in SymPy stands
+   > in for the second: `nsolve` takes square systems only and no bounds, so
+   > every one of #131's per-unknown restrictions would go.
+   >
+   > **`vendor_pyodide.py` is where these files come from**, and the one
+   > record of it. The distribution is **Pyodide v314.0.5** — it tracks the
+   > CPython it ships (3.14), which is why probing for a `0.2x` version
+   > returns 404 on every filename and why #208 nearly concluded the source
+   > was lost. Every wheel in `vendor/` hash-matches
+   > `vendor/pyodide-lock.json`; `python vendor_pyodide.py --check` says so
+   > without downloading anything.
 3. **A `symbulator-local/` top-level folder** so unzipping is tidy.
 
 `build_zip.py` verifies what it built — every manifest icon, every file the
-service worker caches, every `<link>` in the page head, and the icon sizes
-Chrome requires. It refuses to produce a ZIP that fails those checks.
+service worker caches, every `<link>` **and `<script src>` in both pages'
+heads**, `eqsheet.py`, `eqbridge.py` and the scipy wheel by name (nothing
+links to those three), and the icon sizes Chrome requires. It refuses to
+produce a ZIP that fails those checks.
+
+**The ZIP is about 30 MB since #208**, up from 17.8. Exactly one published
+string states that size, and it is easy to look for in the wrong places:
+the app's *Installing from a file* card, which lives inside a
+**`server-only` block**, so the sentence is on the server build alone and
+both offline builds strip it. The landing page and `README.txt` state no
+size at all. If the ZIP's size changes again, that one card is the whole
+job.
 
 ### Deploying each variant
 
@@ -315,6 +455,27 @@ Deploying the local build is **two jobs**, not one: the hosted copy at
 leaves them silently out of step.
 
 ---
+
+## The two harnesses
+
+`repos/server/tools/verify_lesson.py` checks the **answers** against the
+tutorial's printed ones, over all 330 examples. It drives `app.py`.
+
+`repos/local/verify_bridge.py` checks that the **two front ends agree**,
+over the same examples plus ten refusal paths. It drives `app.py` and
+`bridge.py` side by side.
+
+They cover different failures, and #210 exists because the second one
+did not. A bug in `bridge.py` shipped on 31 Aug 2026 — four sites
+rendering `[object Object]` where a definition failed — while
+`verify_lesson` stayed green, because `verify_lesson` never calls the
+file the offline builds use. Run both after touching `symbulator_ui.py`,
+`bridge.py` or `app.py`.
+
+`verify_bridge.py` needs no Pyodide: `bridge.py` runs under ordinary
+CPython. What it therefore does **not** cover is the browser around it —
+the boot, the fetch of the `.py` files, the service worker. A green run
+is not an offline test; it is a drift test.
 
 ## Verifying a deploy
 
@@ -372,6 +533,25 @@ and in JavaScript especially, since none of them look like template
 syntax to a reader.
 
 
+**A translation is innerHTML, so it can break the page silently.** The
+dictionary values are written straight into the elements they belong to.
+A translation that loses an `id="plotKeyLabel"` takes the element the app
+looks up with it; one that loses a `%{n}` slot loses the number the
+sentence was about. Neither throws. `tools/i18n.py check` compares the
+ids, links and slots of every translation against its English and fails on
+a mismatch — run it, and do not hand-edit inside the `BEGIN/END i18n`
+markers, which `pack` overwrites.
+
+**The ribbon must stay one line, and a breakpoint cannot know when it
+does.** What fits depends on the language: German's *Eingaben löschen* is
+36px wider than *Clear inputs*. Worse, `banner.css` caps `<nav>` at one
+line-box and *clips* what wraps inside it, so a crowded ribbon does not
+grow — it drops the Tutorial link off the screen without a trace.
+`syncLangMenu()` therefore measures: it writes the language names, asks
+whether the row wrapped **or the nav had to clip**, and falls back to ISO
+codes if either. A `<select>` sized `width: auto` is as wide as its widest
+option, not the selected one, so all nine option texts change together.
+
 **`CACHE_VERSION` in `sw.js`.** The service worker is cache-first. If you
 change app files without bumping it, returning visitors keep the old build
 forever — including the old manifest. Any fix you cannot see on a device you
@@ -413,9 +593,18 @@ cp1252 and crash. `.gitattributes` forces LF, because `start.sh` and
 `start.command` are run by `/bin/sh` — a CRLF checkout ships launchers that
 fail with `bad interpreter: /bin/sh^M`.
 
-**Shared modules.** `symbulator_ui.py` and `circuitbook.py` are byte-identical
-in the server and local repos, deliberately, so the two front ends cannot
-drift. Change one, copy it to the other.
+**Shared modules.** `symbulator_ui.py`, `circuitbook.py` and (since #208)
+`eqsheet.py` are byte-identical in the server and local repos, deliberately,
+so the two front ends cannot drift. `build_local.py` copies them and fails
+`--check` when they differ, so the copying is not a thing to remember.
+
+**A number that is not a number cannot travel as JSON.** `json.dumps` writes
+a bare `NaN` or `Infinity` for a non-finite float; it is legal Python and
+**invalid JSON**, so `JSON.parse` and `Response.json()` both throw and the
+page hangs with nothing on screen. `eqsheet.py` hit this on the live server
+for as long as the Solver existed — a fresh sheet starts every variable
+Unknown at zero, and a divider equation is 0/0 there. It sends `null` now.
+Anything else that formats a float for the page wants the same guard.
 
 ---
 

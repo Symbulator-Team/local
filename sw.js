@@ -2,19 +2,21 @@
  * Service worker: makes Symbulator work offline and installable.
  *
  * Everything the app needs is cached on first visit -- the Python
- * runtime, SymPy, the symbulator wheel, MathJax and the page itself --
- * so afterwards it runs with no network at all. That is what turns this
+ * runtime, SymPy, SciPy, the symbulator wheel, MathJax and both pages
+ * (the app and the Numerical Solver) -- so afterwards it runs with no
+ * network at all. That is what turns this
  * from "a website" into "an app you can install", and it is why the
  * download is worth paying once.
  *
  * Bump CACHE_VERSION whenever the app files change, so returning users
  * get the new build instead of the cached one.
  */
-const CACHE_VERSION = 'symbulator-v101';
+const CACHE_VERSION = 'symbulator-v116';
 
 const ASSETS = [
   './',
   'index.html',
+  'eqsheet.html',
   'manifest.webmanifest',
   'favicon.ico',
   'favicon-16x16.png',
@@ -47,9 +49,25 @@ const ASSETS = [
   'examples/Showcase.cir',
   'examples/The_Monograph.cir',
   // ==== END examples ====
+  // ==== BEGIN i18n ==== written by build_local.py; do not edit
+  'i18n/bn.js',
+  'i18n/de.js',
+  'i18n/eo.js',
+  'i18n/es.js',
+  'i18n/fr.js',
+  'i18n/hi.js',
+  'i18n/id.js',
+  'i18n/ja.js',
+  'i18n/ko.js',
+  'i18n/pt.js',
+  'i18n/uk.js',
+  'i18n/zh.js',
+  // ==== END i18n ====
   'bridge.py',
   'symbulator_ui.py',
   'circuitbook.py',
+  'eqsheet.py',
+  'eqbridge.py',
   'static/mathjax/tex-svg.js',
   'vendor/pyodide.js',
   'vendor/pyodide.asm.mjs',
@@ -59,7 +77,13 @@ const ASSETS = [
   'vendor/sympy-1.14.0-py3-none-any.whl',
   'vendor/numpy-2.4.6-cp314-cp314-pyemscripten_2026_0_wasm32.whl',
   'vendor/mpmath-1.4.1-py3-none-any.whl',
-  'vendor/symbulator-0.5.22-py3-none-any.whl',
+  // The Numerical Solver's own dependency (#208), and by a long way the
+  // largest file here: 13.4 MB. It is cached with everything else on
+  // purpose. Fetching it on demand would be cheaper for a reader who
+  // never opens the Solver, and would also mean the Solver did not work
+  // offline -- which is the one thing this file exists to guarantee.
+  'vendor/scipy-1.18.0-cp314-cp314-pyemscripten_2026_0_wasm32.whl',
+  'vendor/symbulator-0.5.25-py3-none-any.whl',
 ];
 
 self.addEventListener('install', event => {

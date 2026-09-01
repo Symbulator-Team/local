@@ -59,6 +59,8 @@ EXCLUDE_NAMES = {
     "README.md",          # developer readme; users get README.txt
     "build_local.py",
     "build_zip.py",
+    "vendor_pyodide.py",   # fetches vendor/ from the CDN; a user has it already
+    "verify_bridge.py",    # compares this build against the server's (#210)
     "CLAUDE.md",
     "NEXT.md",           # deferred-work list; developer-facing
     "banner.css",        # source of the inlined lockup; the page carries it
@@ -88,6 +90,13 @@ def collect(src: Path, skip_top_level_excludes: bool) -> dict[str, Path]:
             full = Path(dirpath) / name
             rel = full.relative_to(src).as_posix()
             if skip_top_level_excludes and rel in EXCLUDE_NAMES:
+                continue
+            # Every top-level .md is developer-facing; users get
+            # README.txt. Named exclusions alone were not enough: the
+            # #197 brief was committed to this repo as
+            # PROMPT_i18n_overnight.md and rode into the ZIP, and from
+            # there would have gone up to install.symbulator.com.
+            if skip_top_level_excludes and "/" not in rel and rel.endswith(".md"):
                 continue
             if name.endswith(".pyc"):
                 continue
@@ -150,23 +159,52 @@ def verify(staged: dict[str, Path]) -> list[str]:
         if not block:
             problems.append("could not find the ASSETS list in sw.js")
         else:
-            for asset in re.findall(r"'([^']+)'", block.group(1)):
+            # Comments out first. The list is read by matching quoted
+            # strings, and an apostrophe in a comment beside an entry
+            # ("the Solver's own dependency") opens a quote that then
+            # swallows the next real filename -- reported, memorably,
+            # as a missing file whose name was three lines of prose.
+            body = re.sub(r"//[^\n]*", "", block.group(1))
+            for asset in re.findall(r"'([^']+)'", body):
                 if asset == "./":
                     continue
                 if asset not in staged:
                     problems.append(f"sw.js caches {asset}, which is not in the ZIP")
 
-    # --- every local href in the page head -----------------------------
+    # --- every local href, and every script src, in each page's head ---
+    #
+    # Both pages, since #208: the Numerical Solver is a second document
+    # in the same folder, with its own head and its own runtime tag. Its
+    # <script src="vendor/pyodide.js"> is exactly the sort of thing that
+    # would go missing quietly, so srcs are checked as well as links.
     html = read("index.html")
     if html is None:
         problems.append("index.html is missing")
-    else:
-        head = html.decode("utf-8").split("</head>")[0]
-        for href in re.findall(r'<link[^>]+href="([^"]+)"', head):
-            if href.startswith(("http://", "https://", "data:")):
-                continue
-            if href not in staged:
-                problems.append(f"index.html links {href}, which is not in the ZIP")
+    eq_html = read("eqsheet.html")
+    if eq_html is None:
+        problems.append("eqsheet.html is missing")
+    for name, blob in (("index.html", html), ("eqsheet.html", eq_html)):
+        if blob is None:
+            continue
+        head = blob.decode("utf-8").split("</head>")[0]
+        for attr in ("href", "src"):
+            for ref in re.findall(r'<(?:link|script)[^>]+%s="([^"]+)"' % attr, head):
+                if ref.startswith(("http://", "https://", "data:")):
+                    continue
+                if ref not in staged:
+                    problems.append(f"{name} references {ref}, "
+                                    f"which is not in the ZIP")
+
+    # --- the Numerical Solver's own Python, and its one big wheel ------
+    #
+    # eqsheet.py and eqbridge.py are fetched by the Solver page at boot
+    # and scipy is loaded by name out of pyodide-lock.json, so none of
+    # the three is reachable from any <link> or <script src> above.
+    for rel in ("eqsheet.py", "eqbridge.py",
+                f"vendor/{build_local.SCIPY_WHEEL}"):
+        if rel not in staged:
+            problems.append(f"the Numerical Solver needs {rel}, "
+                            f"which is not in the ZIP")
 
     # --- the worked example of the input-file format --------------------
     # The "About input file (.cir) format" panel shows a sample file. It is

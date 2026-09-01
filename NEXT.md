@@ -1,17 +1,2028 @@
 # Next build — accepted but not yet done
 
+**#212 is done and everywhere, 1 Sep 2026**, at solver **0.5.24** and cache **v115** — PyPI, `install.symbulator.com`, the ZIP and `symbulator.pythonanywhere.com` (Roberto's pass the same night; `/healthz` clean, a DC divider, an AC complex solve and a live schematic all verified by fetching). The wheel is byte-identical in four places: PyPI, the install host, the ZIP and the local build. Only the typed prune of the 0.5.23 wheel on the install host is left, and that is his to run. — **the schematics are drawn the way a textbook draws them.** Element names are set as a kind letter with a capitalised subscript — `rin` is Rₓₙ, `r1` is R₁ — inductors are coils of *loops* rather than rows of humps, and a controlled source is a diamond. Roberto's brief, with two textbook PDFs to work from; the grounding is written into the code, not just into this entry.
+
+**The naming.** One `<text>` per label, one `<tspan>` per run, the subscript carrying `class="sub"` and a baseline shift relative to the run before it — which is what lets a caption come back up to full size after `R₁ = `. An underscore is a separator, not a character to print (`r_a` is Rₐ), so the display is many-to-one: `rab`, `rAB` and `r_a_b` all read Rₐᵇ. That was already true of case, and it is confined to the drawing — the answers, the exports and the description keep the name as typed. Written up under LIMITATIONS.
+
+**The inductor.** The old body was `a r r 0 0 1 2r 0` four times: an exact semicircle over a chord of exactly 2r, which is a row of humps — a cursive `m`. A loop needs the arc to be *more* than a semicircle, so the chord has to be shorter than the diameter and the large-arc flag set: `a 7 7 0 1 1 11.5 0`, four times across the same 46px the zigzag spans. `2*IND_R > IND_STEP` is not a nicety but the condition for the arc to exist at all — at a chord of exactly 2r the two arcs coincide and the flag stops meaning anything. There is a test on that inequality.
+
+**The diamond.** *"Dependent sources are usually designated by diamond-shaped symbols"* — Sadiku & Alexander, Fig. 1.13. A source is controlled when its value refers to another quantity in the circuit, and the test is built from the circuit's own names and folded the way `spice._fold` folds them, because `i_r1`, `ir1` and `IR1` are one name to the solver since 0.5.19 — searching for an underscore would have missed two spellings out of three. A consequence worth knowing: `e1,1,0,vs` in a circuit that has a node `s` draws as a diamond, correctly, because that is what it solves as.
+
+**Also:** the resistor's peaks are mitred (the page's global `stroke-linejoin` is round, which turned each peak into a blob), and label placement now comes from each symbol's actual reach rather than one offset for every kind. The old fixed −11px cleared a resistor's 9px zigzag and ran *through* a capacitor's 13px plates; it would have run through the new coil too.
+
+### What it found
+
+**The review harness had never reviewed the working tree.** `review_schematics.py` computed its solver path with one `os.path.dirname` too many — `Symbulator/solver`, a directory that has never existed — so it silently fell back to the installed package. Every "clean run" since it was written was a clean run against whatever `pip` had. Fixed, and it now says so on stderr instead of falling back quietly. This is the schematic drawer's counterpart of the lesson #210 taught about `bridge.py`: **a guard nobody has watched fail is not yet a guard.**
+
+With the path fixed, the harness immediately reported 306 of 330 circuits with findings — from the two new checks, both of which were real:
+
+* **labels touching each other.** A vertical element's name and value were 15px apart, which the subscript's descent closed to nothing.
+* **labels touching symbols.** This one needed the canvas to record where each body actually draws (`_Canvas.ink` — deliberately *narrower* than the `obstacle` a wire must clear, since every value label sits 3px above its own body by design). The first pass recorded the whole segment as ink and produced 485 findings that were all a node name sitting over a *lead*; recording only the body's extent, leads excluded, took it to zero.
+
+Both are fixed, and the check is proved non-vacuous: forcing `GAP` to −14 makes it report the two labels it should.
+
+### Round two: the labels were still touching
+
+Roberto looked at the drawings and said labels were touching symbols. The harness said `with_issues=0`. **He was right and the harness was wrong**, and the gap between those two sentences is the most useful thing in this item.
+
+The check compared label boxes against `_Canvas.ink`, and every `REACH` entry was a **path centreline** figure. A stroke puts another half-width outside its path — and a *mitred* one puts far more: the peak of the zigzag runs past its own vertex by half the stroke over the sine of half the vertex angle, **2.2px** at these proportions. So `REACH["r"] = 9.0` understated the resistor's ink by a quarter, and the mitre that made the peaks sharp (this same item, an hour earlier) is what widened the error. Labels the geometry called 3px clear were **1px clear on screen**.
+
+Geometry could not catch this, so the fix was to stop asking geometry. **`tools/pixel_clearance.py`** renders each drawing with the labels forced to pure red and every stroke to pure blue, then grows the blue mask a ring at a time until it meets the red one. Real font, real glyphs, real stroke widths, no estimate anywhere. It put numbers on it immediately: 1.00px on the divider, the series RLC, the dependent-source circuit and the op-amp stage.
+
+Every `REACH` is an ink figure now — half a stroke wider than its path, the resistor `ZIG_AMP + _ZIG_MITRE` — `GAP` is 4px, and the vertical labels' two magic offsets (17 and 20) are `reach + GAP + 1.5`. Re-measured: the tightest of the samples is 4.00px, which is the 4px it was asked for.
+
+Two things the tool cost, worth writing down because both are easy to repeat:
+
+* **Read a pixel's ink from the channel it removes from white.** Red ink takes the blue channel down; blue ink takes the red channel down. Classifying by "are R and B close?" reads a faint antialiased red — `(255,243,243)`, 12/255 of red and no blue at all — as carrying *both* inks, and the first version duly reported all eight sample drawings as collisions, uniformly 0.00px. A checker that reports everything is as useless as one that reports nothing, and looks more convincing.
+* **Prove it can fail.** Forcing `GAP` to −14 must make it report the two labels it should. Both checks were run that way before either was believed.
+
+The fast harness keeps its estimate-based check — it is a second, not twenty minutes — but `tools/README.md` now says plainly that it estimates, and what it cannot see.
+
+### Round three: the sample was not the population
+
+Round two fixed the four-pixel gap on eight hand-picked circuits and I said so. Running the pixel checker over **all 330** said something else: **21 of them below 3px, the tightest at 1.00px.** The eight I had chosen were not representative, and "I measured it" is not the same claim as "I measured all of it".
+
+The offenders named themselves once the tool was made to report *which* label: `-2j`, `-4j`, `-5j`, `30j`, `1/gx`, `1/g4`, and the node names `ag`, `bg`, `cg` that the three-phase chapters use. Every one of them **hangs below its baseline**. Placement was computing "the label's baseline sits GAP above the symbol's ink" — but a baseline is not an edge. A `j`, a `g` or a `µ` descends past it and eats the whole gap.
+
+So the font's real extents were measured the same way everything else in this item was, by rendering them: **ascent 9.75, descent 3.12** at 13px `ui-sans-serif` — and capitals alone still descend **1.25**, which is Q's tail, so even a name and its capitalised subscript are not flush with their baseline. Those are `LABEL_ASCENT`, `LABEL_DESCENT` and `CAP_DESCENT` now, and every offset in `_draw_element`, the node names and the op-amp's label are expressed as *ink clears ink by GAP* rather than as a baseline distance. `review_schematics.py` and the unit tests read the same three constants, so the fast check no longer has the blind spot that hid this.
+
+Re-measured, the ten worst are 4.00-4.50px, which is the GAP they were asked for.
+
+**Two process notes, both paid for.** The tool crashed while printing its own findings — a value carrying `µ` through a console on a legacy code page — and took thirty-five minutes of results with it; it reconfigures its streams now. And it originally reported only a number per drawing, which is enough to know something is wrong and useless for fixing it: naming the label turned a guess into a five-minute diagnosis.
+
+**Where it stands.** 330 circuits, `failed=0 with_issues=0`, against the working tree this time. 317 solver tests pass, including six new ones for the naming, the loop condition, the diamond, the folding rule, and a unit-level version of the clearance check. **Nothing is deployed**: `schematic.py` is in the solver package, so this needs a PyPI release (0.5.24) before the hosted app sees it, and a rebuilt wheel for the two offline builds. No app-side file changed — `symbulator_ui.py` passes the SVG through untouched.
+
+**#199 is done, 31 Aug 2026**, at solver **0.5.23** and cache **v114**: the solver package speaks in codes too — **thirty-six of them, 2xx–6xx**, one range per module — and with it the batch Roberto ruled on that morning is complete. `CircuitError` carries a code and its arguments; a plain string still works, which is what let the two halves deploy in either order. It found two bugs on the way, both by tooling: `app.py` flattened the code in its own parse step, and **`verify_bridge.py` — one day old — found the mirror image in `bridge.py`**, which is exactly what #210 was built for.
+
+**#207 is done, 31 Aug 2026**, at cache **v113**: the thirteen dictionaries are downloadable files at `/i18n/<lang>.json`, with a `/translate` page explaining what may be edited and what is machinery, and a Languages section in the About card linking out to it. Server-only by design. Corrections go to **translate@symbulator.com** or a GitHub pull request. **No native speaker has reviewed any of the twelve**, and today alone added about 1,200 unreviewed strings — this is the only route to fixing that.
+
+**#210 is done, 31 Aug 2026**, at cache **v112**: the offline path has a harness. `verify_bridge.py` runs every input through **both** front ends and compares them — 340 cases, **0 disagreements**. It exists because the day's shipped bug lived in `bridge.py`, which no check touched, and it found a second drift on its first run: `app.py` takes `variables` as a list or a string, `bridge.py` only a string. It needed one calibration, recorded in the entry — 201 of its first 201 findings were a benign shape, and a harness that cries wolf is one people stop running.
+
+**#200 is done, 31 Aug 2026**, at cache **v110**: `symbulator_ui.py` speaks in codes too — **forty-one of them, 801–877**, across the validators, plotting, Evaluate, the mini-tools, SPICE and the notes, in twelve languages. The trap its own entry predicted was real and one function higher than expected: `_run_in_process` flattened every failure to a string before any route could name its code. Only **#199** — the package, with the release train — is left of the three.
+
+**#198 is done, 31 Aug 2026**, at cache **v109**: **the Numerical Solver's engine speaks in codes** — seventeen of them, 901–924, with the page putting them into words. The status line that was four concatenated pieces (three of them untranslated English) is now one code and one `tv()` call: 已求解（最小二乘：3 个方程，2 个未知量） — 3 次求值. Roberto's design of that morning survived contact unchanged, which is what it was ordered first to find out; **#199** (the package, with the release train) and **#200** (`symbulator_ui.py`) can now follow it. The item's own costing had gone stale inside the day — #208 had put `eqsheet.py` into the offline builds, so 'server-only, no cache bump' was no longer true.
+
+**#209 is done, 31 Aug 2026**, at cache **v108**: **twenty-four reader-facing strings that never reached the dictionary** are in it, twenty-two new keys across twelve languages — the line under every set of answers among them, now *DC 分析 · 12 个结果*. The lasting part is the guard in `tools/i18n.py check`, which finds literals reaching a reader outside `t()`; it caught two more on its first run that three manual sweeps had missed. Its blind spot — strings thrown as exceptions — is written down rather than chased. `time (s)` follows Roberto's ruling: the word translates, the unit symbol does not, in Ukrainian too, which brings it back into line with the `Ω` its own answers print.
+
+**#208 is done, 31 Aug 2026**, at cache **v107**: the **Numerical Solver ships in the offline builds** — its own page, its own Pyodide, SciPy bundled, solving with no network at all. The ZIP is **31,682,389 bytes (30.2 MB)**, up from 17.8 MB, which Roberto agreed to against the measured figure; the app's one published "about 17 MB" string now reads **about 30 MB** in English and in all twelve translations. Along the way: `vendor/`'s provenance was recovered and written down (Pyodide **v314.0.5** — the version scheme changed, which is why every earlier probe 404'd) as `vendor_pyodide.py`, and a **live server bug** was found and fixed — a NaN residual travelled as bare `NaN`, which no JSON parser accepts, and hung the hosted Solver on *solving…* for ever.
+
+**#204 is done, 31 Aug 2026**, at cache **v106**: the dictionaries are files now, fetched only when a language is actually used. The app page dropped from **941,815 to 271,905 bytes** while the ZIP grew 19 KB, and an English reader now makes no i18n request at all. Boot uses a parser-blocking script and a later switch uses an injected one — see the entry for why those cannot be the same mechanism.
+
+**#203 and #206 are done and deployed, 31 Aug 2026**, at cache **v105**: the app speaks **thirteen** languages — **Hindi** and **Bengali** (terms of art transliterated into the reader's own script, per Roberto's ruling), and **Ukrainian**, which he asked for on political rather than reach grounds and which should not be tidied out of the list by speaker count. Ukrainian also exposed a real bug: a ribbon label long enough to wrap was being **clipped away silently**, and the test meant to catch that had been checking the wrong axis since #197. **#205 (Arabic and Urdu) is deferred at Roberto's instruction**; #204 is no longer a prerequisite for anything.
+
+**#202 is done and deployed, 31 Aug 2026**, at cache **v104** — `install.symbulator.com` and the ZIP verified by fetching (the install page hash-matches the local build; ZIP sha256 `69280ce33b2dafd0b8139729398bcb027dc0d277f27e8d399f0ee15da1dac344`, 17,758,663 bytes). **`symbulator.pythonanywhere.com` awaits one pull carrying #201 and #202 together.**  **Indonesian** is the tenth language — the cheapest of the five candidates and the one whose readers most plausibly need it, since Indonesian engineering is taught in Indonesian. #203–#205 open the rest of that plan: Hindi and Bengali, the dictionary split, then the right-to-left pass for Arabic and Urdu.
+
+**#201 is done and deployed, 31 Aug 2026**, at cache **v103**: the
+ribbon's language control shows the chosen language as two letters, a
+dot separates it from the Clear button, the Clear button abbreviates at
+phone widths, and Esperanto is third in the list. See its entry below.
+
+`install.symbulator.com` and `symbulator.com/9/local.zip` are live and
+verified by fetching — the install page hash-matches the local build, the
+ZIP is
+`d1da9ad3e7372c0d2417073f8a6f434d226be078d1e1d6aea44ba44b923c630a`
+(17,743,655 bytes), and the live host was checked in Spanish: face **ES**,
+*Limpiar entradas* / *Limpiar*, the dot present, Esperanto third, build
+stamp `2026-08-31 00:26 UTC`. **`symbulator.pythonanywhere.com` awaits
+Roberto's pull** — `templates/index.html`, `templates/eqsheet.html` and
+`i18n/es.json`, no solver release.
+
+**#197 is done and deployed, 31 Aug 2026**: the app speaks nine
+languages. `install.symbulator.com` and `symbulator.com/9/local.zip` are
+live at cache **v102**, both verified by fetching and hashing — the
+install page matches the local build byte for byte, and the ZIP is
+`de42e5ca3b919f67f1bdf459688b8659caeb398551c6631f8133f3e9571e8e4b`
+(17,743,392 bytes). Checked live in Portuguese and Esperanto, build stamp
+`2026-08-30 15:52 UTC`.
+
+**`symbulator.pythonanywhere.com` is done too** — Roberto's pull, same
+day, carrying #183, #196 and #197. Verified by fetching, not by report:
+`/healthz` gives build `2026-08-30 15:52 UTC` running *and* on disk,
+`needs_reload: false`, solver 0.5.22 (no release was involved). A real
+solve through `/api/solve` returns the expected answers with no notes,
+and in the browser the same circuit solved in English, Spanish and
+Japanese gives byte-identical mathematics with the interface in each.
+`/eqsheet/` checked in Korean: headings, variable-sheet columns and the
+DC/AC pair all translated, ribbon one line, no console errors.
+
+**All five sites are current.**
+
 **#184–#191 deployed 30 Aug 2026** to `learn.symbulator.com`,
 `install.symbulator.com` and the ZIP, at cache **v99**, and verified by
 fetching: the settings box, the *approx (full precision)* label, the Solve
 card's waiting text, the centred SPICE row, the solver's Clear button and
 its blank sheet, the renamed showcase, `sw.js` at v99 and the ZIP matching
-by hash. **`symbulator.pythonanywhere.com` awaits Roberto's pull.**
+by hash.
 
 Version X has the same code: merged with `git fetch v9 && git merge
 v9/main` — clean, no conflicts — pushed to `Symbulator-Team`, and live on
 `symbulatorx.pythonanywhere.com`, verified the same way.
 
 ---
+
+## #217 — an SI prefix is a decimal shift, so it is done in decimal — **done, shipped in 0.5.25**
+
+Roberto, 1 Sep 2026: `js,0,d,397.3'm` translated to SPICE as
+`Is 0 d 0.39730000000000004`, where `js,0,d,.3973` gave `Is 0 d 0.3973`.
+Same current, two spellings, one of them showing the reader a binary
+artefact.
+
+**The noise was born nowhere near the netlist.** `397.3'm` expanded to
+the *expression* `397.3*10**-3`, and multiplying those out in binary
+lands one unit in the last place from the decimal that was typed.
+Nothing downstream can undo that — it is a different double, and `repr`
+is right to print all seventeen digits of it. The exporter's `_exact`
+was doing exactly its job. So the fix is upstream: the prefix is folded
+into the number in **base ten**, with `decimal`, before anything binary
+sees it. Quoted form and bare suffix, every prefix, every element.
+
+**What was deliberately *not* changed.** A whole-numbered mantissa keeps
+the `n*10**e` form, because SymPy reads that as an exact Rational —
+`100'p` is 1/10000000000, not a float, and a circuit of whole-numbered
+values still solves exactly, which is what "Rounding: exact" is for.
+Folding those too would have quietly turned every `4.7'k` circuit's
+exact-mode answers into fractions. Only a mantissa that already has a
+decimal point — a Float either way — is folded.
+
+**The same bug ran the other way, in the two number formatters.**
+`2.2e-9 / 10**-9` is 2.1999999999999997 in binary, so `2.2'n` went out
+as `2.1999999999999997N`. That one only became visible *after* the
+first fix, because the input noise had been masking it. Both formatters
+now take the mantissa out in base ten and verify it by reading the
+decimal back rather than by multiplying floats. `100'p` gained from it
+too: it used to come back as `100.00000000000001P`, and is now `100P`.
+
+**The blast radius was measured, not assumed.** Of the 330 example
+circuits, seven use a decimal mantissa with a prefix — the only ones
+whose stored value can move at all — and all seven print byte-identical
+answers before and after, checked by running each one twice with the
+old expansion monkeypatched back in. The stored double moves toward the
+value the reader typed; nothing the reader sees moves.
+
+Five tests, in `test_suffix.py` (the fold, and the Rational that must
+survive it) and `test_spice.py` (Roberto's case, every prefix through
+the round trip, and the SPICE suffix read back).
+
+---
+
+## #215 — the monograph showcase, restated — **done, in the working tree**
+
+Roberto's own rewrite of the entry, 1 Sep 2026, in
+`Symbulator/repos/server/examples/The_Monograph.cir`, in two passes. The
+circuit is the same circuit; what changed is how it is *written*, and it
+now reads the way #213 draws it — implied multiplication and no
+underscores in the controls: `jd1,a,b,0.2vr7`, `ed2,c,b,0.1ir5`,
+`jd3,n,c,2ir1`, `ed4,0,n,0.7vr6`. The expert equations follow the same
+hand: `pjd1 = -80` and `ped2 = 0`. Rounding moved from 5 digits to **4**,
+and the entry now carries `units: yes` and `show_equations: yes`, so it
+opens with units on and the equation system on screen.
+
+**The second pass renamed the two unknowns after their own elements**:
+`es,e,0,es` and `js,0,d,js`, with `unknowns: es, js` and the conditions
+to match. An element whose value is its own name is not a special case
+to the solver — `es` is an ordinary free symbol, and `v_es` / `i_es` are
+its answers — and it is not one to #214 either: the unknown is still the
+whole of an element's value, so it still inherits that element's unit.
+The note's names moved with it (`Find positive values of Es and Js`);
+the numbers in it did not need to.
+
+Verified in the running app: it solves, the answers are unchanged, and
+the Expert Mode block reads `is = 0.3973 A` / `vs = 17.61 V` (which is
+#214's fix, found on this very entry).
+
+`repos/local/examples/The_Monograph.cir` is now behind the server copy,
+as it should be -- it is generated by `build_local.py`, which runs at
+deploy time. Nothing to do by hand; just do not edit it.
+
+**One thing left for Roberto.** The entry's `note:` still quotes the
+answers to five digits — *"Vs = 17.614 V and Is = 0.39727 A"* — because
+that is what the monograph's §5.2 prints, and the note is tied line by
+line to it. At rounding 4 the app now shows 17.61 and 0.3973. The note
+was left exactly as it was: a documented value is authoritative until he
+says otherwise. Say the word and it becomes 17.61 / 0.3973, or the
+rounding goes back to 5.
+
+---
+
+## #214 — Expert Mode's own answers get their units — **done, in the working tree**
+
+Roberto, 1 Sep 2026: *"in the Results area, the Expert Mode results are
+not given units of measure (e.g. V, A, W) like the rest of the answers
+above do."* He was right, and the reason is worth writing down.
+
+Every other answer in the Results carries a **prefix** the formatter can
+read a unit off: `v_e` is volts, `i_r7` is amps, `p_jd1` is watts. An
+Expert Mode unknown carries nothing — `vs` in `es,e,0,vs` is an ordinary
+free symbol with no underscore, so `key.split("_")[0]` came back empty
+and the whole Expert Mode block was the one part of the Results that
+ignored the "Show units" checkbox.
+
+**The circuit says what they measure, so the circuit is what is read.**
+`_value_units()` walks the elements and maps every free symbol that *is*
+an element's value to that element's unit: a voltage source's value is
+volts whatever the reader called it. That covers every shape in the 330
+examples — `vs`, `is`, `rx`, `r_b`, `ix`, `is1`, and the bare `e`, `r2`,
+`r3` of B11's Example 6.19.
+
+**The unknown has to be the whole of the value, up to things that carry
+no dimension.** `e,1,0,a*u(t)` still makes `a` a voltage — the unit step
+has no dimension — but `j,2,0,gm*vrg` does *not* make `gm` a current:
+that is a transconductance times a voltage, and the second dimensional
+name in the expression is exactly what says so. Guessing from the
+leading letter instead would have got `vs` and `is` right and `gm`,
+`zeta` and `sigma` wrong; guessing from the circuit gets all of them
+right and knows when to say nothing. A symbol that is the value of two
+elements of different kinds also gets nothing — there is no answer that
+is right for both.
+
+`H` and `F` joined `_UNIT_LATEX` on the way past: an unknown standing for
+an inductance or a capacitance can now carry one, and they would have
+come out as italic maths otherwise.
+
+Verified in the running app: the showcase reads **is = 0.3973 A** and
+**vs = 17.61 V** where it read bare numbers before. Front end untouched
+— it renders `plain`/`latex` as they arrive.
+
+---
+
+## #213 — a dependent source shows what it is reading — **built, unreleased**
+
+Roberto's brief, 1 Sep 2026. A schematic that prints `4*ir1` inside a
+diamond and nothing else has told the reader that *some* current
+controls the source and left them to work out from the netlist text
+which r1 and which way round — which is the one thing a schematic
+exists to save them. So the control is now drawn on the element it
+reads, and the value inside the diamond is typeset to match.
+
+**A voltage control marks its drop.** `ed,3,0,2*v_r1` puts a **+** at
+r1's first node and a **−** at its second, just outside the body on the
+leads, where Sadiku and Boylestad both put them. The direction is not a
+choice: `v_r1` is v(n1) − v(n2) (`engine.stamp_all`), so the + is at n1
+every time, whichever way round the layout happened to draw the element.
+
+**A current control marks its direction.** `ed,3,0,4*i_r1` draws an
+arrow beside r1 running first node to second, head at the second, and
+labels it *i* with `R1` as its subscript — a sloped lower-case i, the
+way every book sets a current. Again not a choice: the solver's positive
+`i_r1` flows n1 → n2 through the element (`engine._stamp_r`).
+
+**And the value is typeset the same way.** Whatever the reader typed,
+the drawing sets multiplication as implied rather than starred, a
+voltage or a current as its own lower-case sloped letter, and what it
+names as a capitalised subscript. `2*v_r1`, `2vr1` and `2*VR1` all read
+*v*_R1 in the diamond, exactly as the resistor beside it reads R₁. Two
+things the star rule has to get right: `2*3` keeps its star (`23` is a
+different number), and the *names come out of the string before the
+stars do* — dropping them first fuses `2*x*ir2` into the single word
+`xir2` and the current inside it is never seen again, which is what the
+first cut of this did.
+
+**`pi` became the letter on the way past**, and for the same reason the
+star went: spelled out and run together, `100+24*pi*j` draws as the
+unreadable word `24pij`, where `24πj` reads at a glance. Seven values
+in the example books are affected. The degrees rewrite (`30*pi/180`
+→ `30°`) runs first, so what is left is a real π.
+
+**What is not marked.** A node voltage (`2*v_2`) is a real control and
+makes a real diamond, but there is no element to put a sign on; it is
+typeset in the value and left at that. Nor are the non-two-terminal
+kinds — an op-amp or a two-port block has no single pair of terminals a
+sign could sit at. And precedence follows `engine._alias_map` exactly:
+node voltages are claimed first, so in a circuit with a node called `x`
+the token `vx` is *that node's* voltage and not the drop across an
+element called `x`, and nothing is marked. The drawing has to say what
+the solver will actually solve.
+
+48 of the 330 example circuits carry marks.
+
+### What it found
+
+**`STACK_H` had never been measured.** A lifted source hangs its value
+*below* its circle and the element on the row beneath stacks a value and
+a name *above* its own: 34.75px down against 45.35px up, so the gap
+needed 84 and had 78. The two had been overlapping by 0.4px ever since
+#212 gave every name a subscript — under `review_schematics.py`'s 2px
+tolerance, and so invisible until the *values* gained subscripts too and
+it grew to 2.1 on three circuits. Now 88. The same lesson as #212's
+three rounds, one layer up: the number that had never been computed was
+the one that was wrong.
+
+**The guard was made to go red on purpose** before its green was
+believed — `_reference_marks` called with the symbol's reach forced
+negative puts the new arrows and signs through the bodies, and the
+harness reports 29 circuits with label clearances, naming the new `iR1`
+labels among them. With the marks where they belong: `total=330 failed=0
+with_issues=0`, and the exhaustive check clean too — `pixel_clearance.py
+--all --min 3` over all 330 drawings, **tightest 4.00px, nothing below**.
+4.00 is `GAP` exactly, so nothing is even marginal, and the tightest ten
+are all pre-existing descender cases (`ag`, `1/gx`, `1/g4`) rather than
+anything the marks brought.
+
+### Where it stands
+
+Built, tested (328 solver tests, up from 323) and clean on both
+schematic harnesses, **in the working tree and unreleased**. It ships in
+the next solver release train — PyPI, the bundled wheel, the two offline
+deploys at a new cache version, `requirements.txt`, and the
+PythonAnywhere pass — which is Roberto's go.
+
+---
+
+## #197 — the app speaks nine languages — **done, deployed everywhere, cache v102**
+
+Roberto, 30 Aug 2026, briefed as an overnight run: a language menu, and
+the interface translated into **Spanish, French, German, Portuguese,
+Chinese, Japanese, Korean** and **Esperanto**. Nine with English.
+
+**All nine are done**, both pages, all three builds. What follows is why
+the scheme is the shape it is, and the four things that nearly went
+wrong.
+
+### It had to be a dictionary in the page
+
+There are three builds and only one of them has a server. `install` and
+the ZIP are static files with Pyodide in the tab; a Flask-Babel or
+`gettext` scheme would have translated the hosted app and left the
+downloaded one in English, and per-language templates would have forked
+the one-template property `CLAUDE.md` guards. So: **one client-side
+dictionary, applied in the page**, on the model of the theme switch —
+stored in `localStorage` under `symbulator-lang`, read by the same
+head script that applies Dark Mode before first paint.
+
+Roberto's note offering the server alone was not needed. It cost nothing
+to do all three: the dictionary that works on the server is the same file
+the offline page carries, and *excluding* the offline build would have
+been the extra work.
+
+**English is not in the dictionary.** The page's own markup is the
+English, so `applyLang` snapshots what it finds before writing anything
+and restores the snapshot for English. That halves the payload and, more
+usefully, makes it impossible for the English to drift from what the
+template says.
+
+### What is translated, and what is deliberately not
+
+**474 keys**: 265 units of markup, 169 strings the page's JavaScript
+writes at runtime, and 42 terms the maths engine names (element kinds,
+the quantities in the Results card, the twenty-odd two-port parameter
+descriptions), looked up on the way in through `tSrv()`.
+
+Never translated, and the reasons are not stylistic:
+
+* **The mathematics.** No decimal comma, no localised number formatting
+  — `toLocaleString` stays pinned to `'en-US'` where it appears, with a
+  comment saying why. `v_1 = 8` reads `v_1 = 8` in all nine, and it was
+  measured, not assumed (below).
+* **The syntax.** The Fields column of the elements table
+  (`name,n1,n2,value`), the two SI cells that spell alternatives
+  (`'k or 'K`), and the sample `.cir` file in the format card. Those are
+  what a reader types, and the tutorial spells them this way in every
+  language.
+* **The wordmark and the build stamp.** `notranslate`, both of them. The
+  stamp especially: `build_local.py` rewrites it with `STAMP_RE` and
+  expects exactly one in the file, so a copy inside a dictionary would
+  fail the build — which is the good outcome — or freeze the version a
+  reader is told they have.
+* **The tutorial, the landing page, the PDFs, and the 330 example
+  entries.** Out of scope by the brief — and **confirmed as a standing
+  decision by Roberto on 31 Aug 2026**: *"I'm fine leaving the notes in
+  the input files in English. At least for now."* So the examples' titles
+  and their `note:` lines stay English, in every language, until he says
+  otherwise. They are tied line by line to the printed chapters and were
+  verified entry by entry against them; translating them is not a
+  translation job but a second edition of the tutorial.
+
+### The menu
+
+A native `<select>` in the ribbon, beside the theme toggle — the one
+control a phone renders as a proper picker, and this one has nine
+entries. Its options are the languages' own names for themselves, so it
+is `notranslate`; its accessible name comes from the dictionary instead.
+
+Roberto asked (31 Aug) that the ribbon never wrap, offering abbreviations
+if needed, and that *Clear all inputs* become **Clear inputs** to make
+room. Both done. The abbreviation is **decided by measurement, not by a
+breakpoint**: a breakpoint measured against English wording is wrong in
+eight other languages, so `syncLangMenu()` writes the names, looks at
+whether the row wrapped, and falls back to ISO codes if it did.
+
+Two things that taught: a `<select>` sized `width: auto` is as wide as
+its **widest** option, not the selected one, so all nine option texts
+have to change together for the control to shrink at all. And wrapping is
+not the only way the ribbon runs out of room — `banner.css` caps `<nav>`
+at one line-box and *clips* what wraps inside it, so a wide control next
+door does not push the row onto two lines, it silently takes the Tutorial
+link off the screen. German found that: *Eingaben löschen* is 36px wider
+than *Clear inputs*, enough at 375px to cost the reader the only link out
+of the app. The crowding test now asks the nav whether it had to clip, as
+well as counting rows.
+
+`banner.css` itself is untouched. The menu's styling is app-local, in the
+page's own `<style>`, because only these two pages speak nine languages.
+
+### The machinery
+
+`repos/server/tools/i18n.py`, documented in `tools/README.md`. It finds
+the translation units, tags them, packs the dictionaries into the
+templates between markers, and — the part that matters six months from
+now — **checks**. A translation is written into the page as innerHTML, so
+one that drops an `id`, an `href` or a `%{slot}` breaks the page
+silently; `check` fails on all three, on stale keys, on orphans, on a
+`t(key, …)` whose key is a variable (invisible to the extractor, so it
+would fall back to English in all eight languages with nothing to say
+so), and on a new element kind in `symbulator_ui.py` that no language has
+a word for yet.
+
+`pack` escapes `<`, `>`, `&` and `{` inside every string. That is not
+tidiness: `{#` inside an HTML comment took every server page down on
+30 Aug, and eight languages of prose none of us can proofread as code is
+a lot of new opportunity to do it again.
+
+The keys are a readable slug plus four hex of the English's SHA-1, so
+editing an English string mints a new key and the stale translation shows
+up as an orphan rather than staying on screen.
+
+### Verified
+
+* **A real solve in each of the nine**, twice — a DC ladder and an AC
+  circuit with polar phasors — comparing the rendered mathematics.
+  Byte-identical across all nine, both times.
+* **All 48 entries of Lesson 3 run through the real page** in English,
+  then Korean, then Spanish — each entry three times in a row, comparing
+  the rendered mathematics. Zero mismatches. (The first attempt at this
+  reported thirteen; every one was the harness racing a slow symbolic
+  solve, because it waited for a result row to appear rather than for the
+  Run button to go fresh. A measurement that can be wrong in only one
+  direction is not a measurement.)
+* `tools/verify_lesson.py` clean on Lesson 1, Lesson 3, Lesson 13 and the
+  Showcase — the API path is language-blind by construction, but the
+  templates changed and this is what says the answers did not.
+* **Loading an entry raises no phantom unsaved edit** in Korean. The
+  language is in `localStorage`, never in `inputsSnapshot()` or the
+  `.cir` file: it is a reader's preference like the theme, and #182's
+  warning compares that snapshot.
+* **The ribbon is one line in all nine at 375px and at 1280px**, with the
+  nav unclipped; screenshots in both themes.
+* **The offline build**, served and solved: Spanish applied before first
+  paint, all eight dictionaries present, Pyodide solving with translated
+  labels, and the server-only blocks correctly absent — the host notice
+  and the *Run Symbulator 9 locally* card are gone from the markup, and
+  no dictionary entry paints them back, because a unit spanning a
+  `server-only` marker is never a unit.
+* Flask renders `/`, `/eqsheet/` and `/healthz`; no console errors on
+  either page.
+
+### Found along the way
+
+`PROMPT_i18n_overnight.md`, the brief for this item, had been committed
+into `repos/local`, and `build_zip.py` swept it into the ZIP and from
+there would have put it on `install.symbulator.com`. Its exclusion list
+was by exact name; it now drops **every top-level `.md`** — users get
+`README.txt`, and the next working note will not need remembering. The
+brief itself was deleted from the repo at Roberto's ask once the item
+was done (31 Aug 2026); it survives in this repo's history at `34084c8`
+and the rule in `build_zip.py` outlives it.
+
+Three things worth knowing but not fixed tonight:
+
+* **The maths engine still speaks English.** The solver package's 31
+  `CircuitError` messages, `symbulator_ui.py`'s notes and warnings, and
+  the Numerical Solver's status line all reach the reader in English in
+  every language. Its closed vocabularies are translated (that is what
+  `tSrv` is for); its sentences are not. Written up as **#198**.
+* The `.cir` sample in the input-file card stays English. It is a file
+  listing whose keys (`title:`, `analysis`) are English keywords.
+* The app page is 660 KB now, 213 KB gzipped, against 270/85 before. Each
+  page carries only the keys it asks for — that took the Numerical Solver
+  from 475 KB to 90 KB — but the app really does use nearly all of them.
+
+### Lines a native speaker should check
+
+The Spanish is the one Roberto will read, and one decision in it is worth
+his eye more than the rest:
+
+* **`voltage` is rendered `voltaje`, not `tensión`**, throughout — chosen
+  for a Panamanian student audience over the more formal term. It is one
+  find-and-replace in `i18n/es.json` if he or Antony García prefers
+  `tensión`; the words that would move with it are *voltaje*, *fuente de
+  voltaje*, *caída de voltaje* and *Voltajes de nodo*.
+* **`two-port` is `cuadripolo`** (es), *quadripôle* (fr), *Zweitor* (de),
+  *quadripolo* (pt), *二端口* (zh), *二端子対* (ja), *2포트* (ko),
+  *duopordo* (eo). The Esperanto one is a coinage; the other eight are
+  the settled term.
+* **`Expert Mode`** is *Modo experto* (es) but *Modo avançado* (pt) and
+  *전문가 모드* (ko) — the Portuguese reads better as "advanced" and I
+  took that liberty.
+* The three group headings are spaced capitals —
+  `[ E N T R A D A S ]`, `[ H E R R A M I E N T A S ]` — and the longest
+  of them is the Spanish one. It fits at 375px; it is the first thing to
+  shorten if any wording grows.
+* Esperanto's *tensifonto* / *kurentfonto* are compounds rather than
+  *tensia fonto*; both are used.
+
+---
+
+## #201 — the ribbon's language control, reworked — **done, cache v103**
+
+Roberto, 31 Aug 2026, in four passes over the course of the morning:
+Esperanto third; the chosen language shown as two letters rather than its
+full name; a separator between *Clear inputs* and the language; and then
+the better idea that made the rest fit — abbreviate the Clear button
+itself when the screen narrows.
+
+### The chosen language is two letters; the list keeps the names
+
+A native `<select>` displays the **selected option's own text** when
+closed, so the closed control and the list cannot differ. That is the
+whole constraint. The construction:
+
+* the two-letter face is a `<span>` in normal flow and **defines the
+  width**;
+* the real `<select>` is stretched over it, `opacity: 0`, still taking
+  every click, key and mobile picker.
+
+The obvious version — make the select's own text transparent and leave it
+in flow — looks identical and **saves nothing**: a `<select>` sized
+`width: auto` is as wide as its *widest* option whatever colour its text
+is. Measured on the live ribbon: full name **79px**, transparent text
+**79px**, this construction **35px**. It is a good trap, and the sort
+that ships because the screenshot looks right.
+
+### Why not flags
+
+Mocked up and rejected, in this order of severity. **Windows does not
+render flag emoji at all** — on Roberto's own machine 🇪🇸 comes out as the
+letters ES in a box, so the flag variant silently becomes a worse version
+of the letters for every Windows reader. **Languages are not countries**:
+Spanish would fly Spain's flag at a Panamanian audience, our Portuguese
+is Brazilian, English has two candidates and Chinese three. And
+**Esperanto has no country by design** — its green star is not an emoji.
+
+### The dot
+
+`·`, at every width, between the Clear button and the language. Not a new
+mark: it is already this design's separator, used 38 times in the app —
+the footer's four links, `DC · real` and `AC · phasor` on the Numerical
+Solver's own ribbon. Sky at 55% so it sits under the labels it separates.
+
+### The Clear button abbreviates, and that is what made room
+
+The measurement that decided it. At 375px the usable row is **335px**,
+and with the full language name it was **completely full — zero slack**.
+Two letters gave 44px back, but not evenly: English, Spanish, Esperanto
+and the three CJK languages had 44px, while **French, German and
+Portuguese had none** — *Eingaben löschen* is half again the width of
+*Clear inputs* and ate the entire saving.
+
+So the button regained the `.subbar-lbl` / `.subbar-lbl-short` pair that
+banner.css already switches at 480px (#144), and three of the wide forms
+were shortened as well:
+
+| | wide (>480px) | narrow (≤480px) |
+|---|---|---|
+| en | Clear inputs | Clear |
+| es | Limpiar entradas | Limpiar |
+| eo | Vakigi enigojn | Vakigi |
+| fr | Tout effacer *(was "Effacer les entrées")* | Effacer |
+| de | Alles leeren *(was "Eingaben löschen")* | Leeren |
+| pt | Limpar tudo *(was "Limpar entradas")* | Limpar |
+| zh | 清空输入 | 清空 |
+| ja | 入力を消去 | 消去 |
+| ko | 입력 비우기 | 비우기 |
+
+Two wording notes. German moved from *löschen* to *leeren*: the button
+empties fields, it does not delete data, and *löschen* was the wrong
+promise as well as the wider word. Spanish is **Limpiar**, not *Borrar*,
+at Roberto's instruction — same distinction — and the confirm dialog and
+the tooltip that name the same action moved with it, since a button
+saying *Limpiar* that raises a dialog saying *¿Borrar…?* is two verbs for
+one act.
+
+### It deleted more code than it added
+
+`ribbonRows()`, `ribbonCrowded()`, `setLangOptionText()` and the resize
+listener are gone — about 45 lines, in both templates. All of it existed
+only because the closed control showed the full name and had to be
+measured and shrunk when the ribbon got crowded. With the face always two
+letters there is nothing to measure, and the Clear button abbreviates
+through a rule banner.css already had. The pixels were the ask; the
+simplification was the return.
+
+### Verified
+
+* **One row, and the Tutorial link unclipped, in all nine languages** at
+  375px, 481px, 520px and 1100px. The 481–520 band was the one to watch —
+  full two-word labels at the smallest viewport that shows them — and
+  Spanish's *Limpiar entradas* is the widest thing in it.
+* Answers **byte-identical** across English, Korean and Esperanto,
+  switched through the real menu; `<html lang>` follows; the choice
+  persists in `localStorage`.
+* Esperanto third in the list, native names throughout.
+* Both pages render through Flask; no console errors on either; the
+  offline build regenerates clean with no dead references.
+
+### A correction worth keeping
+
+Roberto read a 375px panel of the mockup as *dropping the Tutorial link
+to hold one line*, and praised the call. It was the opposite: banner.css
+caps `<nav>` at one line-box and **clips** what overflows, so a crowded
+ribbon does not grow — it takes the Tutorial link off the screen without
+a trace. That is the failure this whole item exists to prevent, and the
+static mockups showed it because they carry none of the page's logic. If
+a future reader sees the link missing at a narrow width, that is a bug,
+not a design.
+
+---
+
+## #202 — Indonesian, the tenth language — **done, cache v104**
+
+Roberto, 31 Aug 2026, after asking which languages lead the world by
+total speakers and what each would cost: *"Proceed as you advise."* The
+advice was Indonesian first, and this is it.
+
+**Why it was first, of the five candidates.** It is the cheapest — Latin
+script, left to right, no font question at all, no new machinery — and it
+is the one whose readers most plausibly need it. Indonesian engineering
+*is* taught in Indonesian, with settled vocabulary of its own: *tegangan*,
+*arus*, *daya*, *kapasitor*, *induktor*, *dua-port*. That is not true of
+every large language on the list, and it is the argument that ranked
+Indonesian above three languages with more speakers.
+
+485 keys, ~5,100 English words, one new `i18n/id.json` and one line in
+`LANGS` in each template and in `tools/i18n.py`. No machinery changed:
+this is exactly what #197's scheme was built to make routine, and it was.
+
+### Choices a native speaker should check
+
+* **berkas**, not *file*, for the input file — the formal Indonesian term,
+  as GNOME and other localisations use. If Roberto or a reader prefers
+  *file*, it is a find-and-replace in one file.
+* **Bersihkan masukan** / **Bersihkan** for Clear, following the #201
+  pair. At 123px the wide form is now the **widest of the ten** — Spanish
+  is 105px — so it is the label to watch if the ribbon ever tightens
+  again. Measured at 481px, the narrowest width that shows wide labels:
+  one row, nav unclipped.
+* **Perkakas** for Tools, **Pemecah numerik** for the Numerical Solver,
+  **Mode Pakar** for Expert Mode, **simpul** for node.
+* Headings are `[ M A S U K A N ]`, `[ K E L U A R A N ]`,
+  `[ P E R K A K A S ]`.
+
+### Verified
+
+One row and the Tutorial link unclipped in **all ten** at 375px and
+481px; a real solve in Indonesian returning mathematics byte-identical to
+English; `<html lang="id">`; the face reading **ID**; no console errors;
+`i18n.py check` clean, including the structural comparison of ids, links
+and slots against the English.
+
+Bahasa Indonesia is a long name for a menu, and it costs nothing: since
+#201 the closed control shows two letters, so the list can carry names of
+any length.
+
+---
+
+## #203 — Hindi and Bengali — **done, cache v105**
+
+Roberto, 31 Aug 2026: *"#203 I follow your advise."* The advice was
+option (2) of the three below — translate the chrome and the prose, leave
+the terms of art recognisable — so that question is settled and the item
+is built.
+
+**What (2) turned out to mean in practice.** Not Latin script dropped
+into Devanagari mid-sentence, which reads as broken typesetting rather
+than as a technical term. It means **transliterating the term of art into
+the reader's own script**: रेज़िस्टर, not प्रतिरोधक; ক্যাপাসিটর, not
+ধারক. The reader meets the word they learned in English, and the sentence
+still reads as Hindi or Bengali. The rule applied throughout:
+
+* **components and circuit-theory terms are transliterated** — रेज़िस्टर
+  / রেজিস্টর, कैपेसिटर / ক্যাপাসিটর, इंडक्टर / ইন্ডাক্টর, इम्पीडेंस /
+  ইম্পিড্যান্স, टू-पोर्ट / টু-পোর্ট, ऑप-ऐम्प / অপ-অ্যাম্প;
+* **ordinary physics quantities keep their standard native word**, because
+  every reader met those at school — वोल्टेज, धारा, शक्ति, प्रतिरोध;
+  ভোল্টেজ, কারেন্ট, পাওয়ার, রোধ.
+
+That split is the whole of the judgement, and it is the thing a native
+speaker should check first.
+
+### Digits are Western in both
+
+Bengali was drafted with Bengali-script digits (নোড ১, ৫ অঙ্ক) and then
+converted: **58 of them, all to ASCII.** Hindi never had any. The reason
+is not typographic. `নোড ১` is a label for a node the reader *types* as
+`1`, and the rounding menu's `৫ অঙ্ক` names a digit count the app prints
+in Western figures — a label that disagrees with its own field is worse
+than a label in the wrong script. It also keeps the standing rule intact:
+the mathematics is never localised, and these labels are part of it.
+
+### The failure this found, which was real
+
+**Ukrainian lost the Tutorial link at 481px**, and would have shipped that
+way. `banner.css` caps `<nav>` at one line-box with `overflow: clip`, so a
+crowded ribbon does not grow or scroll — the overflow is simply gone.
+*Локальний застосунок* measures **149px** against English's 62px, which
+pushed *Підручник* onto a second line that was then clipped away.
+
+**And the check that was supposed to catch it did not**, because it tested
+the wrong axis: it asked whether the Tutorial link's right edge had passed
+the nav's right edge. A wrapped element is not to the right, it is
+*below*. The test now compares each child's bottom against
+`nav.clientHeight` and reads `scrollHeight - clientHeight`, which is what
+the failure actually looks like. The old test would have passed a clipped
+ribbon in any of the thirteen languages; it is worth assuming it did not
+catch things in #197 and #201 either, and the widths were re-swept for all
+thirteen on that basis.
+
+The fix was the wording, not the CSS: **Локальна версія** (124px) for the
+wide form, **Застосунок** for the narrow one.
+
+### Verified
+
+Thirteen languages at **375, 481, 520, 768 and 1100px**: one row, nothing
+clipped horizontally or vertically, in every one. The mathematics compared
+as the *glyph sequence MathJax actually draws*, not as text near it —
+identical in English, Hindi, Bengali, Ukrainian and Spanish, on the server
+build and again on the offline build. Both pages render through Flask;
+every inline script re-parses; `i18n.py check` clean, including the
+structural comparison of ids, links and `%{slots}` against the English.
+
+---
+
+## #204 — the dictionaries are files, fetched on demand — **done, cache v106**
+
+Roberto, 31 Aug 2026: *"Let's split the dictionary out of the page (#204)
+and have the app download it the moment the user tries to use a
+non-default language."*
+
+**The page went from 941,815 to 271,905 bytes** — 670 KB out of every
+load, for every reader, in every language. That is more than the ~505 KB
+this item estimated when it was only a payload argument; the estimate
+counted the JSON and not what escaping it into a script had cost.
+
+The ZIP barely moved: 17,814,560 → 17,833,540 bytes, **+19 KB**. The
+dictionaries left the page and became twelve files inside the same
+archive, so the download is the same size and the app is lighter.
+
+### One file per language, whole
+
+Not per-page subsets, which is what the inlined version did. Two reasons:
+the file is then byte-identical to what a translator would be handed
+(#207), and the Numerical Solver's saving — it uses about sixty of the
+keys — is not worth a second set of files to keep in step. The Solver
+fetches ~50 KB it mostly does not need, once, from cache thereafter.
+
+They are **.js, not .json**, because the file is loaded two ways and one
+format has to serve both. JSON would mean shipping every dictionary
+twice.
+
+### Two load paths, and why they are not the same
+
+**Boot** — a parser-blocking `<script>`, written into the head by the
+generated block. This is not a style choice. `applyLang()` runs at boot
+*before the page takes any element reference*, because it replaces
+`innerHTML` and would otherwise leave those references pointing at
+detached nodes. A `fetch` defers it past that line, and the app breaks in
+ways that would not show up in a screenshot.
+
+**A language chosen later** — an injected `<script>`, resolved through a
+promise, exactly as Roberto asked. Safe here precisely because the
+references are long taken by then.
+
+English does neither: it is the page's own markup and is never fetched at
+all, so an English reader's boot now makes **zero** i18n requests and is
+strictly faster than before this item.
+
+### Failure is English, never a hidden page
+
+A dictionary that 404s resolves to an empty one. The page paints, in
+English, and stays usable; `i18n-pending` is lifted either by the apply
+or by the 2s failsafe that has guarded it since #197. Tested by hiding
+`eo.js` and booting into Esperanto: visible immediately, English, app
+working.
+
+That test found a real flaw, now fixed: `<html lang>` went on claiming
+`eo` while the text was English, which would put a screen reader in the
+wrong voice. `applyLang` now sets the attribute to the language it could
+actually apply.
+
+### Where the files live
+
+`i18n/dist/<lang>.js`, generated by `python tools/i18n.py pack` from the
+`.json` sources — never edited by hand. The server serves them at
+`/i18n/<lang>.js` from a route with a year-long immutable cache; the
+offline builds carry them beside the page. The URL is root-absolute on
+the server (the app is at `/`, the Solver at `/eqsheet/`, so a relative
+path would resolve differently on the two) and rewritten to relative by
+`build_local.py`, where there is one page at the root of its folder.
+
+The `?v=` on the URL is a hash of every dictionary, so it changes exactly
+when a translation does. It does nothing offline — the service worker
+matches with `ignoreSearch: true` — where `CACHE_VERSION` governs as it
+does for everything else.
+
+### The service worker had to be taught about them
+
+`sw.js` gained a generated `BEGIN/END i18n` block beside the examples
+one, written by `build_local.py`. A dictionary that ships but is never
+precached is a dictionary that vanishes offline, which would silently
+drop a Ukrainian reader back to English the first time they opened the
+app without a network. `build_local.py --check` now fails on a stale or
+missing one, and `sw_i18n_lines()` refuses to build at all if the `dist`
+folder is empty rather than quietly shipping an English-only app.
+
+### Verified
+
+Server build: English boots with **zero** i18n requests; Hindi boots with
+exactly one and the page is Hindi before first paint; three switches
+fetch two files and returning to the first refetches nothing; `/eqsheet/`
+correctly resolves the root-absolute path; `/i18n/xx.js`, `/i18n/zzz.js`
+and `/i18n/en.js` all 404. Offline build: relative base, all **twelve**
+precached under `symbulator-v106`, a versioned request for a
+never-loaded language served from cache, a runtime switch to Korean
+working from the cache, and a real Pyodide solve byte-identical to
+English. Every inline script re-parses on both pages; `i18n.py check` and
+`build_local.py --check` clean; `build_zip.py`'s cache-list check passes
+with 63 files.
+
+**A note for whoever tests this next.** The first offline run appeared to
+work and did not: the service worker served the *previous* build from
+cache `symbulator-v105`, so the page was Bengali with no i18n request and
+none of the new globals. That combination — translated, but with nothing
+loaded — is the signature. Unregister the worker and delete the caches
+before believing anything the offline build tells you.
+
+### What this leaves for #207
+
+Most of it. The dictionaries are now files a translator can be pointed
+at. What is still missing is `en.json` among the served files, since the
+`js.*` English lives as literal fallbacks in `t()` calls and cannot be
+harvested in the browser.
+
+---
+
+## #205 — Arabic and Urdu, and the first right-to-left pass — **deferred
+at Roberto's instruction, 31 Aug 2026**
+
+Roberto, 31 Aug 2026: *"Let's leave the right to left languages out for
+now."* Not descoped and not rejected — **deferred**, with the measurement
+below kept intact so that whoever picks it up does not have to re-derive
+it. Nothing else waits on this.
+
+Not another dictionary: the first RTL layout the app has ever had. What
+the measurement found:
+
+* **22 physical-direction CSS declarations** to convert to logical ones —
+  16 in `templates/index.html`, 4 in `eqsheet.html`, 2 in `banner.css`.
+  All mechanical (`margin-left` → `margin-inline-start`, `border-left` →
+  `border-inline-start`, `text-align: left` → `start`); the stylesheets
+  are already part-way there.
+* **`dir="rtl"`** in `applyLang`, beside the `lang` it already sets.
+* **Pinning the mathematics to LTR** — the real work. 37 places render
+  answers, the LCD panels, MathJax output and the circuit textarea, and
+  every one must stay left-to-right inside a right-to-left page. So must
+  every `<code>` inside translated prose, or bidi reordering visually
+  scrambles `4.7'k` and flips parentheses.
+* **The digits stay Western.** `٠١٢٣` would break the rule that the
+  mathematics is never localised. Browsers do not substitute by default,
+  but it needs a test rather than an assumption.
+
+**And a coordination cost worth knowing before starting:** `banner.css`
+is the lockup shared by all five sites, so converting its two physical
+rules trips `build_local.py`'s `check_banner()` and `build.py --check`.
+An RTL pass therefore turns a two-site deploy into a five-site one, for a
+change that alters nothing visible on the landing page or on learn.
+
+**Urdu rides with Arabic and never alone**: same script, same direction,
+so it is nearly free afterwards and expensive before. It prefers
+Nastaliq, and where Noto Nastaliq Urdu is absent it falls back to Naskh —
+legible to an Urdu reader, but wrong-looking.
+
+---
+
+---
+
+## #206 — Ukrainian — **done, cache v105**
+
+Roberto, 31 Aug 2026: *"For political reasons, I'd like to add
+Ukrainian."*
+
+**That reason is the entry.** Every language before this one was chosen by
+reach — the ranking of world languages by total speakers that produced
+Indonesian, Hindi and Bengali. Ukrainian is not on that list and is not
+close to it: roughly 40 million speakers, well outside the top ten, and
+its readers overwhelmingly have another language they could use. It is
+here because Roberto wants it here. **A later session tidying the roster
+by speaker count would remove it, and would be wrong to** — this
+paragraph exists so that does not happen.
+
+The cheapest language added so far, and the only one needing no vocabulary
+judgement at all: Ukrainian has a complete native technical vocabulary
+that Ukrainian engineering actually uses, so there was no
+translate-or-transliterate question of the kind #203 had to settle.
+напруга, струм, потужність, опір, конденсатор, котушка індуктивності,
+вузол, коротке замикання, **чотириполюсник** for two-port — the standard
+Slavic four-terminal-network term — and холостий хід / коротке замикання
+for the open- and short-circuit parameter families.
+
+Cyrillic, left to right, no new machinery, no font question.
+
+**It is also the language that found the clipped-ribbon bug**, because it
+is the first one whose *Local App* label was long enough to overflow. See
+#203 for that; the fix was the Ukrainian wording, and the corrected test
+now guards all thirteen.
+
+---
+
+## #207 — the dictionary as a file a translator can take away — **done, cache v113**
+
+Roberto, 31 Aug 2026: *"Could the dictionary be offered as a downloadable
+thing?"* Opened at his instruction as a write-up only; nothing is built.
+
+**Why this is worth doing, stated plainly: no native speaker has reviewed
+any of the twelve.** Claude wrote all of them. #203's terminology split —
+components transliterated, physics quantities in the native word — was
+flagged in that entry as the thing a native speaker should check first,
+and there is currently no way for one to. A dictionary someone can take
+away, correct and send back is the only route to that correction, and it
+is the difference between twelve translations and twelve *reviewed*
+translations.
+
+### As built, 31 Aug 2026
+
+**Version (1), and it needed less than the entry expected**, because
+#204 had already done half of it: the dictionaries were files by then,
+just the packed `.js` form the page loads rather than the JSON a person
+edits.
+
+* **`/i18n/<lang>.json`** serves all thirteen source dictionaries.
+  `en.json` is among them, for the reason this entry gives: half its keys
+  are markup the page could hand back at runtime, but the `js.*` half
+  lives as literal fallbacks inside `t()` calls and cannot be harvested
+  in a browser at all. A translator needs both halves or the template
+  looks broken. Not the same file as `/i18n/<lang>.js`, which is escaped,
+  stamped and machine-shaped.
+* **`/translate`** explains what to do with them.
+* **A Languages section in the About card** links out to it, the same
+  outward-link pattern as Acknowledgements.
+
+**Server-only, deliberately.** A translator has to send a file back,
+which needs a network anyway, so there is nothing for the offline builds
+to carry. 817 KB of source JSON in a 30 MB download whose readers cannot
+finish the job would be paying for it twice, and it would put install and
+local out of step, which this project does not do. Checked after the
+build: no `.json` reached `install_site`.
+
+### The page, and why it is the way it is
+
+**Not translated.** It is addressed to somebody about to translate, who
+reads English by definition — and a version in their own language
+would be a page written by the very machine whose work they came to
+check.
+
+**No dependencies.** No `banner.css`, no i18n runtime, no Pyodide, no
+Jinja beyond being rendered. It is the one page that must keep working
+while everything else is mid-deploy, and a translator arriving from an
+email should not meet a broken layout.
+
+It says four things the checker cannot say for itself:
+
+* **What is machinery, not words** — `%{slot}`, tags, `id=`, `href=`
+  — and that a checker refuses a file that has lost one, so a
+  translator can be aware rather than careful.
+* **What never translates** — the mathematics. Variable names,
+  element letters, the decimal point, unit symbols.
+* **Roberto's rule for a label carrying a unit**, stated as a rule:
+  *translate the word, keep the symbol*. `time (s)` becomes *Zeit (s)*,
+  *时间（s）*, *समय (s)*.
+* **That the terminology calls are open to being overruled.** #203's
+  transliteration split is named on the page as exactly the kind of
+  decision a native speaker should reverse. That is the point of the
+  whole item: it is the difference between twelve translations and
+  twelve *reviewed* ones.
+
+### One decision that was not mine
+
+The first draft put Roberto's personal email on the page as the route
+back. It came out again before anything shipped. This page invites
+strangers, a published address cannot be unpublished, and whose inbox
+takes that traffic is the decision of the person who owns the inbox.
+
+Asked, and answered: **translate@symbulator.com**, a role address on his
+own domain. It lives in `templates/translate.html` and nowhere else.
+GitHub pull requests are offered beside it for anyone who would rather
+work in the open.
+
+### Version (3) is still not built, and its warning still stands
+
+Upload-to-preview — a translator loading their edited file and seeing
+their own words in the live app — remains worth doing and remains
+unbuilt. **If it is ever built it must escape on load.** Dictionaries are
+written into the page as `innerHTML`, and `pack` escapes `<`, `>`, `&`
+and `{` at *build* time; a file loaded from a reader's own disk bypasses
+that entirely, and the wrapper that would have prevented stored XSS is a
+great deal harder to add once the loader exists.
+
+### Three versions, increasing in value
+
+**1. Serve the dictionaries as static files.** `i18n/*.json` stop being
+inlined text and become files the page fetches. Every URL is then a
+download — `install.symbulator.com/i18n/uk.json` — with no interface at
+all. **This is #204 doing double duty:** the payload split and the
+download feature are the same piece of work, which is why these two
+should be done together rather than in sequence.
+
+**2. A *Help translate* button** that builds a translator's working file
+in the browser: one row per key, carrying the English and the current
+translation, so a new language starts from a filled-in template instead
+of a blank file.
+
+**3. Download *and* upload-to-preview.** The translator loads their
+edited file and sees their own words in the live app before sending
+anything back. The app already has the upload pattern, for `.cir` files.
+
+**Recommendation: (1) with #204, (3) eventually, skip (2).** Once the
+files are served and `en.json` is among them, a button that merely links
+to them earns little.
+
+### The English is the one part that is not free
+
+Half of it is already in the page at runtime. `applyLang()` stores every
+translated element's original English `innerHTML` in the `i18nBase` map,
+keyed beside its `data-i18n` — see `templates/index.html`, `applyLang`.
+That is `en.json`'s markup half, available in the browser at no payload
+cost and with no drift risk, which is exactly why English is not shipped
+as a dictionary in the first place.
+
+**The other half is not reachable that way.** The runtime strings — the
+`js.*` keys, a large share of the 485 — live as literal fallback
+arguments inside `t('js.solved', 'Solved!')` calls, not in any map. A
+purely client-side harvest would hand a translator a half-empty template
+and look like a bug.
+
+So **ship the generated `en.json` as one of the static files** in (1).
+`i18n.py scan` already produces it; this costs a build step, not a
+decision.
+
+### One thing to build in at the start, not retrofit
+
+Dictionaries are written into the page as `innerHTML`, and `pack` escapes
+`<`, `>`, `&` and `{` inside every string **at build time**. A dictionary
+loaded from a reader's own file at runtime bypasses that entirely. If (3)
+is ever built, it must escape on load — otherwise a hostile dictionary
+file is stored XSS in the reader's tab, and the wrapper that would have
+prevented it is a great deal harder to add once the loader exists.
+
+### What already gates a contribution
+
+`i18n.py check` validates a returned file structurally: stale keys,
+orphans, a translation that dropped an `id`, an `href` or a `%{slot}`,
+and the `<script>`/`<style>` comparison against the English. So a file
+that comes back can be verified before it is trusted, and the reviewer's
+job is the words, not the markup.
+
+**Not gated by any of that:** whether the words are *right*. That still
+needs a speaker, which is the entire point of the item.
+
+---
+
+## #210 — the offline path gets a harness — **done, cache v112**
+
+Roberto, 31 Aug 2026, after the day's bug: *"Close that gap."*
+
+The gap: `tools/verify_lesson.py` checks that the app's answers still
+match the tutorial's printed ones, and it drives `app.py`. **Nothing
+drove `bridge.py`**, which is the other half of the same job — the
+offline builds call it instead of the Flask routes. On 31 Aug that cost
+a shipped bug: four sites in `bridge.py` rendering `[object Object]`
+where a definition failed, live on `install.symbulator.com` and in the
+ZIP for hours, while every check the project had stayed green. The sweep
+could not see it. It exercises the server.
+
+### `repos/local/verify_bridge.py`
+
+Every input through **both** front ends, compared field by field —
+`app.py` through the Flask test client, `bridge.py` called directly.
+
+    python3 verify_bridge.py                # every example book
+    python3 verify_bridge.py Lesson_03      # one book
+    python3 verify_bridge.py --errors       # the refusal paths only
+
+**No Pyodide, and none needed.** `bridge.py` imports `symbulator_ui` and
+`circuitbook` and nothing else, so it runs under ordinary CPython. That
+is what makes this cheap enough to run often, and it is the code that
+actually ships offline rather than a stand-in for it.
+
+Ten refusal cases lead the run, because that is where the two files are
+most likely to drift: each writes its own guards, and the 31 Aug bug was
+exactly there.
+
+### What "the same" means, and the calibration it needed
+
+`app.py` **lists its response fields by hand**, so it cannot be a byte
+comparison. Three rules:
+
+* every field the **server** returns must match the bridge's;
+* a field the **bridge** has and the server lacks is a **NOTICE** —
+  that is the hand-enumeration trap `CLAUDE.md` warns about, where a key
+  added in `symbulator_ui` reaches the offline build automatically and
+  is dropped by the server until someone names it;
+* a field the server sends as an **empty default** and the bridge omits
+  is also a notice, not a failure.
+
+That third rule was learned on the first full run, where it was **201 of
+201 findings**. `app.py` emits `eqsheet`, `system` and `solutions` on
+every solve, filled with `None` or `[]` when `symbulator_ui` produced
+nothing; the bridge has no such key. The page sees `null` on one build
+and `undefined` on the other, and every read of the three is guarded —
+`(data.solutions || []).length`. Checked, not assumed: the unguarded
+`data.solutions.length` reads are in the **solveq** handler, where
+`solveq_ui` always supplies the field.
+
+A harness that cries about a known-benign shape is a harness people stop
+running, so the reasoning is in the constant beside the rule.
+
+### It found a real one immediately
+
+`app.py` accepts `variables` as a list **or** a comma-separated string.
+`bridge.py` accepted only a string, and `str(["v 2"])` is `"['v 2']"`,
+which split into `["['v", "2']"]` — so the offline build answered
+``Invalid variable name: "['v"`` where the server said
+`Invalid variable name: 'v 2'`.
+
+Not reachable from the page, which sends the Variables field's text. But
+**the drift is the bug**: these two files exist so that the two front
+ends cannot differ, and the next caller to pass a list would have found
+it the hard way. Fixed.
+
+### Result
+
+**340 cases — 330 example entries and 10 refusal paths — 0
+disagreements, 201 notices**, all of them the one benign shape (67 each
+for `eqsheet`, `system`, `solutions`).
+
+### What it still does not cover
+
+The browser around `bridge.py`: the Pyodide boot, the fetch of the `.py`
+files, the service worker, the page's own rendering. That needs a real
+offline load, which is a different check and is still done by hand. The
+docstring says so, so nobody mistakes a green run for more than it is.
+
+---
+
+## #209 — the strings that never reach the dictionary — **done, cache v108**
+
+Roberto asked, 31 Aug 2026, what the app looks like for a reader who
+wants it in Chinese. Answering it properly meant running it, and running
+it turned up a hole: **the line under every set of answers is English in
+all twelve languages.**
+
+    DC analysis · 12 result(s) · 0.06s
+
+`templates/index.html:4435` builds it as a bare template literal. No
+`t()`, so no dictionary, so no translation — and it is arguably the
+most-read line in the app after the answers themselves.
+
+### Why nothing caught it
+
+`tools/i18n.py check` catches an untagged **markup** unit, a key whose
+English no longer hashes to it, an orphan, a translation that dropped an
+`id` or a `%{slot}`, and a `t()` call whose key is a variable. Every one
+of those is about a string that is *already* in the scheme.
+
+A string that never calls `t()` at all is **invisible to it**. There is
+no rule that can see it, because there is nothing to compare. That is
+the actual defect; the nineteen strings below are its symptoms.
+
+### The twenty-four
+
+Found by sweeping every literal reaching a reader — assigned to
+`.textContent`, `.innerHTML`, `.placeholder`, `.title` or `.value`,
+passed to `confirm` / `prompt` / `alert`, or passed to the app's own
+`showNote()` — and subtracting everything inside a `t()` / `tv()` /
+`tSrv()` call.
+
+It took three passes to get here, and the reason is worth recording. The
+first pass wanted two adjacent English words, which walked past
+`'solving…'`. The second wanted three-letter words, which walked past
+`` `${data.key} vs. ${data.xname}` ``. The third missed `showNote()`
+entirely, because it is not a DOM sink — and three of its nineteen call
+sites turned out to be untranslated. **Every widening found more.** That
+is the argument for the guard, not for a fourth pass.
+
+**`templates/index.html` — sixteen**
+
+| line | string | where a reader meets it |
+|---|---|---|
+| 3337 | `'reading ' + file.name + '…'` | opening an input file |
+| 3826 | `` `Updated '${name}' in ${file}.` `` | after Update entry |
+| 3858 | `` `Renamed '${was}' to '${now}'.` `` | after Rename |
+| 3867 | `` `Delete '${name}' from ${file}?` `` | a confirm dialog — the **only** one of eleven that skips `t()` |
+| 4126 | `'Solution #' + (i+1)` | the multi-solution picker's options |
+| 4223 | `'Unknowns: '` | the Equations card |
+| 4397 | `'Copy'` | the copy button on the two-port parameter term (#166) |
+| 4435 | `` `${DOMAIN} analysis · ${n} result(s) · ${s}s` `` | **after every solve** |
+| 4776 | `` `${data.key} vs. ${data.xname}` `` | the sweep chart's title |
+| 4779 | `xLabel: 'time (s)'` | the time plot's x-axis |
+| 4789 | `` `${toolLabel} · ${n} point(s) · ${s}s` `` | after every plot |
+| 4791 | `'Plotted!'` | the Plot button's own status |
+| 4993 | `` `solution ${i} of ${n}` `` | the caption above each solution |
+| 5208, 5229 | `'drawing…'`, `'Drawn.'` | the Schematic button's own status |
+| 5223 | `'Could not draw it.'` | when the drawing fails |
+
+**`templates/eqsheet.html` — eight, of which three are #198's**
+
+| line | string | |
+|---|---|---|
+| 1192 | `` `line ${e.line}: ${e.error}` `` | the `line N:` prefix is #209's; `e.error` is the engine's |
+| 1301 | `'solving…'` | #209 |
+| 1305 | `` ` (least-squares: ${n} equations, ${m} unknowns)` `` | **#198** |
+| 1306 | `' (restricted)'` | **#198** |
+| 1307 | `` ` — ${d.nfev} evaluations` `` | **#198** |
+| 1450 | `'system file: '` | #209 |
+| 1503, 1504 | `'import: '`, `'import link: '` | #209 |
+
+So **twenty-one for #209**, three already spoken for.
+
+**The shape of the mistake is visible in the button statuses.** #125
+gave Solve, Plot and Schematic each its own status. #197 translated
+**all three of Solve's** and none of the other two's, because it was
+working from the markup and these live in script. Same feature, same
+day, three buttons, one done.
+
+Roberto asked on 31 Aug whether *Solving* and *Solved* would be
+translated. Most of that family already is — measured, not assumed:
+
+| | at rest | while busy | when done | on failure |
+|---|---|---|---|---|
+| **Solve** (app) | ✅ `run-symbulator.e67f` 运行 Symbulator | ✅ `js.busy.solving` 正在求解… | ✅ `js.solved` 已求解！ | ✅ `js.res.noVars` etc. |
+| **Plot** (app) | ✅ `run.b1b3` (markup) | — no busy label | ❌ `'Plotted!'` | ✅ via `t()` |
+| **Schematic** (app) | ✅ `draw-the-circuit-above.4fac` | ❌ `'drawing…'` | ❌ `'Drawn.'` | ❌ `'Could not draw it.'` |
+| **Solver** (eqsheet) | — | ❌ `'solving…'` | **#198** — `d.message` is the engine's | **#198** |
+
+So: the app's *Solving…* and *Solved!* have been translated since #197
+and were on screen in Chinese during the 31 Aug walkthrough (已求解！).
+What #209 adds is their four missing counterparts on the Plot and
+Schematic buttons, plus the Solver's `solving…`. The Solver's *solved*
+and *did not converge* stay English until **#198**, because they are the
+engine's words, not the page's.
+
+### Two questions asked, both already answered in the tree
+
+Both were raised for Roberto on 31 Aug and both were withdrawn the same
+day, because the answers were already written down. Recorded because a
+question that looks open and is not costs somebody a reply.
+
+**`time (s)` — Roberto's ruling, 31 Aug 2026:**
+
+> That should be translated. Use the corresponding word for "time" in the
+> target language and the unit of measure (s) which stands for second.
+
+So: the **word** translates, the **symbol** does not. Which is what
+eleven of the twelve dictionaries already do — see the Ukrainian note
+below for the twelfth.
+
+It was never really a judgement call to begin with. It sits in a
+four-branch `if/else` where every sibling is already decided, twelve
+lines of code:
+
+```js
+xLabel: t('js.plot.freqAxis', 'frequency (Hz, log scale)'),   // Bode x
+yLabel: 'dB',                                                 // bare unit
+yLabel: t('js.plot.degrees', 'degrees'),                      // Bode phase y
+xLabel: data.xname,  yLabel: data.key,                        // sweep: names
+xLabel: 'time (s)',                                           // <- the miss
+```
+
+The rule is already applied and already shipped: a **unit symbol alone**
+stays (`dB`), and a **label containing one** goes to the translator
+whole, who decides per language. They have — Chinese kept the Latin
+symbol and used full-width brackets, 频率（Hz，对数刻度）; Ukrainian
+localised it, Частота (Гц, логарифмічна шкала).
+
+And the same phrase is *already translated on the same card*: the End
+time field above the plot is `end-time-s.801d`, zh 终止时间（s）, de
+Endzeit (s). The form says it in Chinese and the axis below says it in
+English.
+
+#### The Ukrainian consequence, which needs Roberto's nod
+
+Measured across all twelve dictionaries, on the three shipped strings
+that carry a unit symbol (`end-time-s.801d`, `js.plot.endFreq`,
+`js.plot.freqAxis`):
+
+**Eleven of twelve keep the Latin symbol** — `(s)`, `(Hz)` — including
+Hindi and Bengali, which set every word in their own script and still
+write `s` and `Hz`. That is Roberto's rule, already in force, without
+anyone having stated it before now.
+
+**Ukrainian is the exception**, and consistently so: `Кінцевий час (с)`
+with a Cyrillic *es*, `Кінцева частота (Гц)`, `Частота (Гц,
+логарифмічна шкала)`. That is ordinary Ukrainian practice and not a
+mistake — but it is not the rule just given.
+
+**And the app cannot follow Ukrainian all the way.** The unit symbols in
+the *answers* are not in the dictionary and cannot be: they come from
+`symbulator_ui._UNIT_SUFFIXES` — `VA, ohm, Ω, Hz, V, A, W, S, F, H` —
+under the rule that the mathematics is never translated. Measured live
+on 31 Aug: a Ukrainian reader solving a divider gets `Vin = 12 V`,
+`R1 = 2 kΩ`, `r_e1 = 3000 Ω`. So Ukrainian already shows Latin unit
+symbols on every screen that has an answer on it, and the Cyrillic
+`(Гц)` in the chrome contradicts the `Ω` two inches above it. That is
+not a style preference; it is the one language where the app disagrees
+with itself today.
+
+There are only two coherent endings, because the worst outcome is
+Ukrainian disagreeing **with itself** — the form reading `час (с)` and
+the axis beneath it `час (s)`:
+
+* **(a) Apply the ruling everywhere.** The new string is `час (s)`, and
+  the three shipped Ukrainian strings change from `(с)`/`(Гц)` to
+  `(s)`/`(Hz)`. Consistent with the other eleven and with the ruling.
+  Three values, one line each. **Recommended — and chosen by Roberto,
+  31 Aug 2026.**
+* **(b) Let Ukrainian keep its own convention.** The new string is
+  `час (с)`, nothing shipped changes, and Ukrainian is deliberately
+  the one language that localises unit symbols — written down here so a
+  later tidy-up does not "fix" it, exactly as #206 had to be protected
+  from a tidy-up by speaker count.
+
+Either is defensible; **(a)** is what the ruling says and what the
+other eleven do. It meant editing translations that are already live,
+which is why it was put to Roberto rather than assumed. He chose (a).
+
+**The Solver's status line is #198's, and #198 already says so.** Its
+entry carries a section headed *Known, and resolved by #198* naming
+these exact fragments, and the reasoning: translating them alone leaves
+a half-English line, because `d.message` is English from the engine
+regardless. Once the message is a code the whole line renders in one
+`tv()` call. So #209 does not touch 1305–1307, and the ordering already
+in the file stands.
+
+### The part that outlives the twenty-four
+
+A scanner, in `tools/i18n.py check`: every literal reaching a reader-
+facing sink, minus everything inside a `t()`-family call, minus an
+explicit allowlist of the deliberate exceptions (mode values compared
+against, CSS, selectors, filenames, the mathematics). It is about forty
+lines and it is the only thing here that stops the class coming back —
+the twenty-one are a day's work, the guard is why there is not a
+twenty-fifth next month.
+
+Seed the allowlist from the triage, and keep it **explicit**: an
+exception that has to be written down is an exception somebody has
+looked at.
+
+### What it came to
+
+**Twenty-four strings wrapped, twenty-two new keys, twelve languages.**
+Two of the twenty-four reuse a key the app already had: `js.copy`, and
+`js.busy.solvingLower` — the Solver page had been showing `solving…` in
+English beside an app that had translated that exact word twelve times.
+`en.json` went 485 → 507.
+
+Two of them were found **by the guard, on its first run**, after the
+three manual sweeps had finished: `$('evalConds').placeholder` and
+`$('solveqEqs').placeholder`, both sitting directly under
+`$('evalExpr').placeholder = t('js.eval.hint', …)`. Same function, same
+six lines, one wrapped and two not — the button-status mistake again, in
+a second place, and neither eye nor regex had caught it.
+
+One more was found by **reading the page in Chinese** after the guard
+was green: `throw new Error('missing "equations" list')`, which the
+reader meets two functions away as the tail of an already-translated
+prefix — 方程组文件：missing "equations" list. See the blind spot below.
+
+**A collision worth recording.** `js.draw.fail` already existed, with
+*"Could not draw that circuit."*, on the error panel. The status line
+beside the button wanted *"Could not draw it."* — a second English under
+one key, which is precisely what `check` catches and what it caught. The
+short one became `js.draw.failShort`. Two messages that differ only in
+length still differ.
+
+### The guard, and what it cannot see
+
+`untranslated()` in `tools/i18n.py`, wired into `check`. Every literal
+reaching a reader — `.textContent`, `.innerHTML`, `.placeholder`,
+`.title`, `.alt`, `.value`, `confirm`, `alert`, `prompt`, and the app's
+own `showNote()` — minus everything inside a `t()`/`tv()`/`tSrv()` call,
+minus an explicit `NOT_FOR_READERS` allowlist.
+
+The allowlist is **short and reasoned on purpose**: state values compared
+against, the mathematics, markup fragments, and the three Solver status
+fragments that belong to **#198**, which carry a comment saying to delete
+them when #198 lands.
+
+**Its blind spot, stated so nobody assumes otherwise: it watches sinks,
+not values that travel to a sink.** A string thrown as an exception and
+displayed by a `catch` three functions away is invisible to it — which is
+how `missing "equations" list` survived a green run. Widening it to
+follow `throw new Error(...)` was considered and not done: nearly
+everything arriving that way is the browser's own English (`atob`,
+`JSON.parse`), which is not ours to translate, and a guard that cries
+about strings nobody can fix is a guard people switch off.
+
+### Verified in Chinese, offline, on the shipped build
+
+* the line that started it: **DC 分析 · 12 个结果 · 0.09 s**
+* the time plot: x-axis **时间（s）** — Roberto's ruling exactly, the word
+  translated and the unit symbol kept — with **时域图 · 300 个点 · 1.54 s**
+  under it and **已绘图！** beside the button
+* the Schematic button: **已绘制。**
+* the Solver: **正在求解…**, **第 1 行：…**, and a dropped bad file giving
+  **方程组文件：缺少 "equations" 列表**
+* the two placeholders: **例如 t = to**, **例如 p_r2 = 0.05**
+* mathematics unmoved throughout — `v_2`, `12 V`, `2 kΩ`
+* zero off-origin requests
+
+The one line still half-English is the Solver's `solved — 13
+evaluations`, which is #198's by design and by its own entry.
+
+### Ukrainian
+
+Ruling (a) applied: `Кінцевий час (s)`, `Кінцева частота (Hz)`,
+`Частота (Hz, логарифмічна шкала)`, and the new `час (s)`. Ukrainian no
+longer contradicts the `Ω` and `V` that the answers print beside it.
+
+---
+
+## #208 — the Numerical Solver in the offline builds — **done, cache v107**
+
+Roberto, 31 Aug 2026: *"EqSheet is supposed to be also in the local
+versions. Can you fix that? The Numerical Solver (EqSheet) should be
+available in the locals, with the packages needed for it to run."*
+
+It is. `eqsheet.html` now ships beside `index.html` in both offline
+builds, boots its own Pyodide with SciPy on board, and solves with no
+network at all — verified with the static server stopped.
+
+### The number, and where the distribution actually came from
+
+**scipy's Pyodide wheel is 14,029,768 bytes (13.4 MiB)**, and the ZIP
+went from 17,833,540 to **31,682,389 bytes (30.2 MiB)**. Roberto was
+given the figure before anything was bundled and chose to bundle it:
+*"with the packages needed for it to run"* was never going to be served
+by a lazy CDN fetch, which would break the no-internet promise for the
+one feature that most needs it.
+
+The entry that stood here said the wheel could not be found, that every
+probe of `cdn.jsdelivr.net/pyodide/v0.28…v0.31/full/` returned 404, and
+that the provenance of `vendor/` was unrecorded and unrecoverable.
+
+**It was recoverable, and the answer was inside `vendor/` the whole
+time.** `pyodide.js` carries its own version string, `var ee="314.0.5"`:
+Pyodide now tracks the CPython it ships (3.14) instead of counting up
+from 0.x, so the version scheme had changed underneath, not the URL.
+`https://cdn.jsdelivr.net/pyodide/v314.0.5/full/` serves every filename
+in `vendor/pyodide-lock.json`, and the scipy wheel fetched from it
+hash-matches the lockfile exactly. So do the sympy, mpmath and numpy
+wheels already on disk — checked, so the whole folder's provenance is
+now established rather than assumed.
+
+**`vendor_pyodide.py` is the answer written down where it can be
+re-run.** It fetches what is missing and hash-checks everything against
+the lockfile; `--check` verifies without downloading. #208 was the
+second time somebody needed this and the first time anyone recorded it.
+It is a dev script and is excluded from the ZIP.
+
+### What the port is
+
+* **`eqsheet.py` no longer imports Flask.** It was a Blueprint; the two
+  entry points are now `api_parse(data)` and `api_solve(data)`, plain
+  dict in, plain dict out. `eqsheet_web.py` is the Blueprint the server
+  mounts (three routes, no opinions), and `app.py` imports from there.
+  The module joined `SHARED` in `build_local.py`, so it is copied into
+  the offline build verbatim, exactly like `symbulator_ui.py`.
+* **`eqbridge.py`** is the offline glue, deliberately separate from
+  `bridge.py`: that one imports `symbulator_ui` at module level and
+  pulls the whole solver in with it. Apart, the Solver page never
+  fetches the symbulator wheel and the app page never fetches SciPy,
+  and the shared service-worker cache means a reader who opens both
+  downloads each file once.
+* **`build_local.py` generates `eqsheet.html`** the way it generates
+  `index.html`. It is a much smaller job: everything the Solver asks the
+  server is `post('api/parse')` and `post('api/solve')`, so replacing
+  the body of `post()` ports the entire page and every call site is left
+  as the server's. The page sits at the **root** as `eqsheet.html`, not
+  in an `eqsheet/` folder, so #204's `i18n/` base rewrite is the same
+  string for both pages.
+* **The Google Fonts pair is stripped** from the offline page. A
+  downloaded copy has no network to fetch IBM Plex from, and a
+  stylesheet link that cannot resolve is a render-blocking wait for a
+  timeout before the fallback stack takes over — which is where the page
+  lands either way. Measured after the port: the offline Solver makes
+  **zero off-origin requests**.
+* **The handover is re-pointed.** `EQSHEET_URL` is
+  `'eqsheet.html'` in the offline build. The `?import=` payload, the
+  6 KB URL ceiling and the `numerical_system.json` drop-file fallback
+  all work unchanged — all three were exercised offline.
+* **`sw.js` is at v107** and caches `eqsheet.html`, `eqsheet.py`,
+  `eqbridge.py` and the scipy wheel. `build_zip.py` now checks both
+  pages' heads (`src` as well as `href`) and checks those three by name,
+  since none of them is reachable from any tag.
+
+### It found a bug, and the bug was the server's
+
+A NaN residual travelled as a bare `NaN`, which `json.dumps` writes
+happily and **no JSON parser accepts**. Give the Solver every variable
+Unknown at a guess of zero — which is exactly what a fresh sheet starts
+with — and a divider equation evaluates 0/0 at the start point. The
+reply could not be read at all: the page sat on *solving…* for ever,
+with a `SyntaxError` in the console and nothing on screen.
+
+**This was live on `symbulator.pythonanywhere.com`, and had been since
+the Solver shipped.** The port only made it impossible to miss, because
+the offline page fails in the same tab you are looking at.
+`eqsheet.py` now sends `null` for any non-finite residual or answer (a
+phasor all-or-nothing, since "3 + j —" is not a partial answer), and the
+page draws an em dash. A failed solve is a normal thing to say; saying
+it in unparseable JSON is not.
+
+### Verified, not assumed
+
+* **24 payloads through both engines, 0 differing** — exact, bounded,
+  range-bounded, least-squares, AC complex, AC real-only, a Python
+  keyword as a variable name, the unit step, the non-converging case and
+  both error paths. Recorded from the live Flask routes, then replayed
+  through `eqbridge` in the tab and compared field by field.
+* **With the server stopped**: boot, parse, solve, `Vout = 4 V`.
+* **The handover**, offline: a 2k/1k divider solved in the app, its
+  system carried across in the link, `v1` flipped to Known and set to
+  24 V, and the sheet followed to `v2 = 8 V`, 8 mA.
+* **The drop-file fallback**, offline.
+* **Ukrainian**, offline, from the cache: the whole page translated, the
+  boot bar with it (`syncBootBar()` is hooked into the language-change
+  handler), and the mathematics byte-identical to English.
+* Both server pages re-rendered through Jinja after every template
+  change, and `tools/i18n.py check: ok`.
+
+### The published size string — one, not three
+
+The brief said three strings say "about 17 MB". Measured: **one**, and
+it is narrower than that even sounds. It is in the app's *Installing
+from a file* card, which sits inside a **`server-only` block** — so it
+is on `symbulator.pythonanywhere.com` and on **neither offline build**,
+which strip it. That is right, and it is the point of the card: it
+tells a reader of the hosted app how big the download would be, and
+someone already running the download does not need telling. The
+landing page and `README.txt` state no size at all.
+
+It now reads **about 30 MB** — the same MiB convention the old number
+used, and what a browser's download dialog will show. Verified live on
+the server after the pull; the two offline builds correctly do not
+carry the sentence.
+
+Changing that English mints a new content-hash key, so the twelve
+translations were **migrated in place** rather than orphaned:
+`works-on-windows-macos.f74e` → `.b9b9`, with `17` → `30` inside each
+value. Every language writes the number in Western digits (Bengali's
+were converted in #203), so nothing else moved. One line changed per
+dictionary.
+
+---
+
+## #198–#200 — the engine speaks in codes, the interface in words
+## — **all three done: #198 (v109), #200 (v110), #199 (v114)**
+
+Roberto's ruling, 31 Aug 2026, replacing the proposal that stood here
+overnight. I had recommended translating `symbulator_ui.py` and
+`eqsheet.py` and leaving the solver package alone. He asked for the
+opposite and for something better:
+
+> Let's standardise the error format. Let's modify the package this one
+> time, so that all messages, warnings, errors, etc, are returned in a
+> structured manner, with a message code and arguments. When I think
+> about the package, I do not worry about readability by humans. I do not
+> expect any human to use the package directly. The package is meant to
+> be under the hood. So, create a running list of all the messages shared
+> by the package, give each a number and a format for it to pass the
+> arguments (variables, numbers) needed to communicate this message to
+> the human, and let the interface do the work of putting the message
+> into words.
+
+He is right, and for a reason beyond translation: it gives the package,
+`symbulator_ui.py` and `eqsheet.py` **one** mechanism where they have
+three, and the app **one** renderer where it would have had three.
+
+**And the pattern is already in the tree.** `eqsheet.py` does exactly
+this for its success line: Python returns `mode`, `n_eq`, `n_un` and
+`nfev` as fields, and `templates/eqsheet.html` composes "solved
+(least-squares: 1 equations, 4 unknowns) — 29 evaluations" from them.
+Only its *failures* come back as prose. This is finishing a job somebody
+already started at the one place they needed it.
+
+### The measured inventory
+
+| emitter | messages | carry a value | ships how |
+|---|---|---|---|
+| solver package `CircuitError` | 27 distinct, 33 raise sites (elements 19, engine 8, equiv 2, laplace 2, spice 2) | 22 | PyPI release |
+| solver package SPICE warnings | 17 sites — `spice()` returns `(netlist, warnings)` | most | same release |
+| `symbulator_ui.py` notes and errors | ~40 (35 `_err`, 4 note sites) | most | copied file, no release |
+| `eqsheet.py` | 12, plus the composed status line | 4 | server only |
+
+About 85 messages end to end. The SPICE warnings are the surface the
+first write-up missed, and they are the clearest case for the change:
+they are already prose assembled in the engine purely for the interface
+to display.
+
+**A risk that turned out not to exist:** no tutorial chapter quotes a
+solver message. Checked across `Sym Docum/Documentation/src`. So the
+English wording is not pinned by the printed answers and may be reworded
+as well as restructured — unlike every answer in the app.
+
+### The shape
+
+```python
+# symbulator/messages.py -- the one place the package's words live.
+E_TWOPORT_LIST_LEN = 214
+
+CATALOGUE = {
+    214: ("error",
+          "The parameter list of two-port '{name}' has {n} entries. "
+          "Exactly four are expected: [p11,p12,p21,p22]."),
+}
+```
+
+```python
+raise CircuitError(E_TWOPORT_LIST_LEN, name=el.name, n=len(items))
+```
+
+A named constant at the raise site so the code still reads; the **number**
+on the wire. `exc.code`, `exc.args_map` and `str(exc)` all available.
+Warnings become `{"code": …, "args": {…}}` in the list `spice()` already
+returns.
+
+**Severity is a field, not a number range**, so a warning and an error
+about the same thing need one code, not two.
+
+**Ranges by origin**, matching how the modules already divide:
+1xx parsing · 2xx elements · 3xx engine · 4xx Laplace and transient ·
+5xx equivalents and two-ports · 6xx SPICE · 8xx `symbulator_ui.py` ·
+9xx `eqsheet.py`. One renderer in the page serves all of them.
+
+**A code is permanent once published.** Never reused, never renumbered;
+retired codes stay retired. The same rule as the item numbers in this
+file, for the same reason: a reader quoting "E214" in a bug report should
+mean one thing forever.
+
+### The English stays in the package
+
+Roberto's premise — nobody should need to read the package — stands, and
+this does not contradict it. `str(exc)` keeps rendering the English from
+the catalogue for three reasons that have nothing to do with reading the
+package for pleasure:
+
+1. **It is the generation source.** `tools/i18n.py` generates `en.json`
+   from the English in the app rather than letting anyone hand-keep a
+   second copy, and `check` fails when the two drift. A catalogue in the
+   package generates the same way and gets the same guard. English living
+   only in `en.json`, against a numbered list in another repo, is exactly
+   the drift the scheme exists to prevent.
+2. **15 of the solver's tests assert on message wording** (of 36
+   `pytest.raises`, out of 272). They pass untouched. Migrating them to
+   assert on `.code` is better testing and worth doing later; it should
+   not gate the release.
+3. The `.txt` export, `review_schematics.py`, `verify_lesson.py` and a
+   traceback in a bug report all need something to write — and the About
+   card invites "circuits that break it".
+
+Cost of keeping it: one dict in the package.
+
+### Three items, in this order
+
+Ordered by cost, cheapest first, so the design is proved on the surface
+that cannot break anything before it reaches the one that can.
+
+**#198 — `eqsheet.py` speaks in codes (9xx). Done, 31 Aug 2026, cache
+v109.** See the section below for what it came to.
+
+> **This paragraph's costing went stale within the day, and the way it
+> went stale is the point.** It said: server-only, no wheel, no
+> `vendor/` copy, no three pins, no cache bump, no offline build to
+> think about. That was true when it was written at 09:25. At 14:08
+> **#208 put `eqsheet.py` and `eqsheet.html` into both offline builds**,
+> so #198 needed a cache bump and both offline deploys after all. Still
+> no wheel and no PyPI release. A cost written down beside an item is
+> only true until another item moves under it.
+
+The original estimate follows. Twelve messages and the status line, twelve
+languages (the entry said eight when it was written, before #202, #203
+and #206 — the count moved under it). This is the end-to-end proof of the whole scheme for the price
+of an afternoon, and if the design is wrong we find out here.
+
+**#199 — the solver package speaks in codes (2xx–6xx). Done,
+31 Aug 2026, solver 0.5.23, cache v114.** See the section below. The
+original plan follows.
+
+The release
+train: PyPI publish → the same wheel into `repos/local/vendor/` → three
+pins (`build_local.py`'s `WHEEL`, `sw.js`'s cache list,
+`requirements.txt`) → cache bump → both offline deploys → the PyAn pull
+with `pip install --upgrade`. The interface reads `.code` and falls back
+to `str(exc)`, so nothing breaks in the window between the publish and
+the pull.
+
+**#200 — `symbulator_ui.py` joins (8xx). Done, 31 Aug 2026, cache
+v110.** See the section below. The trap this paragraph predicted was
+real and was worse than predicted: see *The field nobody would have
+named*.
+
+**Each item carries its own twelve translations**, so none of them can
+land half-done and the app is never in a state where a code renders as a
+bare number.
+
+### Known, and resolved by #198
+
+The Numerical Solver's status line is assembled in the page from
+`d.message` plus English fragments — `(least-squares: N equations, M
+unknowns)`, `— N evaluations`. Those fragments are untranslated English
+that #197 shipped: the leftovers sweep missed them because the prose is
+split across `${}` boundaries, which its two-adjacent-words filter cannot
+see. Translating the fragments alone would give a half-English line,
+since `d.message` is English from the server regardless. Once the message
+is a code, the whole line renders in one `tv()` call and the gap closes
+by construction.
+
+### #198, as built
+
+**Seventeen codes, 901–924.** `eqsheet.py` carries a `CATALOGUE` mapping
+each to `(severity, English template)`, named constants at the call
+sites (`M_UNCLASSIFIED`, `M_SOLVED_LSQ`), and `msg(code, **args)`
+returning `{code, args, severity, text}`. The wire keeps **both**: `msg`
+for the page and `message` — the rendered English — for a traceback, a
+bug report, or a page older than the server.
+
+**The status line is one code now, not four pieces.** It was
+`d.message` + `(least-squares: …)` + `(restricted)` + `— N evaluations`,
+three of which #209 found untranslated and deliberately left here.
+`_status()` picks one of five codes and the page renders it in one
+`tv()` call:
+
+| | Chinese, measured |
+|---|---|
+| 920 | 已求解 — 13 次求值 |
+| 921 | 已求解（最小二乘：3 个方程，2 个未知量） — 3 次求值 |
+| 922 | 已求解（受限） — 6 次求值 |
+| 923 | 未收敛 — 请换一组初值（21 次求值） |
+| 924 | *no solution under the restrictions*, same shape |
+
+**The page's table is verbose on purpose.** `EQ_MESSAGES` is seventeen
+literal `t()`/`tv()` calls keyed by code, not a lookup built from the
+number, because `tools/i18n.py` harvests the English from the call
+itself and `check` refuses a variable key. A computed key would have
+been shorter and invisible to every guard in the file.
+
+**The deploy window is covered.** `eqMsg()` falls back to the message's
+own `text` when it meets a code it does not know — which is what a
+server ahead of its page sends. Tested: an unknown code renders the
+server's English, a payload with no code at all renders its prose, and
+`null` renders nothing rather than throwing.
+
+**SymPy's words stay English, as an argument.** Code 912 is *could not
+read that equation: %{error}*, and `%{error}` is the parser's own
+sentence. The frame translates and the library's text does not, which is
+honest: those words are not ours. Same for 907 and 910.
+
+**#209's three exceptions are deleted.** They were allowlisted in
+`NOT_FOR_READERS` with a comment saying to remove them when #198 landed.
+It landed; they are gone; the guard now watches that line again.
+
+Verified in Chinese on the offline build: the five status shapes above,
+every refusal code with its arguments substituted (未归类的变量：c,
+x 的范围为空 — “从”必须小于“到”), and the per-line parse errors, which
+used to be raw engine English and now read 第 1 行：每个方程需要且只需要
+一个 '='.
+
+**What it proves for #199 and #200.** The shape survived contact: named
+constant at the raise site, number on the wire, severity as a field,
+English kept in the catalogue as the generation source, arguments by
+name. Nothing about it wanted changing. #199 can take the same pattern
+into the package with the release train, and #200 into
+`symbulator_ui.py`.
+
+### #200, as built
+
+**Fifty-five codes, 801–877**, across six surfaces: the description
+and analysis validators (801–810), added equations, conditions,
+unknowns and definitions (811–816), plotting (820–824),
+Evaluate and conditions (830–833), the schematic drawer
+(840–841), the mini-tools (850–854), SPICE (860) and the
+**notes** (870–877). Same `CATALOGUE` / `msg(code, **args)` shape
+as #198's, deliberately, so the page has one renderer for both engines
+rather than two.
+
+**Severity earned its keep here.** #198 had errors and one success line;
+this range has eight **notes** sitting in the same catalogue as
+thirty-three errors, told apart by a field. Two number ranges would have
+meant two of everything.
+
+### The seam that makes a half-done state safe
+
+`_err()` takes a coded message **or** a bare string, and `error` is the
+English either way:
+
+```python
+if isinstance(message, dict) and "code" in message:
+    return {"ok": False, "error": message["text"], "err": message}
+return {"ok": False, "error": message}
+```
+
+A string is what this file *forwards* rather than writes — a
+sentence out of the solver package, which has no codes until #199. So
+#199 and #200 could have landed in either order, and an uncoded message
+renders its English exactly as it did before. The page's `uiMsg()`
+mirrors it: a coded message is looked up, a plain string is its own
+answer, and an unknown code falls back to the `text` the engine sent
+— which is the deploy window, when the server is ahead of the page.
+
+### The field nobody would have named
+
+`app.py` lists its response fields by hand, and the entry above predicted
+that as the trap. It was sharper than that: `_run_in_process` **flattened
+the failure to a string** before any route saw it —
+
+```python
+return False, result.get("error", "Unknown error.")
+```
+
+— so the code was destroyed one function above the six places that
+would have had to name it. Naming a field in six routes is a field
+forgotten in the seventh. It returns the failure dict now, and one
+`_refusal(payload, **extra)` names `err` **once**.
+
+The same shape was needed in `bridge.py` and at five validator call
+sites in `app.py`, where `{"ok": False, "error": err}` was built by hand
+around what is no longer a string.
+
+### What is deliberately not coded
+
+* **Everything this file forwards from the solver package** —
+  `_err(_exc_text(exc))` and friends. Those words are the package's and
+  get 1xx–6xx numbers in **#199**. Inventing 8xx numbers for
+  sentences about to acquire their own would have been work done twice.
+* **`app.py`'s own messages** — about twenty of them. They are
+  server-only (the offline build validates in `bridge.py` instead), they
+  are not in this item's brief, and one of them is visible in the
+  measurements below: a bad SPICE direction is refused by `app.py`
+  before `symbulator_ui` sees it, so code 860 never fires on the server.
+  Worth an item if anyone wants it; not worth folding in silently.
+
+### The inventory grew four times, and the fourth found the rest
+
+**34, then 5, then 8, then 6 — fifty-five codes in all.** Each pass was
+sure it was the last, and each of the first three was wrong:
+
+* **34** from the first hand sweep: `_err()`, the validators, three notes.
+* **5** more found by running the app in Chinese and reading what was
+  still English — the TR step-source explanations and the "switched
+  Rounding to approximate" line, which live in helpers returning lists of
+  sentences and are reached by no `_err` and no validator.
+* **8** more found by grepping for a shape the sweep had not looked for:
+  `return {}, "..."`, a message in the second half of a tuple. All five of
+  `parse_defines`' refusals were there, plus the TR "cannot limit the
+  results" error and the mini-tools' one-number reader.
+* **6** more found by the guard below, after those three had finished:
+  two notes that refuse a name outright, the "did you mean" warning, the
+  complex-value refusal and the two no-solution notes.
+
+### The guard, which is the part worth keeping
+
+`uncoded_messages()` in `tools/i18n.py`, wired into `check` beside
+#209's `untranslated()`. It parses `symbulator_ui.py` and `eqsheet.py`,
+finds every string literal that reads like a sentence and is returned or
+appended where a message goes, and subtracts everything inside `msg()`,
+`_exc_text()` or `tSrv()`.
+
+Two exceptions are allowlisted with reasons: a comment line inside the
+SymPy export (a `.py` file the reader opens in an editor — its comments
+are code) and the port phrase `tSrv()` handles by regex (#168).
+
+**Three careful hand sweeps missed six messages; the guard found them in
+one run.** That is the whole argument for it, and it is #209's argument
+about the page in the other language. Grep finds what you thought to look
+for.
+
+It also caught something it was not aiming at. `srv_vocabulary()` reads
+its tables by finding a name and scanning to the next line beginning
+`}`, so the new `_QUANTITY_WORDS` — written with its brace tucked after
+the last entry — made it swallow the SI prefix table as engine
+vocabulary, and `check` started demanding translations for `k`, `M` and
+`p`. The brace sits at column 0 now, with a comment saying why.
+
+### One argument was engine vocabulary, and is now translated
+
+Message 837 says "`%{name}` is its %{what}", where `%{what}` is *voltage*,
+*reactive power*, *equivalent impedance* and six others. Those are the
+engine's words rather than that sentence's, so leaving them a plain
+argument would have put an English noun inside a translated sentence —
+which is not the SymPy case, where the words genuinely are not ours.
+
+They are `_QUANTITY_WORDS` now, module-level and listed in `SRV_SOURCES`,
+so `check` harvests them like the element kinds and demands their
+translations. The page's 837 entry passes that one argument through
+`tSrv()` before substituting it.
+
+### Verified in Chinese, offline, on the shipped build
+
+* the line that started it: **DC 分析 · 12 个结果 · 0.09 s**
+* the time plot: x-axis **时间（s）** — Roberto's ruling exactly, the word
+  translated and the unit symbol kept — with **时域图 · 300 个点 · 1.54 s**
+  under it and **已绘图！** beside the button
+* the Schematic button: **已绘制。**
+* the Solver: **正在求解…**, **第 1 行：…**, and a dropped bad file giving
+  **方程组文件：缺少 "equations" 列表**
+* the two placeholders: **例如 t = to**, **例如 p_r2 = 0.05**
+* mathematics unmoved throughout — `v_2`, `12 V`, `2 kΩ`
+* zero off-origin requests
+
+The one line still half-English is the Solver's `solved — 13
+evaluations`, which is #198's by design and by its own entry.
+
+### Ukrainian
+
+Ruling (a) applied: `Кінцевий час (s)`, `Кінцева частота (Hz)`,
+`Частота (Hz, логарифмічна шкала)`, and the new `час (s)`. Ukrainian no
+longer contradicts the `Ω` and `V` that the answers print beside it.
+
+---
+
+### #199, as built
+
+**Thirty-six codes** in a new `symbulator/messages.py`, numbered by the
+module that raises them: 2xx `elements`, 3xx `engine`, 4xx `laplace`,
+5xx `equiv`, 6xx `spice`. `CircuitError` carries `code`, `args_map` and
+`severity`; `str(exc)` renders the English from the catalogue, which is
+why the nine tests that assert on wording pass untouched. Solver
+**0.5.23**, cache **v114**.
+
+**A plain string still works, and that is not a shim.**
+`CircuitError("a sentence")` sets `code` to None and behaves as before.
+It is how an exception re-raised from elsewhere keeps flowing through,
+and it is what let the package and the app deploy in either order
+instead of in lockstep — the same seam `_err()` has on the interface
+side.
+
+**Four messages became two codes apiece** rather than one code with a
+clause glued on, because the clause is prose a translator has to see
+whole: both `_diagnose_unsolvable` diagnoses with and without their
+*"and inductors, which are shorts in dc"* / *"and capacitors, which are
+open in dc"*, and "could not solve" with and without its extra-equation
+hint.
+
+**`laplace._check_transform` takes `fn`, not `origin`.** It used to be
+handed a ready-made English phrase — *"between brackets"*, *"as an
+argument to t2s()"* — and a phrase cannot be translated from inside
+an argument. It takes a function's name now, or None for the `{...}`
+shorthand, and the two forms are two codes apiece.
+
+### Two bugs, both found by tooling rather than by reading
+
+**`app.py` flattened the code in its own parse step.** It forwarded the
+worker's code correctly, so solve-time errors carried theirs while every
+*parse* error — bad name, duplicate, floating node, two-port list
+— silently lost it.
+
+**`bridge.py` had the mirror image, and `verify_bridge.py` found it** —
+one day after that harness was built for exactly this, reporting
+`1 disagreement: [unparseable circuit] .err: only the server has it`.
+Two of the day's items paying for each other: **#210** exists because
+#200's bug shipped, and it caught #199's before it could.
+
+### Verified
+
+* **311 solver tests pass**, the nine wording assertions among them.
+* Every path carries its code end to end — 204, 205, 211, 217, 304,
+  309 — with arguments, through both front ends.
+* `verify_bridge.py`: **340 cases, 0 disagreements**.
+* `i18n check: ok`; thirty-six codes times twelve languages.
+* The wheel `install.symbulator.com` serves is byte-identical to PyPI's:
+  152,782 b, sha256 `51c1714c...`.
+* Offline, in Chinese, with 0.5.23 in the tab: **二端口 'zz1' 的参数列表有
+  3 个条目** (211), **节点 2, 3 没有通向参考节点 0 的路径** (217),
+  **元件名 'r-x' 含有不能用于名称的字符** (204). The engine's own words,
+  in the reader's language, with no server — which is the point of
+  the whole batch.
+
+### What is not in it: #211
+
+**`spice.py`'s warnings.** Seventeen `append` sites are not seventeen
+messages: seven are `f"{el.name}: {why}"` with `why` built elsewhere,
+`skip()` alone has eight call sites with their own reasons, and the
+`described` map names eleven element kinds. Thirty-odd more codes.
+
+It is separate for a reason that is not size. **The SPICE translator is
+labelled beta in the app**, so its wording is the likeliest prose in the
+package to change, and **a code is permanent once published**. Rework
+the wording first, then code it.
+
+There is a handoff brief at
+`C:\Users\perez\Claude Code\PROMPT_211_spice_warnings.md`, written
+31 Aug 2026 at Roberto's ask: the measured chain from `to_spice()` to
+`note(w)` in the page, the four consequences of that shape, the design
+these three items proved, and the precondition above stated first.
+
+`si_prefix.py`'s `AmbiguousValueError` and `UnsafeExpressionError` are
+their own classes with their own contract, not `CircuitError`. The 1xx
+range is held for them.
 
 ## #191 — a box for the settings notes — **done, cache v99; PyAn pending**
 
