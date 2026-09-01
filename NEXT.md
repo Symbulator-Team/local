@@ -259,14 +259,22 @@ not reach" rather than as a broken link. All 248 verified live.
 
 ### Shipped
 
-Deployed 1 Sep 2026 on Roberto's go. `install.symbulator.com` and
-`symbulator.com/9/local.zip` are both live at cache **v118**, hash-verified
-by the deploy script and then by fetching: the card appears, the picture
-loads, and two entries from different lesson books were driven on the live
-site. Both repos are pushed. No solver release was needed — template,
-examples and i18n only — so `pip` is untouched, but **the server pull does
-matter** (`templates/index.html`, `circuitbook.py` and `i18n/` all
-changed), and that PythonAnywhere pass is Roberto's own step.
+Deployed 1 Sep 2026 on Roberto's go, and **all five sites are current**.
+`install.symbulator.com` and `symbulator.com/9/local.zip` are live at cache
+**v118**, hash-verified by the deploy script and then by fetching: the card
+appears, the picture loads, and two entries from different lesson books
+were driven on the live site. Both repos are pushed.
+
+Roberto's PythonAnywhere pass followed the same day: `/healthz` reports
+build `2026-09-01 08:52 UTC` running *and* on disk, `needs_reload: false`,
+solver **0.5.26** — no `pip` upgrade, since #219 shipped no solver release,
+though the *pull* mattered (`templates/index.html`, `circuitbook.py` and
+`i18n/` all changed). Verified on the live app rather than from the
+console's exit status: an entry loads its picture, switching entries swaps
+it, a real solve is right (36 V over 1k+3k+2k gives v2 = 30 V, v3 = 12 V,
+ie = −6 mA), and a Showcase entry leaves **no card and no gap** — the space
+between the input-file and description cards measures 21px, which is the
+ordinary card margin and not a reserved hole.
 
 Two things worth remembering from the deploy itself:
 
