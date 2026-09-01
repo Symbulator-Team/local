@@ -120,13 +120,21 @@ v9/main` — clean, no conflicts — pushed to `Symbulator-Team`, and live on
 
 ---
 
-## #219 — an `image:` field on an input-file entry — **done, cache v118**
+## #219 — an `image:` field on an input-file entry — **done, cache v119**
 
 Roberto's brief, 1 Sep 2026. An optional `image:` line on a `.cir` entry
 names a picture of its circuit; when the entry is picked, the picture
-appears in a card of its own, **no heading**, between the input-file card
-and the circuit description. An entry without one reserves nothing — no
-card, no gap.
+appears at the **foot of the Input File card**, below the format
+reference and under a hairline rule, with **no heading**. An entry without
+one reserves nothing — the card simply ends at its ordinary bottom padding.
+
+It first shipped (cache v118) in a headingless card of its own between the
+input file and the circuit description; Roberto changed his mind the same
+day and it moved into the Input File card at **cache v119**. It sits
+*inside* that card's disclosure, so it folds away with the rest of the
+panel — which means a picture could load into a closed box and never be
+seen, so the image's `load` handler opens the panel, exactly as
+`showNote()` already does for an entry's note.
 
 The field is in `circuitbook.py` beside `note:`, in `_KEYS` and in
 `format_book`'s key order, so it round-trips: an entry saved from the app
@@ -259,9 +267,23 @@ not reach" rather than as a broken link. All 248 verified live.
 
 ### Shipped
 
-Deployed 1 Sep 2026 on Roberto's go, and **all five sites are current**.
-`install.symbulator.com` and `symbulator.com/9/local.zip` are live at cache
-**v118**, hash-verified by the deploy script and then by fetching: the card
+**A zero measurement means the viewport, not the bug.** Verifying the moved
+picture on the live install site, the image measured **2px tall** with
+`max-height` computed to `0px`. That looked like a real fault in the new
+placement. It was not: `innerWidth`/`innerHeight` were **0** and
+`document.visibilityState` was `hidden` — the browser pane was collapsed, so
+`60vh` is `0`, a `width:100%` box is `0` wide, and everything under it
+measures nothing. It also explains a session's worth of "stale" screenshots
+that contradicted the DOM. Forcing a viewport (1280×900) gave the real
+numbers immediately: `max-height` 540px, the image painted at 798×540 with
+`elementFromPoint` returning `IMG#entryImage`, 23px from the picture's
+bottom to the card's. This is the trap the shared `CLAUDE.md` already names
+— it is written down because it keeps working.
+
+
+Deployed 1 Sep 2026 on Roberto's go. `install.symbulator.com` and
+`symbulator.com/9/local.zip` are live at cache **v119** (the picture in the
+Input File card; v118 was the same feature in a card of its own), hash-verified by the deploy script and then by fetching: the card
 appears, the picture loads, and two entries from different lesson books
 were driven on the live site. Both repos are pushed.
 
