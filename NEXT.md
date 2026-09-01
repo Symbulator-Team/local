@@ -120,7 +120,7 @@ v9/main` — clean, no conflicts — pushed to `Symbulator-Team`, and live on
 
 ---
 
-## #219 — an `image:` field on an input-file entry — **built, undeployed**
+## #219 — an `image:` field on an input-file entry — **done, cache v118**
 
 Roberto's brief, 1 Sep 2026. An optional `image:` line on a `.cir` entry
 names a picture of its circuit; when the entry is picked, the picture
@@ -257,13 +257,32 @@ own. It now retries, runs three at a time, and separates an HTTP status —
 which it believes — from a transport failure, which it reports as "could
 not reach" rather than as a broken link. All 248 verified live.
 
-### Left to do
+### Shipped
 
-Deploy, on Roberto's go: cache **v118** is bumped and the local build is
-regenerated, but nothing is committed or deployed. No solver release is
-needed — this is template, examples and i18n only, so the server pull
-matters (`templates/index.html`, `circuitbook.py` and `i18n/` all changed)
-but `pip` does not.
+Deployed 1 Sep 2026 on Roberto's go. `install.symbulator.com` and
+`symbulator.com/9/local.zip` are both live at cache **v118**, hash-verified
+by the deploy script and then by fetching: the card appears, the picture
+loads, and two entries from different lesson books were driven on the live
+site. Both repos are pushed. No solver release was needed — template,
+examples and i18n only — so `pip` is untouched, but **the server pull does
+matter** (`templates/index.html`, `circuitbook.py` and `i18n/` all
+changed), and that PythonAnywhere pass is Roberto's own step.
+
+Two things worth remembering from the deploy itself:
+
+* **`build_zip.py --assets` only supplies `vendor/` and `static/`**, and
+  the repo wins every overlap, so a stale extracted copy at
+  `Symbulator/local/` cannot put old examples in the ZIP. `install_site/`
+  is the one staging folder that *does* have to be refreshed by hand from
+  the built ZIP, and it is deliberately five files short of it — the
+  launchers and README belong to the download, not to the hosted site.
+* **The stale service worker did exactly what it always does.** The first
+  live check found no card at all, and a `fetch(..., {cache:'reload'})`
+  agreed — because the SW is cache-first, so that fetch never reached the
+  network either. `curl` settled it in one request: the server's
+  `index.html` was hash-identical to the local one and had the card all
+  along. Unregistering the worker and clearing the caches showed the real
+  page. Do not diagnose this one from inside the page.
 
 ---
 
