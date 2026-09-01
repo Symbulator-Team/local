@@ -28,6 +28,7 @@ from __future__ import annotations
 
 import argparse
 import re
+import subprocess
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
@@ -693,6 +694,33 @@ def check_banner(template_text: str, where: str = "templates/index.html") -> Non
             "between the markers.")
 
 
+def check_example_images() -> None:
+    """Stop the build if an example's `image:` link names a picture that is
+    no longer in the docs tree.
+
+    Soft on a missing docs tree and hard on a broken link. The tree is a
+    neighbour, not a dependency of this build -- the offline page does not
+    show these pictures at all -- so a checkout without `Sym Docum` beside
+    it must still build. A link that *is* checkable and wrong is a real
+    fault, and one that shows up nowhere else: the app hides the picture's
+    card when the image fails, so a reader sees a missing circuit as a page
+    with no circuit on it."""
+    checker = SERVER / "tools" / "check_example_images.py"
+    docs = SERVER.parent.parent.parent / "Sym Docum" / "Documentation"
+    if not checker.is_file():
+        return
+    if not docs.is_dir():
+        print("  note: 'Sym Docum' is not beside this tree, so the examples' "
+              "image links were not checked.")
+        return
+    result = subprocess.run([sys.executable, str(checker)],
+                            capture_output=True, text=True)
+    if result.returncode != 0:
+        raise SystemExit(
+            (result.stdout or "") + (result.stderr or "")
+            + "build_local.py: an example's image: link is broken (see above).")
+
+
 # ---------------------------------------------------------------------
 # The Numerical Solver's page (#208)
 #
@@ -921,6 +949,15 @@ def build() -> str:
     if eqsheet_template.is_file():
         check_banner(eqsheet_template.read_text(encoding="utf-8"),
                      where="templates/eqsheet.html")
+
+    # #219: the examples' `image:` links point into the docs tree, which
+    # nothing else connects to this one. A figure renamed there leaves a
+    # dead link here, and the app hides a picture that fails to load -- so
+    # the fault is invisible on the page and has to be caught by a check.
+    # This is the one build that runs over the whole example set, which is
+    # why it runs here even though the offline page never shows these
+    # pictures (they are online links, by Roberto's decision on 1 Sep 2026).
+    check_example_images()
 
     # --- drop every server-only block: the "download the offline
     #     version" card, and the "no backend here" notice -- both are

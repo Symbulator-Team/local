@@ -120,6 +120,153 @@ v9/main` — clean, no conflicts — pushed to `Symbulator-Team`, and live on
 
 ---
 
+## #219 — an `image:` field on an input-file entry — **built, undeployed**
+
+Roberto's brief, 1 Sep 2026. An optional `image:` line on a `.cir` entry
+names a picture of its circuit; when the entry is picked, the picture
+appears in a card of its own, **no heading**, between the input-file card
+and the circuit description. An entry without one reserves nothing — no
+card, no gap.
+
+The field is in `circuitbook.py` beside `note:`, in `_KEYS` and in
+`format_book`'s key order, so it round-trips: an entry saved from the app
+comes back with its picture. Like `note:`, it is deliberately **not** in
+`inputsSnapshot()` — the picture is content of the entry, not a field on
+screen, so *Update inputs in this entry* keeps it rather than wiping it.
+
+### Local paths cannot work, and not only in the hosted build
+
+The brief asked for a path to an image on the reader's own device "if that
+can be made to work", and expected the answer to be that the hosted build
+could not manage it. Measured, the answer is stronger and simpler: **no
+build can**, and the reason is one both offline builds already live with.
+
+All three builds are served over http(s). The hosted app obviously is; but
+so are `install.symbulator.com` and the downloaded ZIP, because Pyodide
+will not load WebAssembly from a `file://` URL — which is why the ZIP
+ships `start.bat`/`start.sh`/`start.command` to run `python -m
+http.server` rather than telling anyone to double-click `index.html`.
+And an http origin cannot fetch a `file://` subresource at all.
+
+Measured rather than reasoned, in a page served from `http://127.0.0.1`,
+which *is* the ZIP's own case:
+
+| written in the file | result |
+|---|---|
+| `file:///C:/…/circuit.jpg` (same folder as the page) | blocked |
+| `file:///C:/…/circuit.jpg` (any other folder) | blocked |
+| a bare `C:\Users\me\circuit.png` | blocked |
+| `sibling.jpg`, `sub/nested.jpg` (relative) | **loads** |
+| `https://learn.symbulator.com/…` | **loads** |
+| an https URL that 404s | `onerror` fires |
+
+So the field takes a URL or a path relative to the page, and the format
+panel says plainly that a picture on your own computer cannot be linked
+to. The third option the brief floated — resolving a sibling of an
+uploaded `.cir` through the file picker — is not available either: an
+`<input type=file>` hands over that one File and nothing around it.
+
+### A dead link degrades to silence
+
+The card starts hidden and is revealed by the image's own `load` event;
+its `error` event hides it again. An entry with no picture, a link that
+404s, a host that cannot be reached and an offline reader all therefore
+produce exactly the same thing: no card, no gap, no broken-image box.
+
+**`loading="lazy"` cannot be used here**, which is worth writing down
+because the brief suggested it. A browser does not fetch a lazy image that
+is not being displayed — and this one starts inside a `hidden` card, so
+the `load` event that reveals the card would never fire and the picture
+would never appear at all. It cost nothing to drop: there is only ever one
+of these on the page, fetched only when an entry that has one is picked.
+The value is also held to `http:`, `https:`, `data:image/` or no scheme at
+all, since a `.cir` is reader-supplied content.
+
+### The mapping was derived from the netlists, not from the names
+
+The brief supplied a slug rule that resolved 255 of the 330 entries and
+warned, correctly, that a rule resolving 255 is *a hypothesis about 255
+entries*. It did not have to stay a hypothesis. Every chapter in the docs
+tree writes each problem as `::: problem <name>` containing both the
+figure **and** the `field 9 Circuit Description` netlist — so an entry can
+be matched to a figure by the circuit itself, and the entry's name used
+only to corroborate.
+
+Netlist identity resolved **295** entries, not 255, and where the name
+agreed it never disagreed: 163 entries matched on both signals, **163
+agreements, 0 conflicts**.
+
+Three structural facts had to be measured, each of which the naive reading
+gets wrong:
+
+* a figure inside the problem's `::: answer` is a *solution* step, not the
+  circuit (`b11e0507b.jpg` is Example 5.7 "with the node names pencilled
+  in"). Excluding those cut the ambiguous entries from 47 to 28;
+* a figure *after* the netlist is a screenshot of the answer or the
+  textbook's printed answer, not the circuit. Excluding those took 28 to 6;
+* the last 6 were looked at — actually looked at, as pictures — and in
+  half of them the first figure is a **scan of the problem's prose** and the
+  second is the circuit. Aspect ratio does not separate the two: the
+  flattest image in the whole set (`a-more-complex-problem-44.png`, 5.34:1)
+  is a real circuit, and a 6.3:1 one is prose.
+
+Four more entries were added by name where the netlist is a *notation*
+variant of the same physical circuit — `re,1,0,[10'k,22'k]` is the
+chapter's R2 and R3 in parallel — each checked against its figure by eye.
+**299 image lines across 248 distinct pictures**, and every pair was
+either matched by netlist identity or looked at.
+
+**Two entries in `The_Monograph.cir` legitimately have one**, against the
+brief's expectation that it would have none: their own notes say "Lesson 9
+solves it too" and "Lesson 10 has it too", and the netlist match found the
+tutorial figure the slug rule could not.
+
+### What was deliberately left without a picture
+
+31 entries. `Showcase.cir` (12) and six of the monograph's eight are drawn
+by the schematic engine and never were scanned figures. The other 13 are
+entries whose chapter prints no circuit for them because they *modify*
+another problem's circuit — Bo2's Drill Exercise 5.11 reads "for the
+circuit of Bo2's Example 5.7, change the value of the capacitor to ¼ F".
+Reusing 5.7's figure there would put a picture with the wrong capacitor
+and the wrong source over a netlist that has neither, and **a confidently
+wrong picture is worse than none**: nothing on the page would look broken.
+
+### Online links, and what stops them drifting
+
+Roberto's decision, 1 Sep 2026, given the measured numbers: the 248
+pictures total 23.4 MB raw against a 30.3 MB ZIP, or 8.3 MB re-encoded to
+900px wide at quality 82. **Online links** — so the ZIP does not grow, no
+second copy of the images exists, and the offline reader simply sees no
+card.
+
+That leaves the app depending on the docs tree, which nothing else joins.
+A figure renamed on the docs side would leave a dead link here, and a dead
+link is *invisible by design* — the card hides itself. So
+**`repos/server/tools/check_example_images.py`** exists: every `image:`
+URL must name a file that is really in `Sym Docum/Documentation/assets/`,
+and `--live` fetches all 248 from the real site. `build_local.py` runs the
+plain form on every build — soft when `Sym Docum` is not beside the tree,
+since the offline build does not use these pictures, and hard on a link it
+can check and finds broken. Both the tool and the build hook were **watched
+going red** on a deliberately broken link before either was believed.
+
+`--live` earned its own lesson. The first version fetched eight at a time
+and reported 23 dead links; every one served 200 when asked again on its
+own. It now retries, runs three at a time, and separates an HTTP status —
+which it believes — from a transport failure, which it reports as "could
+not reach" rather than as a broken link. All 248 verified live.
+
+### Left to do
+
+Deploy, on Roberto's go: cache **v118** is bumped and the local build is
+regenerated, but nothing is committed or deployed. No solver release is
+needed — this is template, examples and i18n only, so the server pull
+matters (`templates/index.html`, `circuitbook.py` and `i18n/` all changed)
+but `pip` does not.
+
+---
+
 ## #218 — the three passive symbols, redrawn — **done, solver 0.5.26**
 
 Roberto's brief, 1 Sep 2026, from reference images rather than words:
