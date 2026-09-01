@@ -281,7 +281,7 @@ bottom to the card's. This is the trap the shared `CLAUDE.md` already names
 — it is written down because it keeps working.
 
 
-Deployed 1 Sep 2026 on Roberto's go. `install.symbulator.com` and
+Deployed 1 Sep 2026 on Roberto's go, and **all five sites are current at v119** — his PythonAnywhere pass for the move landed the same day (`/healthz` build `2026-09-01 09:41 UTC` running and on disk, `needs_reload: false`, solver 0.5.26; the picture verified on the live app by hit-testing it at the foot of the Input File card). `install.symbulator.com` and
 `symbulator.com/9/local.zip` are live at cache **v119** (the picture in the
 Input File card; v118 was the same feature in a card of its own), hash-verified by the deploy script and then by fetching: the card
 appears, the picture loads, and two entries from different lesson books
