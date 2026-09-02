@@ -120,6 +120,40 @@ v9/main` — clean, no conflicts — pushed to `Symbulator-Team`, and live on
 
 ---
 
+## #223 — the solver README calls `ap_` apparent power, and it is not — **accepted, not done**
+
+`repos/solver/README.md`, under *DC / AC / s-domain results*:
+
+    - `res["p_<name>"]` / `res["ap_<name>"]` -- real/apparent power (DC / AC only)
+
+`ap_` is **average real power**, the same quantity as `p_`. From
+`symbulator/analysis.py:211`:
+
+    out[f"p_{e.name}" if use_rms else f"ap_{e.name}"] = sp.re(s)
+
+One value, `sp.re(V·conj(I))`; the name it lands under depends only on
+the RMS setting — `ap` under peak-amplitude phasors (the default, with
+the divide-by-two), `p` under RMS. Apparent power is the *magnitude* of
+the complex power `s_<name>`, which the README documents correctly on
+the next line. `_ELEMENT_KEYS` in `repos/server/symbulator_ui.py` has it
+right too, labelling `ap_{n}` "average power" in W, and so does Lesson 8:
+*"stores the average real power consumed in r, e, j and o elements in a
+variable called **ap** plus the element name."*
+
+**This line has already cost a wrong bug report.** A documentation review
+on 2 Sep 2026 cited it to argue that Lesson 7's AS7 Example 9.9 had the
+two swapped and should be rewritten. The chapter was correct; the change
+would have introduced the error. See #220 in
+`Sym Docum/Documentation/NEXT_DOCS.md`.
+
+Suggested wording: `real (average) power -- ap_ under peak-amplitude
+phasors, p_ under RMS`, with a pointer to the `use_rms` paragraph
+already three lines below.
+
+Prose only, no code. GitHub is the deploy; the PyPI page re-renders on
+the next real release, so this rides whatever solver release comes next
+rather than earning one.
+
 ## #219 — an `image:` field on an input-file entry — **done, cache v120**
 
 Roberto's brief, 1 Sep 2026. An optional `image:` line on a `.cir` entry
