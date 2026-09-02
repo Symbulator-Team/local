@@ -120,7 +120,7 @@ v9/main` — clean, no conflicts — pushed to `Symbulator-Team`, and live on
 
 ---
 
-## #223 — the solver README calls `ap_` apparent power, and it is not — **accepted, not done**
+## #223 — the solver README calls `ap_` apparent power, and it is not — **done and pushed, 2 Sep 2026**
 
 `repos/solver/README.md`, under *DC / AC / s-domain results*:
 
@@ -150,9 +150,35 @@ Suggested wording: `real (average) power -- ap_ under peak-amplitude
 phasors, p_ under RMS`, with a pointer to the `use_rms` paragraph
 already three lines below.
 
-Prose only, no code. GitHub is the deploy; the PyPI page re-renders on
-the next real release, so this rides whatever solver release comes next
-rather than earning one.
+### Done, 2 Sep 2026 — and it was in three places, not one
+
+The grep found the same misconception twice more, both of which would
+have kept regenerating the first:
+
+* **`symbulator/analysis.py`**, `_derived`'s docstring, called `s_<name>`
+  "apparent/complex power". `s_` is the complex power; the apparent
+  power is its *magnitude*. Reworded to say what each name holds and
+  which one the RMS setting selects.
+* **`symbulator/tests/test_circuits.py`**, the AC power test, commented
+  its assertion as "apparent power (peak convention) = |V|^2/(2R)". The
+  number is right and the label is wrong — and **on a resistor the two
+  quantities are equal**, so that test could never have caught the
+  mislabel. That is why this survived: the only test touching `ap_` was
+  one that cannot tell average from apparent power.
+
+**So a test that can was added.** `test_ap_is_average_power_not_apparent_power`
+uses a series R-L at the source, where S = −0.6 − 0.8j VA: the average
+power is −0.6 W and the apparent power |S| is 1.0 VA. It asserts `ap_`
+equals `re(s_)`, equals −0.6, and is *not* equal to `abs(s_)`.
+
+Proved non-vacuous the way this tree requires: forcing
+`p = sp.simplify(abs(s))` in `analysis.py` makes it fail with
+`approx_eq(1.0, -0.6)` while the old resistor test still passes — which
+is the whole point, and the sabotage was reverted immediately after.
+337 tests pass.
+
+No release: nothing shipped changed behaviour. GitHub carries the README
+now; the PyPI page re-renders on the next real release.
 
 ## #219 — an `image:` field on an input-file entry — **done, cache v120**
 
