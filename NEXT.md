@@ -48,9 +48,13 @@ markup: default on with the picture loaded, and unticking it drops the
 the bundled wheel and the three pins that name it did not move, and no
 `pip install --upgrade` was needed anywhere.
 
-**X has not been merged since #219**, so `symbulatorx.pythonanywhere.com`
-does not have this. `git fetch v9 && git merge v9/main` on the two
-`SymbulatorX` repos would carry it across; Roberto's call.
+**X has this merged** (Roberto's "Do X now", the same day): `git fetch
+v9 && git merge v9/main` ran clean on all three `SymbulatorX` repos --
+server, local and solver, the last picking up #223 -- and is pushed to
+`Symbulator-Team`. X differs from v9 by its three orientation
+`CLAUDE.md` files and nothing else, measured with `git diff --name-only
+v9/main HEAD`. `symbulatorx.pythonanywhere.com` still wants a
+pull-and-reload to serve it.
 
 ---
 
