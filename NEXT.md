@@ -1,6 +1,6 @@
 # Next build — accepted but not yet done
 
-## #227 — Say who may frame the app — **pushed 2 Sep 2026; awaiting Roberto's PythonAnywhere pass**
+## #227 — Say who may frame the app — **done and live, 2 Sep 2026**
 
     Content-Security-Policy: frame-ancestors 'self' https://learn.symbulator.com
 
@@ -40,8 +40,16 @@ the console names the directive --
     https://learn.symbulator.com". The request has been blocked.
 
 The header is on every route, the eqsheet Blueprint included. No cache
-bump: `app.py` is not part of the offline build, so this is a server
-`git pull` and **Reload** and nothing else.
+bump: `app.py` is not part of the offline build, so this was a server
+`git pull` and **Reload** and nothing else, done by Roberto the same
+evening.
+
+**Verified live afterwards, including the thing that could have broken.**
+The header is served on `/` and on `/eqsheet/`, with no `X-Frame-Options`
+beside it — and `learn.symbulator.com/split/` still renders both panes
+with an entry loaded on each and **no console errors**. A wrong origin in
+that header would have blanked the right pane in production, so checking
+the header alone would not have been checking the right thing.
 
 ---
 
