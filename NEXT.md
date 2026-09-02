@@ -53,8 +53,9 @@ v9 && git merge v9/main` ran clean on all three `SymbulatorX` repos --
 server, local and solver, the last picking up #223 -- and is pushed to
 `Symbulator-Team`. X differs from v9 by its three orientation
 `CLAUDE.md` files and nothing else, measured with `git diff --name-only
-v9/main HEAD`. `symbulatorx.pythonanywhere.com` still wants a
-pull-and-reload to serve it.
+v9/main HEAD`. `symbulatorx.pythonanywhere.com` cannot serve it: PythonAnywhere shut
+that account down on 2 Sep 2026 and the host now 404s on every path, so
+the merge is as far as #225 travels for X.
 
 ---
 
