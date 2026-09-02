@@ -1,5 +1,59 @@
 # Next build — accepted but not yet done
 
+## #225 — "Show image (if available)" — **done and everywhere, 2 Sep 2026**
+
+Roberto, 2 Sep 2026: a checkbox in the Input File card governing #219's
+entry picture. **Checked by default**, and **remembered across entries
+and across sessions** — his ruling, asked and answered before any of it
+was written: "checked by default in the app, but then it should remember
+across entries and sessions. Not per entry."
+
+So it is a standing preference in its own `localStorage` key,
+`symbulator-show-image`, beside `symbulator-theme` and
+`symbulator-lang`, and deliberately **not** part of the saved workspace
+and **not** a `.cir` field. It says how this reader likes to work, not
+what this circuit is; the input file format is unchanged.
+
+**Unticked, the picture is not merely hidden — the `<img>` is given no
+`src`, so nothing is requested.** That is the point of the feature for
+anyone on a metered connection, and it is why it could not be a CSS
+rule. Measured rather than assumed: with the box off, a fresh load of
+`?lesson=1&entry=1` — an entry that has a picture — requests `logo.png`
+and nothing else.
+
+Two details worth keeping:
+
+* **The src is remembered** (`entryImageSrc`), so ticking the box puts
+  the picture back at once instead of at the next pick. The entry itself
+  is not always to hand — a reader can be looking at inputs they have
+  edited away from it — so the value is kept rather than looked up.
+* **The control sits outside `entryImageBox`**, which is hidden whenever
+  there is no picture. A checkbox that vanished along with the image
+  could never be used to bring one back.
+
+Translated into all twelve languages, `i18n check: ok`. Verified in the
+offline build as well as the server one, and in four languages on the
+page: `Mostrar imagen (si está disponible)`, `画像を表示（ある場合）`,
+`Показувати зображення (якщо є)`, `Bild anzeigen (falls vorhanden)`.
+
+**Shipped, all three surfaces:** cache **v121**;
+`install.symbulator.com` and `symbulator.com/9/local.zip` deployed and
+verified byte-identical to each other (`index.html`, `sw.js` and all
+twelve dictionaries); and `symbulator.pythonanywhere.com` on Roberto's
+pull-and-reload the same day — `/healthz` build `2026-09-02 12:57 UTC`
+running *and* on disk, `needs_reload: false`, solver 0.5.26. The
+checkbox was hit-tested on the live server rather than found in the
+markup: default on with the picture loaded, and unticking it drops the
+`src` and stores `no`. **No solver release** — 0.5.26 is untouched, so
+the bundled wheel and the three pins that name it did not move, and no
+`pip install --upgrade` was needed anywhere.
+
+**X has not been merged since #219**, so `symbulatorx.pythonanywhere.com`
+does not have this. `git fetch v9 && git merge v9/main` on the two
+`SymbulatorX` repos would carry it across; Roberto's call.
+
+---
+
 **#212 is done and everywhere, 1 Sep 2026**, at solver **0.5.24** and cache **v115** — PyPI, `install.symbulator.com`, the ZIP and `symbulator.pythonanywhere.com` (Roberto's pass the same night; `/healthz` clean, a DC divider, an AC complex solve and a live schematic all verified by fetching). The wheel is byte-identical in four places: PyPI, the install host, the ZIP and the local build. Only the typed prune of the 0.5.23 wheel on the install host is left, and that is his to run. — **the schematics are drawn the way a textbook draws them.** Element names are set as a kind letter with a capitalised subscript — `rin` is Rₓₙ, `r1` is R₁ — inductors are coils of *loops* rather than rows of humps, and a controlled source is a diamond. Roberto's brief, with two textbook PDFs to work from; the grounding is written into the code, not just into this entry.
 
 **The naming.** One `<text>` per label, one `<tspan>` per run, the subscript carrying `class="sub"` and a baseline shift relative to the run before it — which is what lets a caption come back up to full size after `R₁ = `. An underscore is a separator, not a character to print (`r_a` is Rₐ), so the display is many-to-one: `rab`, `rAB` and `r_a_b` all read Rₐᵇ. That was already true of case, and it is confined to the drawing — the answers, the exports and the description keep the name as typed. Written up under LIMITATIONS.
@@ -120,7 +174,67 @@ v9/main` — clean, no conflicts — pushed to `Symbulator-Team`, and live on
 
 ---
 
-## #219 — an `image:` field on an input-file entry — **done, cache v119**
+## #223 — the solver README calls `ap_` apparent power, and it is not — **done and pushed, 2 Sep 2026**
+
+`repos/solver/README.md`, under *DC / AC / s-domain results*:
+
+    - `res["p_<name>"]` / `res["ap_<name>"]` -- real/apparent power (DC / AC only)
+
+`ap_` is **average real power**, the same quantity as `p_`. From
+`symbulator/analysis.py:211`:
+
+    out[f"p_{e.name}" if use_rms else f"ap_{e.name}"] = sp.re(s)
+
+One value, `sp.re(V·conj(I))`; the name it lands under depends only on
+the RMS setting — `ap` under peak-amplitude phasors (the default, with
+the divide-by-two), `p` under RMS. Apparent power is the *magnitude* of
+the complex power `s_<name>`, which the README documents correctly on
+the next line. `_ELEMENT_KEYS` in `repos/server/symbulator_ui.py` has it
+right too, labelling `ap_{n}` "average power" in W, and so does Lesson 8:
+*"stores the average real power consumed in r, e, j and o elements in a
+variable called **ap** plus the element name."*
+
+**This line has already cost a wrong bug report.** A documentation review
+on 2 Sep 2026 cited it to argue that Lesson 7's AS7 Example 9.9 had the
+two swapped and should be rewritten. The chapter was correct; the change
+would have introduced the error. See #220 in
+`Sym Docum/Documentation/NEXT_DOCS.md`.
+
+Suggested wording: `real (average) power -- ap_ under peak-amplitude
+phasors, p_ under RMS`, with a pointer to the `use_rms` paragraph
+already three lines below.
+
+### Done, 2 Sep 2026 — and it was in three places, not one
+
+The grep found the same misconception twice more, both of which would
+have kept regenerating the first:
+
+* **`symbulator/analysis.py`**, `_derived`'s docstring, called `s_<name>`
+  "apparent/complex power". `s_` is the complex power; the apparent
+  power is its *magnitude*. Reworded to say what each name holds and
+  which one the RMS setting selects.
+* **`symbulator/tests/test_circuits.py`**, the AC power test, commented
+  its assertion as "apparent power (peak convention) = |V|^2/(2R)". The
+  number is right and the label is wrong — and **on a resistor the two
+  quantities are equal**, so that test could never have caught the
+  mislabel. That is why this survived: the only test touching `ap_` was
+  one that cannot tell average from apparent power.
+
+**So a test that can was added.** `test_ap_is_average_power_not_apparent_power`
+uses a series R-L at the source, where S = −0.6 − 0.8j VA: the average
+power is −0.6 W and the apparent power |S| is 1.0 VA. It asserts `ap_`
+equals `re(s_)`, equals −0.6, and is *not* equal to `abs(s_)`.
+
+Proved non-vacuous the way this tree requires: forcing
+`p = sp.simplify(abs(s))` in `analysis.py` makes it fail with
+`approx_eq(1.0, -0.6)` while the old resistor test still passes — which
+is the whole point, and the sabotage was reverted immediately after.
+337 tests pass.
+
+No release: nothing shipped changed behaviour. GitHub carries the README
+now; the PyPI page re-renders on the next real release.
+
+## #219 — an `image:` field on an input-file entry — **done, cache v120**
 
 Roberto's brief, 1 Sep 2026. An optional `image:` line on a `.cir` entry
 names a picture of its circuit; when the entry is picked, the picture
@@ -266,6 +380,34 @@ which it believes — from a transport failure, which it reports as "could
 not reach" rather than as a broken link. All 248 verified live.
 
 ### Shipped
+
+**Two placement rounds after the first live look**, both cheap because the
+feature was one block of markup. v118 put the picture in a headingless card
+of its own between the input file and the description; v119 moved it to the
+foot of the **Input File** card; v120 moved the *"About input file (.cir)
+format"* reference **above** *Built-in Examples*, so that card now reads
+Upload/Download/Create new → the format reference → Built-in Examples →
+the entries picker → its note → the picture. The last two were pure
+markup reorders: no wording changed, so no i18n key was regenerated and
+all thirteen dictionaries stand untouched.
+
+Version 9's PythonAnywhere pass for v120 is **done** (1 Sep 2026): `/healthz` build `2026-09-01 12:03 UTC` running *and* on disk, `needs_reload: false`, solver 0.5.26 — the served card ordering checked (upload row → format reference → Built-in Examples → entries → note → picture) and the picture hit-tested live at 798×540. X's account followed the same day: `symbulatorx.pythonanywhere.com` reports the same build `2026-09-01 12:03 UTC` running and on disk, with the card ordering, the picture (798×540, hit-tested) and a real DC solve all verified live — so the merge carried #219 across without breaking X's engine.
+
+**#219 crossed to version X on 1 Sep 2026.** `git fetch v9 && git merge
+v9/main` ran clean on `SymbulatorX/repos/server` and `repos/local` (the
+solver needed nothing), and both are pushed to `Symbulator-Team`. X now
+differs from v9 by its own orientation `CLAUDE.md` files **and nothing
+else**, which is the state that keeps future merges clean.
+
+Worth knowing for the next crossing: X's `build_local.py --check` reports
+`i18n/zh.js` STALE straight after a merge, and it is **not** stale. The
+dist dictionaries are near-single-line JS; git checks them out with LF
+while `build_local.py` writes CRLF, so the four line endings make a 4-byte
+difference and a byte-for-byte check calls it stale. The content is
+identical. **Do not "fix" it by running `build_local.py` in X** — that
+re-stamps the build time into `templates/index.html`, which diverges X
+from v9 on a line every future merge would then conflict on. Leave it.
+
 
 **A zero measurement means the viewport, not the bug.** Verifying the moved
 picture on the live install site, the image measured **2px tall** with
