@@ -832,10 +832,56 @@ if ('serviceWorker' in navigator) {
 </body>"""
 
 
+#: #228: the banner's two forkable strings, resolved at build time.
+#:
+#: The server renders them through Jinja; this page has no Jinja, and the
+#: sanity check at the end of each build refuses a `{{ ` that survived --
+#: so they have to be baked in here, from the same `branding.py` the
+#: server reads. `sub()` insists each replacement happened exactly once,
+#: which means a template edit that moves the banner fails this build
+#: loudly instead of shipping an unresolved `{{ brand_tm }}` to a reader.
+BRANDING = SERVER / "branding.py"
+
+
+def _branding() -> tuple[str, str]:
+    """(mark, subtitle) from the server repo's branding.py, read rather
+    than imported: this script is not run with that directory on the
+    path, and the file is two string constants with no logic worth
+    executing."""
+    if not BRANDING.is_file():
+        raise SystemExit(
+            f"build_local.py: {BRANDING} is missing. The banner's mark and "
+            "subtitle live there (#228) so a fork can differ from version 9 "
+            "in one small file instead of in the middle of the template.")
+    ns: dict = {}
+    exec(compile(BRANDING.read_text(encoding="utf-8"), str(BRANDING), "exec"),
+         ns)
+    return ns["BRAND_TM"], ns["BRAND_SUB"]
+
+
+def resolve_banner(s: str, *, where: str) -> str:
+    """Replace the banner's Jinja with what this tree's branding says."""
+    mark, subtitle = _branding()
+    s = sub(s, "{{ brand_tm }}", mark, label=f"the wordmark mark in {where}")
+    start = s.find("{% if brand_sub %}")
+    end = s.find("{% endif %}", start)
+    if start < 0 or end < 0:
+        raise SystemExit(
+            f"build_local.py: the #228 subtitle block is not in {where}. "
+            "The template has changed; fix this script.")
+    block = s[start:end + len("{% endif %}")]
+    forked, canonical = block.split("{% else %}")
+    chosen = (forked.split("{% if brand_sub %}", 1)[1] if subtitle
+              else canonical.split("{% endif %}", 1)[0])
+    chosen = chosen.replace("{{ brand_sub }}", subtitle).strip("\n")
+    return s[:start] + chosen + s[end + len("{% endif %}"):]
+
+
 def build_eqsheet() -> str:
     """The Numerical Solver's page, with the network taken out."""
     s = EQ_TEMPLATE.read_text(encoding="utf-8")
     check_banner(s, where="templates/eqsheet.html")
+    s = resolve_banner(s, where="eqsheet.html")
 
     # --- head: local icons, and no font that has to be fetched --------
     #
@@ -921,7 +967,7 @@ def build_eqsheet() -> str:
             label="the Solver's service worker")
 
     # --- sanity: nothing server-shaped left behind --------------------
-    for banned in ("{{ ", "url_for(", "/static/", "fonts.googleapis"):
+    for banned in ("{{ ", "{%", "{#", "url_for(", "/static/", "fonts.googleapis"):
         if banned in s:
             raise SystemExit(
                 f"build_local.py: {banned!r} survived into eqsheet.html.")
@@ -940,6 +986,7 @@ def build() -> str:
     # dashes, and Windows would otherwise decode it as cp1252 and crash.
     s = TEMPLATE.read_text(encoding="utf-8")
     check_banner(s)
+    s = resolve_banner(s, where="index.html")
 
     # EqSheet's page is not part of this build -- it is server-hosted --
     # but its banner copy has no other guard, and this is the one check
@@ -1299,7 +1346,7 @@ def build() -> str:
     s = sub(s, "</script>\n</body>", "</script>\n" + SW_JS, label="service worker")
 
     # --- sanity: no server left behind ---------------------------------
-    for banned in ("/api/", "{{ ", "url_for("):
+    for banned in ("/api/", "{{ ", "{%", "{#", "url_for("):
         if banned in s:
             raise SystemExit(
                 f"build_local.py: {banned!r} survived into the local build."
