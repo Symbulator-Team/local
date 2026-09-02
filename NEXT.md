@@ -1,5 +1,70 @@
 # Next build — accepted but not yet done
 
+## #228 — The banner's forkable strings move to `branding.py` — **done 3 Sep 2026; needs a server pull when convenient**
+
+Roberto asked how a separate banner for X was going to be *maintained*,
+which was the right question: X1 had made X look different by editing
+X's copy of `templates/index.html`, and that collides with version 9
+every time version 9 touches the banner's neighbourhood in a 5,000-line
+file. Resolved by hand, every time, with a silent failure mode — take
+version 9's side by reflex and X quietly becomes a byte-identical clone
+again, which is what got its PythonAnywhere account disabled.
+
+**Two constants now carry the difference.** `repos/server/branding.py`:
+
+    BRAND_TM  = "9β"   # X sets "X"
+    BRAND_SUB = ""     # empty = use the translated subtitle in the
+                       # template; a fork sets its own tagline
+
+Version 9 changes that file about once a year — #137's beta removal is
+the next time — so the trees now collide almost never, and when they do
+the conflict is two lines and obviously about branding.
+
+**The subtitle keeps both spellings in the markup and picks with Jinja**,
+rather than becoming a variable outright. Version 9's subtitle is a
+translated UI string with twelve translations; turning it into a
+constant would have thrown them away. The i18n tagger still reads the
+English literal out of the markup and keys it exactly as before —
+`en.json` is unchanged and `i18n.py check` is clean.
+
+**`build_local.py` resolves both at build time**, from the same file, because
+the offline page has no Jinja. `sub()` insists each replacement matched,
+so a template edit that moves the banner fails the build loudly instead
+of shipping a raw `{{ brand_tm }}` to a reader.
+
+### The guard that caught its own author
+
+The offline build's sanity check banned `"{{ "` and nothing else. A Jinja
+**comment** is neither an expression nor caught by that rule, and the
+first draft of this item leaked one straight into the offline page as
+visible text. The check now bans `{%` and `{#` as well — and immediately
+failed the very next build, because the explanatory comment written to
+document the leak quoted the syntax verbatim. Hence the wording in the
+template, which describes the braces instead of spelling them.
+
+This is the same family as the 30 Aug 2026 incident already in
+`CLAUDE.md`: `{#` in an HTML comment stopped the template parsing and
+returned 500 on every page while `/healthz` stayed green. Jinja syntax
+does not look like syntax to a reader, and neither of the two checks
+that existed could see it.
+
+### Verified both ways round
+
+Version 9 renders `9β` and the translated subtitle, on the server and in
+both offline pages; the generated pages are byte-identical to v121's but
+for the build stamp and one added HTML comment. A fork's values render
+`X` and its own untranslated tagline on all four surfaces, with no trace
+of the canonical subtitle anywhere in the page. `/`, `/eqsheet/` and
+`/healthz` all 200 — a template edit is not verified until Flask has
+rendered it.
+
+**Nothing needs deploying urgently.** No cache bump (the offline pages
+are unchanged in substance), no solver release, and the server's rendered
+output is identical to what it already serves. The server repo has the
+commit whenever the next `git pull` happens.
+
+---
+
 ## #227 — Say who may frame the app — **done and live, 2 Sep 2026**
 
     Content-Security-Policy: frame-ancestors 'self' https://learn.symbulator.com
