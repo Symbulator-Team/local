@@ -1,5 +1,57 @@
 # Next build — accepted but not yet done
 
+## #229 — The beta mark at 80% of the numeral's height — **done and live, 3 Sep 2026; server awaits a pull**
+
+Roberto, 3 Sep 2026, and **everywhere it appears**: the app's wordmark
+and the landing page's, which are the two consumers that draw a beta.
+`learn.symbulator.com` never did.
+
+Georgia's beta has a long descender *and* an ascender taller than the
+digits, so at the numeral's own size it was the tallest thing in the
+lockup — the wrong emphasis for a mark that is temporary by design.
+`.brand-name .tm .beta { font-size: 0.8em; }` in `banner.css`, and the
+beta gets its own span so it can be sized without taking the numeral
+with it. Measured after: font ratio exactly 0.800, rendered ink 26.4px
+against the numeral's 33.6.
+
+**`BRAND_BETA` joins `branding.py`** rather than staying inside
+`BRAND_TM`. It is a separate glyph with its own styling, and #137
+removes it when 9 leaves beta — at which point it becomes `""` and the
+markup disappears with it, with no template edit. A fork that is not in
+beta leaves it empty, which is what version X does.
+
+**This is a `banner.css` change, so it went to all four cPanel sites.**
+Canonical edited, copied to the landing folder, `stamp_assets.py` run
+(the stamp moved `15076a3e` → `00850b21`, without which a returning
+visitor keeps the old stylesheet for a week), re-inlined into both app
+templates, and both guards run. `check_banner` caught the drift the
+instant the canonical changed and refused to build — which is exactly
+what it is for, and the first time this session it has been seen doing
+it.
+
+Verified live afterwards rather than assumed: the three copies of
+`banner.css` — canonical, `symbulator.com`, `learn.symbulator.com` —
+are byte-identical at sha `00850b2108`, and the beta span is on the
+landing page and the install build. Cache **v122**; install and the ZIP
+deployed together.
+
+**The server still wants a `git pull` and a Reload** to serve it. No
+`pip` upgrade — no solver release.
+
+### Version X, the same day
+
+X took Roberto's variant C from a rendered mockup: the mark in gold
+(`#d9a521`) and a subtitle that says outright what X is — *an
+experimental fork of Symbulator 9 — testing the limits of symbolic
+simulation*. `BRAND_TM_COLOR` is a third branding value, rendered as an
+inline style on the mark alone and absent entirely when empty, so
+version 9 keeps the sky blue `banner.css` gives every property. Inline,
+and declared in `branding.py`, precisely so that a fork never has cause
+to edit the shared stylesheet — which would be #228's problem again, one
+file further down.
+
+---
+
 ## #228 — The banner's forkable strings move to `branding.py` — **done 3 Sep 2026; needs a server pull when convenient**
 
 Roberto asked how a separate banner for X was going to be *maintained*,
