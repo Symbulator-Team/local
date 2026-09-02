@@ -856,12 +856,26 @@ def _branding() -> tuple[str, str]:
     ns: dict = {}
     exec(compile(BRANDING.read_text(encoding="utf-8"), str(BRANDING), "exec"),
          ns)
-    return ns["BRAND_TM"], ns["BRAND_SUB"]
+    return (ns["BRAND_TM"], ns["BRAND_SUB"],
+            ns.get("BRAND_TM_COLOR", ""), ns.get("BRAND_BETA", ""))
 
 
 def resolve_banner(s: str, *, where: str) -> str:
     """Replace the banner's Jinja with what this tree's branding says."""
-    mark, subtitle = _branding()
+    mark, subtitle, colour, beta = _branding()
+    # The mark's optional colour, inline so that banner.css stays the one
+    # shared source of the lockup. Version 9 sets none and the attribute
+    # disappears entirely, leaving the stylesheet in charge.
+    s = sub(s,
+            '{% if brand_tm_color %} style="color: {{ brand_tm_color }}"'
+            '{% endif %}',
+            f' style="color: {colour}"' if colour else "",
+            label=f"the wordmark colour in {where}")
+    s = sub(s,
+            '{% if brand_beta %}<span class="beta">{{ brand_beta }}</span>'
+            '{% endif %}',
+            f'<span class="beta">{beta}</span>' if beta else "",
+            label=f"the beta mark in {where}")
     s = sub(s, "{{ brand_tm }}", mark, label=f"the wordmark mark in {where}")
     start = s.find("{% if brand_sub %}")
     end = s.find("{% endif %}", start)
