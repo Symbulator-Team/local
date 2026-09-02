@@ -1,5 +1,51 @@
 # Next build — accepted but not yet done
 
+## #225 — "Show image (if available)" — **built and on the two offline sites, 2 Sep 2026; the server awaits Roberto's PythonAnywhere pass**
+
+Roberto, 2 Sep 2026: a checkbox in the Input File card governing #219's
+entry picture. **Checked by default**, and **remembered across entries
+and across sessions** — his ruling, asked and answered before any of it
+was written: "checked by default in the app, but then it should remember
+across entries and sessions. Not per entry."
+
+So it is a standing preference in its own `localStorage` key,
+`symbulator-show-image`, beside `symbulator-theme` and
+`symbulator-lang`, and deliberately **not** part of the saved workspace
+and **not** a `.cir` field. It says how this reader likes to work, not
+what this circuit is; the input file format is unchanged.
+
+**Unticked, the picture is not merely hidden — the `<img>` is given no
+`src`, so nothing is requested.** That is the point of the feature for
+anyone on a metered connection, and it is why it could not be a CSS
+rule. Measured rather than assumed: with the box off, a fresh load of
+`?lesson=1&entry=1` — an entry that has a picture — requests `logo.png`
+and nothing else.
+
+Two details worth keeping:
+
+* **The src is remembered** (`entryImageSrc`), so ticking the box puts
+  the picture back at once instead of at the next pick. The entry itself
+  is not always to hand — a reader can be looking at inputs they have
+  edited away from it — so the value is kept rather than looked up.
+* **The control sits outside `entryImageBox`**, which is hidden whenever
+  there is no picture. A checkbox that vanished along with the image
+  could never be used to bring one back.
+
+Translated into all twelve languages, `i18n check: ok`. Verified in the
+offline build as well as the server one, and in four languages on the
+page: `Mostrar imagen (si está disponible)`, `画像を表示（ある場合）`,
+`Показувати зображення (якщо є)`, `Bild anzeigen (falls vorhanden)`.
+
+**Shipped:** cache **v121**; `install.symbulator.com` and
+`symbulator.com/9/local.zip` deployed and verified byte-identical to
+each other. **No solver release** — 0.5.26 is untouched, so the bundled
+wheel and the three pins that name it did not move, and no `pip
+install --upgrade` is needed anywhere. What is left is the server: the
+repo is pushed, so it wants a `git pull` and a **Reload** on both
+PythonAnywhere accounts.
+
+---
+
 **#212 is done and everywhere, 1 Sep 2026**, at solver **0.5.24** and cache **v115** — PyPI, `install.symbulator.com`, the ZIP and `symbulator.pythonanywhere.com` (Roberto's pass the same night; `/healthz` clean, a DC divider, an AC complex solve and a live schematic all verified by fetching). The wheel is byte-identical in four places: PyPI, the install host, the ZIP and the local build. Only the typed prune of the 0.5.23 wheel on the install host is left, and that is his to run. — **the schematics are drawn the way a textbook draws them.** Element names are set as a kind letter with a capitalised subscript — `rin` is Rₓₙ, `r1` is R₁ — inductors are coils of *loops* rather than rows of humps, and a controlled source is a diamond. Roberto's brief, with two textbook PDFs to work from; the grounding is written into the code, not just into this entry.
 
 **The naming.** One `<text>` per label, one `<tspan>` per run, the subscript carrying `class="sub"` and a baseline shift relative to the run before it — which is what lets a caption come back up to full size after `R₁ = `. An underscore is a separator, not a character to print (`r_a` is Rₐ), so the display is many-to-one: `rab`, `rAB` and `r_a_b` all read Rₐᵇ. That was already true of case, and it is confined to the drawing — the answers, the exports and the description keep the name as typed. Written up under LIMITATIONS.
