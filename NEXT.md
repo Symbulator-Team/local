@@ -218,14 +218,13 @@ markup: default on with the picture loaded, and unticking it drops the
 the bundled wheel and the three pins that name it did not move, and no
 `pip install --upgrade` was needed anywhere.
 
-**X has this merged** (Roberto's "Do X now", the same day): `git fetch
-v9 && git merge v9/main` ran clean on all three `SymbulatorX` repos --
-server, local and solver, the last picking up #223 -- and is pushed to
-`Symbulator-Team`. X differs from v9 by its three orientation
-`CLAUDE.md` files and nothing else, measured with `git diff --name-only
-v9/main HEAD`. `symbulatorx.pythonanywhere.com` cannot serve it: PythonAnywhere shut
-that account down on 2 Sep 2026 and the host now 404s on every path, so
-the merge is as far as #225 travels for X.
+**X has this merged**, and **X's site came back on 3 Sep 2026**:
+PythonAnywhere disabled the account on 2 Sep for content that "might be
+related to phishing activities" -- X was then byte-identical to version 9
+under a hostname one letter away -- and restored it on appeal. So #225
+does reach X, once its own PythonAnywhere pull-and-reload happens. X now
+differs from v9 by its orientation `CLAUDE.md` files, its `branding.py`
+(#228, #229) and the pages generated from it.
 
 ---
 
