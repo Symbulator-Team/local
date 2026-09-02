@@ -1,5 +1,50 @@
 # Next build — accepted but not yet done
 
+## #227 — Say who may frame the app — **pushed 2 Sep 2026; awaiting Roberto's PythonAnywhere pass**
+
+    Content-Security-Policy: frame-ancestors 'self' https://learn.symbulator.com
+
+Server variant only (`repos/server/app.py`, one `after_request`). The
+offline builds are static files on cPanel and send no headers; nothing
+frames them.
+
+**Why now.** #224's split view legitimately frames this host from
+`learn.symbulator.com`, and until now nothing said so -- the app sent no
+framing header at all, so *every* origin on the internet was allowed to
+embed it. On 2 Sep 2026 PythonAnywhere disabled the separate
+`symbulatorx` account for content that "might be related to phishing
+activities" (X was then byte-identical to this site under a hostname one
+letter away). Nothing about *this* site was in that notice, but a page
+anybody may frame is what an automated scanner reads as a phishing
+surface, and naming the one origin that may is the honest answer as well
+as a real defence against clickjacking.
+
+**`frame-ancestors` only.** A full CSP would have to account for the
+inline styles and scripts the template is built from, the KaTeX and
+MathJax CDNs and Google Fonts; getting one wrong breaks the page for
+everyone. This directive touches nothing but framing.
+
+**And no `X-Frame-Options` beside it** -- the obvious instinct, and
+wrong. There is no safe value: it has no syntax for "me and one other
+origin", `ALLOW-FROM` was removed from every current browser, and
+`SAMEORIGIN` would forbid the split view, which is the one framing this
+exists to permit. A browser too old for `frame-ancestors` cannot run
+this front end anyway.
+
+**Proved by making it fail on purpose**, not by reading the header back:
+a page served from a second local origin framing the app is refused, and
+the console names the directive --
+
+    Framing 'http://127.0.0.1:5000/' violates the following Content
+    Security Policy directive: "frame-ancestors 'self'
+    https://learn.symbulator.com". The request has been blocked.
+
+The header is on every route, the eqsheet Blueprint included. No cache
+bump: `app.py` is not part of the offline build, so this is a server
+`git pull` and **Reload** and nothing else.
+
+---
+
 ## #225 — "Show image (if available)" — **done and everywhere, 2 Sep 2026**
 
 Roberto, 2 Sep 2026: a checkbox in the Input File card governing #219's
