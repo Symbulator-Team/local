@@ -1,6 +1,6 @@
 # Next build — accepted but not yet done
 
-## #225 — "Show image (if available)" — **built and on the two offline sites, 2 Sep 2026; the server awaits Roberto's PythonAnywhere pass**
+## #225 — "Show image (if available)" — **done and everywhere, 2 Sep 2026**
 
 Roberto, 2 Sep 2026: a checkbox in the Input File card governing #219's
 entry picture. **Checked by default**, and **remembered across entries
@@ -36,13 +36,21 @@ offline build as well as the server one, and in four languages on the
 page: `Mostrar imagen (si está disponible)`, `画像を表示（ある場合）`,
 `Показувати зображення (якщо є)`, `Bild anzeigen (falls vorhanden)`.
 
-**Shipped:** cache **v121**; `install.symbulator.com` and
-`symbulator.com/9/local.zip` deployed and verified byte-identical to
-each other. **No solver release** — 0.5.26 is untouched, so the bundled
-wheel and the three pins that name it did not move, and no `pip
-install --upgrade` is needed anywhere. What is left is the server: the
-repo is pushed, so it wants a `git pull` and a **Reload** on both
-PythonAnywhere accounts.
+**Shipped, all three surfaces:** cache **v121**;
+`install.symbulator.com` and `symbulator.com/9/local.zip` deployed and
+verified byte-identical to each other (`index.html`, `sw.js` and all
+twelve dictionaries); and `symbulator.pythonanywhere.com` on Roberto's
+pull-and-reload the same day — `/healthz` build `2026-09-02 12:57 UTC`
+running *and* on disk, `needs_reload: false`, solver 0.5.26. The
+checkbox was hit-tested on the live server rather than found in the
+markup: default on with the picture loaded, and unticking it drops the
+`src` and stores `no`. **No solver release** — 0.5.26 is untouched, so
+the bundled wheel and the three pins that name it did not move, and no
+`pip install --upgrade` was needed anywhere.
+
+**X has not been merged since #219**, so `symbulatorx.pythonanywhere.com`
+does not have this. `git fetch v9 && git merge v9/main` on the two
+`SymbulatorX` repos would carry it across; Roberto's call.
 
 ---
 
