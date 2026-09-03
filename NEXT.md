@@ -1,5 +1,84 @@
 # Next build — accepted but not yet done
 
+## #251 - every built-in entry that can be plotted carries its plot - **done 3 Sep 2026; cache v134 live on the two offline sites, the server awaits a pull**
+
+Roberto, after #250: *"update all the built-in .cir input files for the
+tutorial and other built-in examples, so that the entries carry the
+values for the fields in the plot tool."* Then *"After that, commit,
+upload, update."* and *"Do not wait for me. I'm going to bed."* -- so
+this ran through to the deploys unattended; PyAn is his.
+
+### What was there
+
+Five entries carried a full plot already (Bo2's 6.5 and 6.6 in Lesson
+6d, the low-pass in Lesson 11, two in the Showcase). **Two of them said
+`plottool: time`**, which is the API's name for the tool and not the
+menu's (`plot_time`), and a `<select>` handed a value it has no option
+for selects *nothing*: both entries loaded with the Plot type blank,
+`selectedIndex -1`, and Run would have posted an empty tool. Measured in
+the browser before anything was changed. Both books now say `plot_time`,
+and `applyCircuit()` maps `time` to `plot_time` on the way in, so a file
+written by hand or downloaded from the old build still loads.
+
+### How the 62 new plots were chosen
+
+Not by hand. A script solved every entry with the real engine and sized
+its plot from the answer, then ran the proposal through the same ui
+function the Plot card calls and kept it only if it drew something:
+
+| analysis | tool | key | range |
+|---|---|---|---|
+| tr | `plot_time` | the entry's `variables:` name if it is an answer; else the capacitor voltage, else the inductor current, else the output node | 0 to five times the slowest time constant, or three periods of the slowest oscillation, or twice the latest step -- rounded up to 1/2/5 x 10^k |
+| fd, ac | `bode` | as above | a decade below the lowest corner to a decade above the highest, on decade marks, at least three decades; the AC entry's own omega counts as a corner |
+| fd, no numeric source | `bode_tf` | H(s) itself, simplified | 1 Hz to 100 kHz |
+| dc, one free symbol that is a source's whole value | `sweep` | the output node | 0 to 10 V |
+
+**62 proposals survived, 261 entries were left alone**, each for a
+reason the script printed: 46 Thévenin and 15 other tool entries; 107 DC
+circuits with nothing to sweep; 37 with several free symbols (the
+symbolic derivations); every AC power and three-phase problem of lessons
+7-10, whose impedances are written in jΩ and so cannot be swept in
+frequency (the engine says so: *still depends on j*); the transient
+figures that are symbolic in V, r and c; the impulse response
+(`DiracDelta` does not sample); and three current-source sweeps I
+dropped by hand, having no natural range for the current. The
+two-stage amplifier in the monograph has a symbolic source and a
+four-capacitor H(s) too long to type into the Bode-of-H(s) field, so it
+has none.
+
+The one editorial addition: NR11's Example 13.7 is *about* a transfer
+function, so it carries `plottool: bode_tf` with `1000/(s + 1000)`, the
+H(s) the engine derives -- the reader sees the plot the chapter is
+about without a source value.
+
+### The check
+
+`repos/server/tools/check_example_plots.py` runs every entry's plot the
+way the card would -- Define lines expanded, Expert Mode extras passed --
+and fails on a tool the menu lacks, an engine refusal, non-finite
+samples, a flat trace, or an inverted range. **67 plots in 330 entries,
+0 failures.** Proved red by sabotage three ways on Lesson 11 (a wrong
+key, `time`, an inverted range), each naming the entry and the reason.
+Not in the build: it solves 67 circuits and takes a minute or two. Run
+it after touching a book or the plot tools.
+
+### Verified on the artefact
+
+NR11's entry opened from `?lesson=12&entry=6` in the local server, the
+Plot card filled, Run pressed: *Plotted!* and an SVG in the card. Bo2's
+6.5 opened with `plot_time` selected where the morning's build had
+nothing selected. Both legacy spellings (`plottool: time`, and the older
+`tool: time`) applied through `applyCircuit()` select `plot_time`.
+
+Build `2026-09-03 12:22 UTC`, cache **v134**, ZIP **31,802,999 bytes**.
+Deployed and hash-verified: `install.symbulator.com` (14 files uploaded,
+48 identical) and `symbulator.com/9/local.zip`. The server needs a pull
+and a reload -- twelve books, the template and the new tool; no `pip`,
+no solver release. The monograph's exemplar circuits gained plot keys
+but their drawings did not change, so Appendix B is not stale.
+
+---
+
 ## #250 - the Plot card's inputs travel with the entry - **built and deployed 3 Sep 2026 at cache v133; the two offline sites are live, the server awaits a pull**
 
 Roberto: *"I want to add the inputs in the fields for the Plot tools to
