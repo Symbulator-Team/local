@@ -724,7 +724,7 @@ def check_example_images() -> None:
 
     Soft on a missing docs tree and hard on a broken link. The tree is a
     neighbour, not a dependency of this build -- the offline page does not
-    show these pictures at all -- so a checkout without `Sym Docum` beside
+    show these pictures at all -- so a checkout without `Documentation` beside
     it must still build. A link that *is* checkable and wrong is a real
     fault, and one that shows up nowhere else: the app hides the picture's
     card when the image fails, so a reader sees a missing circuit as a page
@@ -734,7 +734,7 @@ def check_example_images() -> None:
     if not checker.is_file():
         return
     if not docs.is_dir():
-        print("  note: 'Sym Docum' is not beside this tree, so the examples' "
+        print("  note: 'Documentation' is not beside this tree, so the examples' "
               "image links were not checked.")
         return
     result = subprocess.run([sys.executable, str(checker)],
