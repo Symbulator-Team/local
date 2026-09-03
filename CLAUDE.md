@@ -395,7 +395,7 @@ job.
 
 | Variant | How |
 |---|---|
-| **server** | Push to GitHub, then in a **PythonAnywhere Bash console**: `cd ~/symbulator_web`, `source ~/.virtualenvs/symbulator-venv/bin/activate`, `git pull`, and — whenever the solver version moved — `pip install --upgrade symbulator`. Then **Reload** on the Web tab, and load the site and **run a real solve**: a clean pull does not catch a version-mismatch crash, which only appears on an actual request. `/healthz` reports the running build, the build on disk and the solver version, so a pull without a reload is visible in one request. |
+| **server** | Push to GitHub, then in a **PythonAnywhere Bash console**: `cd /home/symbulator/symbulator_web` (the full path, because the repo is named `server` on GitHub and `cd ~/server` — the natural guess — has been typed by four different sessions and does not exist), `source ~/.virtualenvs/symbulator-venv/bin/activate`, `git pull`, and — whenever the solver version moved — `pip install --upgrade symbulator`. Then **Reload** on the Web tab, and load the site and **run a real solve**: a clean pull does not catch a version-mismatch crash, which only appears on an actual request. `/healthz` reports the running build, the build on disk and the solver version, so a pull without a reload is visible in one request. |
 | **install** | `py Deploy\deploy_symbulator.py install`, from `C:\Users\perez\Claude Symbulator`. |
 | **local** | Build the ZIP, then `py Deploy\deploy_symbulator.py zip`. |
 
