@@ -160,7 +160,7 @@ window.SYMB_I18N_CODES = ["bn","de","eo","es","fr","hi","id","ja","ko","pt","uk"
     transition: background-color .15s ease, color .15s ease;
   }
   /* ==== BEGIN banner.css ====================================
-     Copied verbatim from Symbulator/repos/local/banner.css,
+     Copied verbatim from Application/v9/repos/local/banner.css,
      which is the single source for the lockup shared by this app,
      symbulator.com and learn.symbulator.com. Do not edit it here:
      build_local.py compares the two and refuses to build if they
@@ -1159,7 +1159,7 @@ window.SYMB_I18N_CODES = ["bn","de","eo","es","fr","hi","id","ja","ko","pt","uk"
      .topbar carries the lockup and nothing else, .subbar carries this
      property's own controls, and the sky keyline closes the pair under the
      subbar. Both are styled by the shared banner.css (canonical in
-     Symbulator/repos/local) copied in above; only what sits INSIDE
+     Application/v9/repos/local) copied in above; only what sits INSIDE
      .subbar-inner is the app's own business.
 
      The app had no .subbar until 23 Aug 2026 -- it took the shared file but
@@ -1181,7 +1181,7 @@ window.SYMB_I18N_CODES = ["bn","de","eo","es","fr","hi","id","ja","ko","pt","uk"
         <!-- The β is temporary (Roberto, 28 Aug 2026): version 9 is in
              beta, and the numeral says so until it is not. Banner
              wordmark only -- nowhere else. -->
-        <h1 class="brand-name notranslate">Symbulator <span class="tm">9<span class="beta">β</span></span></h1>
+        <h1 class="brand-name notranslate">Symbulator <span class="tm" style="color: #d9a521">X</span></h1>
         <!-- #228: the subtitle. Empty brand_sub means version 9, whose
              subtitle is a translated UI string and must stay one; a fork
              sets brand_sub and gets its own untranslated tagline. Both
@@ -1195,7 +1195,7 @@ window.SYMB_I18N_CODES = ["bn","de","eo","es","fr","hi","id","ja","ko","pt","uk"
              stray expression. It now bans Jinja statements and comments
              too, which is why this note cannot spell either of them
              out. -->
-        <p class="brand-sub" data-i18n="the-best-portable-symbolic.4e2c">the best portable symbolic simulator of linear circuits</p>
+        <p class="brand-sub notranslate">an experimental fork of Symbulator 9 — testing the limits of symbolic simulation</p>
             </div>
     </div>
     </div>
@@ -2376,7 +2376,7 @@ units: yes</pre>
   <a href="https://github.com/Symbulator" target="_blank" rel="noopener">GitHub</a> ·
   <a href="https://pypi.org/project/symbulator/" target="_blank" rel="noopener">PyPI</a></span><br>
   <span data-i18n="free-and-open-source.dd6c">Free and open-source software under the MIT licence · results are symbolic, powered by SymPy</span><br>
-  <span class="notranslate">Symbulator 9 version 2026-09-03 04:23 UTC</span>
+  <span class="notranslate">Symbulator 9 version 2026-09-03 10:04 UTC</span>
 </footer>
 
 <script>
