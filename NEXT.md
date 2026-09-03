@@ -86,21 +86,29 @@ them; the bridge was tested against the server's `circuitbook.py`, since
 the copy in `repos/local` is generated and was stale until the build
 copied it.
 
-Build `2026-09-03 11:40 UTC`, cache **v133**, ZIP **31,801,752 bytes**,
+### The format reference, in thirteen languages
+
+The paragraph in the Input File card described the plot keys as
+*`plottool` (time/bode) / plotkey / plotmin / plotmax / plotpoints* - no
+`plotx`, and two plot types short. It is one translation unit, so the
+fix was a translation round, done the same day at Roberto's ask: the
+English now reads *`plottool` (sweep/bode/bode_tf/plot_time) / plotkey /
+plotx (the variable on the x-axis) / plotmin / plotmax / plotpoints*,
+`i18n.py tag` minted the new key (`everything-after-the-element.afbf`,
+retiring `.4f05`), and the twelve dictionaries got the same two edits
+each - the parenthetical borrowed from each language's own label for the
+x-axis field, so the reference and the field agree. Japanese and Chinese
+keep their full-width parentheses, as their `plottool` already did.
+`i18n.py check` is clean, no orphans.
+
+Build `2026-09-03 11:54 UTC`, cache **v133**, ZIP **31,802,120 bytes**,
 staged into `install_site`. Not deployed. The server needs a pull and a
-reload (`app.py`, `circuitbook.py` and the template all changed); no
-`pip`, no solver release.
+reload (`app.py`, `circuitbook.py`, the template and the dictionaries all
+changed); no `pip`, no solver release.
 
-### Left alone, on purpose
-
-The format reference paragraph in the Input File card still describes
-the plot keys as *`plottool` (time/bode) / plotkey / plotmin / plotmax /
-plotpoints* - no `plotx`, and two plot types short. It is one
-translation unit in thirteen languages, so correcting it is a
-translation round, not a text edit; it is accurate for every key it
-names. `verify_bridge.py` was not run: it solves all 330 entries through
-both front ends and times out at five minutes, and it exercises the
-solve path, which this item did not touch.
+`verify_bridge.py` was not run: it solves all 330 entries through both
+front ends and times out at five minutes, and it exercises the solve
+path, which this item did not touch.
 
 ---
 
