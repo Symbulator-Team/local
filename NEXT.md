@@ -76,7 +76,7 @@ Cache **v132**; install and the ZIP deployed and verified.
 
 ### Also: `install` needs three commands, not one
 
-`deploy_symbulator.py install` reads `Symbulator/install_site`, which is
+`deploy_symbulator.py install` reads `Application/v9/install_site`, which is
 unpacked from `repos/local/local.zip` by `stage_install_site.py`. Running
 the deploy straight after `build_local.py` uploads **the previous
 build** and verifies it as a hash match, honestly and uselessly - stale
@@ -1021,7 +1021,7 @@ all thirteen dictionaries stand untouched.
 Version 9's PythonAnywhere pass for v120 is **done** (1 Sep 2026): `/healthz` build `2026-09-01 12:03 UTC` running *and* on disk, `needs_reload: false`, solver 0.5.26 — the served card ordering checked (upload row → format reference → Built-in Examples → entries → note → picture) and the picture hit-tested live at 798×540. X's account followed the same day: `symbulatorx.pythonanywhere.com` reports the same build `2026-09-01 12:03 UTC` running and on disk, with the card ordering, the picture (798×540, hit-tested) and a real DC solve all verified live — so the merge carried #219 across without breaking X's engine.
 
 **#219 crossed to version X on 1 Sep 2026.** `git fetch v9 && git merge
-v9/main` ran clean on `SymbulatorX/repos/server` and `repos/local` (the
+v9/main` ran clean on `Application/vX/repos/server` and `repos/local` (the
 solver needed nothing), and both are pushed to `Symbulator-Team`. X now
 differs from v9 by its own orientation `CLAUDE.md` files **and nothing
 else**, which is the state that keeps future merges clean.
@@ -1071,7 +1071,7 @@ Two things worth remembering from the deploy itself:
 
 * **`build_zip.py --assets` only supplies `vendor/` and `static/`**, and
   the repo wins every overlap, so a stale extracted copy at
-  `Symbulator/local/` cannot put old examples in the ZIP. `install_site/`
+  `Application/v9/local/` cannot put old examples in the ZIP. `install_site/`
   is the one staging folder that *does* have to be refreshed by hand from
   the built ZIP, and it is deliberately five files short of it — the
   launchers and README belong to the download, not to the hosted site.
@@ -1250,7 +1250,7 @@ the round trip, and the SPICE suffix read back).
 ## #215 — the monograph showcase, restated — **done, in the working tree**
 
 Roberto's own rewrite of the entry, 1 Sep 2026, in
-`Symbulator/repos/server/examples/The_Monograph.cir`, in two passes. The
+`Application/v9/repos/server/examples/The_Monograph.cir`, in two passes. The
 circuit is the same circuit; what changed is how it is *written*, and it
 now reads the way #213 draws it — implied multiplication and no
 underscores in the controls: `jd1,a,b,0.2vr7`, `ed2,c,b,0.1ir5`,
@@ -5582,7 +5582,7 @@ It was held back at the time as cosmetic, on the grounds that shipping it alone
 costs a full three-site round, and folded into the next deploy that had a reason
 to happen. Verified live: `translateY(calc(-50% + 1px))` is present in the page
 served by `https://install.symbulator.com/` as well as in
-`C:\Users\perez\Claude Code\Symbulator\repos\local\index.html`.
+`C:\Users\perez\Claude Code\Application\v9\repos\local\index.html`.
 
 ---
 
