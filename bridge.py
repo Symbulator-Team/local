@@ -428,41 +428,10 @@ def export_book(payload_json: str) -> str:
     if not isinstance(raw_circuits, list) or not raw_circuits:
         return json.dumps({"ok": False, "error": "Nothing to save yet."})
 
-    circuits = []
-    for raw in raw_circuits[:circuitbook.MAX_CIRCUITS]:
-        if not isinstance(raw, dict):
-            continue
-        circuit = {"name": str(raw.get("name") or "Circuit")[:circuitbook.MAX_NAME_LEN],
-                   "desc": str(raw.get("desc") or "")}
-        for f in ("domain", "omega", "vars", "tool", "n1", "n2", "kind", "unknowns",
-                  "plottool", "plotkey", "plotmin", "plotmax", "plotpoints",
-                  "rounding", "evaluate", "solve_unknowns"):
-            if raw.get(f):
-                circuit[f] = str(raw[f])
-        # Settings booleans -- always carried over (even when False), since
-        # a saved circuit always has *some* Settings state, unlike the
-        # "if present" fields above. "units" defaults to True (unlike the
-        # other three): a circuit dict that never touched Settings at all
-        # (e.g. parsed straight from a supplied example, which doesn't spell out
-        # every default) means "show units", same as a fresh page load --
-        # bool(None) would wrongly read that silence as "off".
-        for f in ("si", "rms", "solve_real_only"):
-            circuit[f] = bool(raw.get(f))
-        circuit["units"] = bool(raw.get("units", True))
-        # #237: `note` moved up here when it became repeatable -- one
-        # paragraph per entry. Left among the scalars above it would
-        # have been str()-ed into the literal text "['a', 'b']" and
-        # written to the file that way.
-        for f in ("equations", "conditions", "evaluate_conditions",
-                  "solve_equations", "solve_conditions", "note"):
-            items = raw.get(f)
-            if isinstance(items, list):
-                items = [str(x).strip() for x in items if str(x).strip()]
-                if items:
-                    circuit[f] = items
-        if circuit["desc"].strip():
-            circuits.append(circuit)
-
+    # #250: one field list, kept in circuitbook beside the parser's tables
+    # and shared with app.py's /api/export. The copy that used to be here
+    # had lost plotx and defines; the server's had lost other keys.
+    circuits = circuitbook.clean_circuits(raw_circuits)
     if not circuits:
         return json.dumps({"ok": False, "error": "Nothing to save yet."})
     title = str(p.get("title") or "")[:circuitbook.MAX_TITLE_LEN]

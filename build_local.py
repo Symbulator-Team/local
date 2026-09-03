@@ -718,6 +718,28 @@ def check_hidden_guards() -> None:
               "attribute (see above).")
 
 
+def check_export_fields() -> None:
+    """Stop the build if an entry cannot make the round trip -- form to
+    file to form -- with every field intact.
+
+    #250: the two export paths kept their own copies of the field list and
+    each had lost different keys, and the front end's snapshot can name a
+    key the file format has never heard of. Both are invisible until a
+    downloaded file is opened again. Hard failure: it needs nothing outside
+    the two repositories."""
+    checker = SERVER / "tools" / "check_export_fields.py"
+    if not checker.is_file():
+        raise SystemExit("build_local.py: tools/check_export_fields.py is "
+                         "missing; the entry round-trip check cannot run.")
+    result = subprocess.run([sys.executable, str(checker)],
+                            capture_output=True, text=True)
+    if result.returncode != 0:
+        raise SystemExit(
+            (result.stdout or "") + (result.stderr or "")
+            + "build_local.py: an entry field does not survive the file "
+              "round trip (see above).")
+
+
 def check_example_images() -> None:
     """Stop the build if an example's `image:` link names a picture that is
     no longer in the docs tree.
@@ -1047,6 +1069,11 @@ def build() -> str:
     # #249: same shape of fault -- invisible in the DOM, visible on
     # screen. Cheap, so it runs on every build.
     check_hidden_guards()
+
+    # #250: every field the form saves must come back out of a file. Two
+    # hand-kept field lists had drifted apart; there is one now, and this
+    # proves it against the parser, the writer and the front end.
+    check_export_fields()
 
     # --- drop every server-only block: the "download the offline
     #     version" card, and the "no backend here" notice -- both are

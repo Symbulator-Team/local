@@ -1,6 +1,229 @@
 # Next build — accepted but not yet done
 
-## #249 - a `display` rule had been overriding `hidden` - **built 3 Sep 2026; the two offline sites are live, the server awaits a pull**
+## #255 - every built-in entry that can be plotted carries its plot - **done 3 Sep 2026, live on all five sites**
+
+> **Numbered #251 when it was written, and renumbered on 4 Sep 2026.** A
+> documentation session running the same evening claimed #251-#254 for the
+> version 9 wording pass, the `::: web` / `::: pdf` tags and the legibility
+> pass -- its #253 is the tutorial's account of #250 here. The two trees
+> share one running sequence, so the collision made #251 two different
+> things. Their block is committed, deployed and named by a revert tag, and
+> is four items to this one, so this is the side that moved. **Two pushed
+> commits still say #251 in their subject lines** (`fd64b36` in `server`,
+> `6f4ce8f` in `local`); the number in the notes is the one to believe.
+> Working in two trees at once is how this happens: claim the number in
+> both `NEXT.md` and `NEXT_DOCS.md` before starting, not when writing up.
+
+Roberto, after #250: *"update all the built-in .cir input files for the
+tutorial and other built-in examples, so that the entries carry the
+values for the fields in the plot tool."* Then *"After that, commit,
+upload, update."* and *"Do not wait for me. I'm going to bed."* -- so
+this ran through to the deploys unattended; PyAn is his.
+
+### What was there
+
+Five entries carried a full plot already (Bo2's 6.5 and 6.6 in Lesson
+6d, the low-pass in Lesson 11, two in the Showcase). **Two of them said
+`plottool: time`**, which is the API's name for the tool and not the
+menu's (`plot_time`), and a `<select>` handed a value it has no option
+for selects *nothing*: both entries loaded with the Plot type blank,
+`selectedIndex -1`, and Run would have posted an empty tool. Measured in
+the browser before anything was changed. Both books now say `plot_time`,
+and `applyCircuit()` maps `time` to `plot_time` on the way in, so a file
+written by hand or downloaded from the old build still loads.
+
+### How the 62 new plots were chosen
+
+Not by hand. A script solved every entry with the real engine and sized
+its plot from the answer, then ran the proposal through the same ui
+function the Plot card calls and kept it only if it drew something:
+
+| analysis | tool | key | range |
+|---|---|---|---|
+| tr | `plot_time` | the entry's `variables:` name if it is an answer; else the capacitor voltage, else the inductor current, else the output node | 0 to five times the slowest time constant, or three periods of the slowest oscillation, or twice the latest step -- rounded up to 1/2/5 x 10^k |
+| fd, ac | `bode` | as above | a decade below the lowest corner to a decade above the highest, on decade marks, at least three decades; the AC entry's own omega counts as a corner |
+| fd, no numeric source | `bode_tf` | H(s) itself, simplified | 1 Hz to 100 kHz |
+| dc, one free symbol that is a source's whole value | `sweep` | the output node | 0 to 10 V |
+
+**62 proposals survived, 261 entries were left alone**, each for a
+reason the script printed: 46 Thévenin and 15 other tool entries; 107 DC
+circuits with nothing to sweep; 37 with several free symbols (the
+symbolic derivations); every AC power and three-phase problem of lessons
+7-10, whose impedances are written in jΩ and so cannot be swept in
+frequency (the engine says so: *still depends on j*); the transient
+figures that are symbolic in V, r and c; the impulse response
+(`DiracDelta` does not sample); and three current-source sweeps I
+dropped by hand, having no natural range for the current. The
+two-stage amplifier in the monograph has a symbolic source and a
+four-capacitor H(s) too long to type into the Bode-of-H(s) field, so it
+has none.
+
+The one editorial addition: NR11's Example 13.7 is *about* a transfer
+function, so it carries `plottool: bode_tf` with `1000/(s + 1000)`, the
+H(s) the engine derives -- the reader sees the plot the chapter is
+about without a source value.
+
+### The check
+
+`repos/server/tools/check_example_plots.py` runs every entry's plot the
+way the card would -- Define lines expanded, Expert Mode extras passed --
+and fails on a tool the menu lacks, an engine refusal, non-finite
+samples, a flat trace, or an inverted range. **67 plots in 330 entries,
+0 failures.** Proved red by sabotage three ways on Lesson 11 (a wrong
+key, `time`, an inverted range), each naming the entry and the reason.
+Not in the build: it solves 67 circuits and takes a minute or two. Run
+it after touching a book or the plot tools.
+
+### Verified on the artefact
+
+NR11's entry opened from `?lesson=12&entry=6` in the local server, the
+Plot card filled, Run pressed: *Plotted!* and an SVG in the card. Bo2's
+6.5 opened with `plot_time` selected where the morning's build had
+nothing selected. Both legacy spellings (`plottool: time`, and the older
+`tool: time`) applied through `applyCircuit()` select `plot_time`.
+
+Build `2026-09-03 12:22 UTC`, cache **v134**, ZIP **31,802,999 bytes**.
+Deployed and hash-verified: `install.symbulator.com` (14 files uploaded,
+48 identical) and `symbulator.com/9/local.zip`. **The server followed on
+4 Sep 2026**, Roberto's pull and reload; no `pip`, no solver release.
+
+Verified on the live host rather than by the stamp: `/api/examples` for
+Lesson 11 serves four entries, all four with a plot, and Lesson 6d
+sixteen -- Bo2's 6.5 among them, now reading `plot_time` where it read
+`time`. Then the plot itself, driven on
+`symbulator.pythonanywhere.com/?lesson=11&entry=1`: Run returns
+*Plotted!* and the card holds a 640x260 SVG titled *v_2 - magnitude*,
+its axis starting at 10 Hz and its trace carrying **300 points** -- the
+entry's own `plotpoints`. The pane was hidden, so every pixel
+measurement read 0; the point count is the measurement that survives
+that, and the viewport was printed to prove the zero rather than
+believed. The monograph's exemplar circuits gained plot keys
+but their drawings did not change, so Appendix B is not stale.
+
+---
+
+## #250 - the Plot card's inputs travel with the entry - **done 3 Sep 2026 at cache v133; live on all five sites**
+
+Roberto: *"I want to add the inputs in the fields for the Plot tools to
+the entry that is saved in input files. So, if there are values for a
+Bode plot inputs at the time the entry is saved, save those and restore
+them when the entry is loaded."*
+
+The keys already existed - `plottool`, `plotkey`, `plotx`, `plotmin`,
+`plotmax`, `plotpoints`, written by `inputsSnapshot()`, read by
+`applyCircuit()`, known to `parse_book` and `format_book`, listed in the
+format reference. And they worked, for the case they were tested on. Two
+things lost the values anyway, and both were found by trying the round
+trip rather than by reading the code that claimed to do it.
+
+### What was losing them
+
+**The gate.** `inputsSnapshot()` saved the Plot card only when the
+*variable* field was non-empty. A Bode plot's frequencies typed before
+its variable, or a sweep's range typed first, were dropped from the entry
+and came back blank. The card now counts as in use when any of its four
+text fields holds something, or when the point count has been changed
+from the 300 a fresh page shows - so a fresh page still claims no plot,
+which the "have the inputs changed?" comparison depends on.
+
+**Two field lists that were supposed to be one.** The browser's entries
+go to a file through `/api/export` on the server or `export_book` in the
+offline bridge, and each kept its own hand-written list of the fields to
+carry across. `app.py` even had a comment saying this was the trap
+CLAUDE.md warns about. It was. Measured before the fix, by posting one
+entry with every field set:
+
+| lost by | fields |
+|---|---|
+| the server's export | `defines`, `evaluate_conditions`, `polar`, `show_equations` |
+| the offline bridge's export | `plotx`, `defines`, `polar`, `show_equations` |
+
+So the sweep's x-axis variable - the one plot field no other plot type
+has - was silently dropped from every file the offline builds wrote, and
+an AC entry saved with polar phasors came back rectangular from any
+downloaded file. Nothing showed inside a session: the entries live in
+the browser and are restored from there, so the values were lost only
+between **Download** and opening the file again - the one place a
+reader expects them to be safe.
+
+### The fix
+
+One function, `circuitbook.clean_circuits()`, behind both exports, and
+its field lists **derived from the parser's own tables** rather than
+written a third time: `SCALAR_FIELDS`, `BOOL_FIELDS` and `LIST_FIELDS`
+come out of `_KEYS`, `_BOOL_FIELDS` and `_MULTI`, so whatever
+`parse_book` can read, an export can write. The server passes its
+request caps; the offline build passes none, as before. `app.py` and
+`bridge.py` each shrank by thirty lines.
+
+### The guard
+
+`repos/server/tools/check_export_fields.py`, run by every
+`build_local.py`, hard. Three directions:
+
+1. a circuit with every field set is written, parsed, cleaned and
+   written again - every field must come back with its value, and the
+   second file must equal the first byte for byte;
+2. every key `inputsSnapshot()` returns must be one the format knows,
+   read straight out of the template;
+3. both exports must still call the shared function.
+
+Proved red by sabotage four ways before being trusted: `plotx` deleted
+from the parser (caught by 2), a `bogus:` key added to the snapshot
+(2), the bridge's call replaced by `[]` (3), and the writer told to skip
+`plotmin` (1, naming the field). Green again on restore:
+
+    check_export_fields: ok -- 31 fields round-trip, 28 snapshot keys all known, both exports share clean_circuits
+
+### Verified on the artefact
+
+Driven in the local server's page, not read off the code: a Bode plot
+with `10` and `1e5` typed and the variable blank, saved to a new entry,
+exported (`plottool: bode / plotmin: 10 / plotmax: 1e5 / plotpoints:
+300` in the file text), the card wiped with *Clear all*, the entry
+re-applied - all four back, card open. A fresh page's snapshot has no
+`plottool`. Both exports were then posted the same full entry and both
+wrote all 21 lines, `defines:` and `plotx: rx` and `polar: yes` among
+them; the bridge was tested against the server's `circuitbook.py`, since
+the copy in `repos/local` is generated and was stale until the build
+copied it.
+
+### The format reference, in thirteen languages
+
+The paragraph in the Input File card described the plot keys as
+*`plottool` (time/bode) / plotkey / plotmin / plotmax / plotpoints* - no
+`plotx`, and two plot types short. It is one translation unit, so the
+fix was a translation round, done the same day at Roberto's ask: the
+English now reads *`plottool` (sweep/bode/bode_tf/plot_time) / plotkey /
+plotx (the variable on the x-axis) / plotmin / plotmax / plotpoints*,
+`i18n.py tag` minted the new key (`everything-after-the-element.afbf`,
+retiring `.4f05`), and the twelve dictionaries got the same two edits
+each - the parenthetical borrowed from each language's own label for the
+x-axis field, so the reference and the field agree. Japanese and Chinese
+keep their full-width parentheses, as their `plottool` already did.
+`i18n.py check` is clean, no orphans.
+
+Build `2026-09-03 11:54 UTC`, cache **v133**, ZIP **31,802,120 bytes**.
+Both repositories pushed, then **deployed on Roberto's go the same
+day**: `install.symbulator.com` (17 files uploaded, 45 already identical,
+`index.html`, `sw.js`, `bridge.py`, `circuitbook.py` and the dictionaries
+hash-verified live) and `symbulator.com/9/local.zip` (31,802,120 bytes,
+hash-verified). **The server followed on 4 Sep 2026** -- Roberto's pull
+and reload on both PythonAnywhere accounts -- so this is live on all five
+sites; no `pip`, no solver release. Verified by fetching, not by the
+stamp: the live page's reference paragraph reads *plottool
+(sweep/bode/bode_tf/plot_time) / plotkey / plotx (the variable on the
+x-axis) / plotmin / plotmax / plotpoints*, and the new translation key
+`everything-after-the-element.afbf` is in the served markup with the old
+`.4f05` gone.
+
+`verify_bridge.py` was not run: it solves all 330 entries through both
+front ends and times out at five minutes, and it exercises the solve
+path, which this item did not touch.
+
+---
+
+## #249 - a `display` rule had been overriding `hidden` - **done 3 Sep 2026; live on all five sites since the 4 Sep pull**
 
 Roberto, on his phone: the monograph's second entry still showed the
 **Show image** tick with nothing under it. #242 was meant to hide that
@@ -91,7 +314,7 @@ before the local and live byte counts were compared.
 
 ---
 
-## #246, #247, #248 — nothing in the interface wraps on a phone any more — **built 3 Sep 2026; on the two offline sites, server awaits a pull**
+## #246, #247, #248 — nothing in the interface wraps on a phone any more — **done 3 Sep 2026; live on all five sites since the 4 Sep pull**
 
 #245 fitted the Input File buttons for English. These three finish the
 job: the remaining three languages, the summary under the buttons, and
@@ -172,7 +395,7 @@ Cache **v131**; install and the ZIP deployed and verified.
 
 ---
 
-## #245 — the Input File buttons fit a phone — **built 3 Sep 2026; on the two offline sites, server awaits a pull**
+## #245 — the Input File buttons fit a phone — **done 3 Sep 2026; live on all five sites since the 4 Sep pull**
 
 *Upload*, *Download* and *Create new* each carried `min-width: 8.6rem`
 so the trio would read as a set. Three of those plus two gaps is
