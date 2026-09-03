@@ -435,7 +435,7 @@ def export_book(payload_json: str) -> str:
         circuit = {"name": str(raw.get("name") or "Circuit")[:circuitbook.MAX_NAME_LEN],
                    "desc": str(raw.get("desc") or "")}
         for f in ("domain", "omega", "vars", "tool", "n1", "n2", "kind", "unknowns",
-                  "note", "plottool", "plotkey", "plotmin", "plotmax", "plotpoints",
+                  "plottool", "plotkey", "plotmin", "plotmax", "plotpoints",
                   "rounding", "evaluate", "solve_unknowns"):
             if raw.get(f):
                 circuit[f] = str(raw[f])
@@ -449,8 +449,12 @@ def export_book(payload_json: str) -> str:
         for f in ("si", "rms", "solve_real_only"):
             circuit[f] = bool(raw.get(f))
         circuit["units"] = bool(raw.get("units", True))
+        # #237: `note` moved up here when it became repeatable -- one
+        # paragraph per entry. Left among the scalars above it would
+        # have been str()-ed into the literal text "['a', 'b']" and
+        # written to the file that way.
         for f in ("equations", "conditions", "evaluate_conditions",
-                  "solve_equations", "solve_conditions"):
+                  "solve_equations", "solve_conditions", "note"):
             items = raw.get(f)
             if isinstance(items, list):
                 items = [str(x).strip() for x in items if str(x).strip()]
