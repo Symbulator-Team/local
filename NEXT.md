@@ -3097,7 +3097,7 @@ package to change, and **a code is permanent once published**. Rework
 the wording first, then code it.
 
 There is a handoff brief at
-`C:\Users\perez\Claude Code\PROMPT_211_spice_warnings.md`, written
+`C:\Users\perez\Claude Code\Notes\PROMPT_211_spice_warnings.md`, written
 31 Aug 2026 at Roberto's ask: the measured chain from `to_spice()` to
 `note(w)` in the page, the four consequences of that shape, the design
 these three items proved, and the precondition above stated first.
