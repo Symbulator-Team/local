@@ -1,6 +1,18 @@
 # Next build — accepted but not yet done
 
-## #251 - every built-in entry that can be plotted carries its plot - **done 3 Sep 2026; cache v134 live on the two offline sites, the server awaits a pull**
+## #255 - every built-in entry that can be plotted carries its plot - **done 3 Sep 2026, live on all five sites**
+
+> **Numbered #251 when it was written, and renumbered on 4 Sep 2026.** A
+> documentation session running the same evening claimed #251-#254 for the
+> version 9 wording pass, the `::: web` / `::: pdf` tags and the legibility
+> pass -- its #253 is the tutorial's account of #250 here. The two trees
+> share one running sequence, so the collision made #251 two different
+> things. Their block is committed, deployed and named by a revert tag, and
+> is four items to this one, so this is the side that moved. **Two pushed
+> commits still say #251 in their subject lines** (`fd64b36` in `server`,
+> `6f4ce8f` in `local`); the number in the notes is the one to believe.
+> Working in two trees at once is how this happens: claim the number in
+> both `NEXT.md` and `NEXT_DOCS.md` before starting, not when writing up.
 
 Roberto, after #250: *"update all the built-in .cir input files for the
 tutorial and other built-in examples, so that the entries carry the
@@ -72,14 +84,25 @@ nothing selected. Both legacy spellings (`plottool: time`, and the older
 
 Build `2026-09-03 12:22 UTC`, cache **v134**, ZIP **31,802,999 bytes**.
 Deployed and hash-verified: `install.symbulator.com` (14 files uploaded,
-48 identical) and `symbulator.com/9/local.zip`. The server needs a pull
-and a reload -- twelve books, the template and the new tool; no `pip`,
-no solver release. The monograph's exemplar circuits gained plot keys
+48 identical) and `symbulator.com/9/local.zip`. **The server followed on
+4 Sep 2026**, Roberto's pull and reload; no `pip`, no solver release.
+
+Verified on the live host rather than by the stamp: `/api/examples` for
+Lesson 11 serves four entries, all four with a plot, and Lesson 6d
+sixteen -- Bo2's 6.5 among them, now reading `plot_time` where it read
+`time`. Then the plot itself, driven on
+`symbulator.pythonanywhere.com/?lesson=11&entry=1`: Run returns
+*Plotted!* and the card holds a 640x260 SVG titled *v_2 - magnitude*,
+its axis starting at 10 Hz and its trace carrying **300 points** -- the
+entry's own `plotpoints`. The pane was hidden, so every pixel
+measurement read 0; the point count is the measurement that survives
+that, and the viewport was printed to prove the zero rather than
+believed. The monograph's exemplar circuits gained plot keys
 but their drawings did not change, so Appendix B is not stale.
 
 ---
 
-## #250 - the Plot card's inputs travel with the entry - **built and deployed 3 Sep 2026 at cache v133; the two offline sites are live, the server awaits a pull**
+## #250 - the Plot card's inputs travel with the entry - **done 3 Sep 2026 at cache v133; live on all five sites**
 
 Roberto: *"I want to add the inputs in the fields for the Plot tools to
 the entry that is saved in input files. So, if there are values for a
@@ -185,9 +208,14 @@ Both repositories pushed, then **deployed on Roberto's go the same
 day**: `install.symbulator.com` (17 files uploaded, 45 already identical,
 `index.html`, `sw.js`, `bridge.py`, `circuitbook.py` and the dictionaries
 hash-verified live) and `symbulator.com/9/local.zip` (31,802,120 bytes,
-hash-verified). The server is the one site behind: it needs a pull and a
-reload (`app.py`, `circuitbook.py`, the template and the dictionaries all
-changed); no `pip`, no solver release.
+hash-verified). **The server followed on 4 Sep 2026** -- Roberto's pull
+and reload on both PythonAnywhere accounts -- so this is live on all five
+sites; no `pip`, no solver release. Verified by fetching, not by the
+stamp: the live page's reference paragraph reads *plottool
+(sweep/bode/bode_tf/plot_time) / plotkey / plotx (the variable on the
+x-axis) / plotmin / plotmax / plotpoints*, and the new translation key
+`everything-after-the-element.afbf` is in the served markup with the old
+`.4f05` gone.
 
 `verify_bridge.py` was not run: it solves all 330 entries through both
 front ends and times out at five minutes, and it exercises the solve
@@ -195,7 +223,7 @@ path, which this item did not touch.
 
 ---
 
-## #249 - a `display` rule had been overriding `hidden` - **built 3 Sep 2026; the two offline sites are live, the server awaits a pull**
+## #249 - a `display` rule had been overriding `hidden` - **done 3 Sep 2026; live on all five sites since the 4 Sep pull**
 
 Roberto, on his phone: the monograph's second entry still showed the
 **Show image** tick with nothing under it. #242 was meant to hide that
@@ -286,7 +314,7 @@ before the local and live byte counts were compared.
 
 ---
 
-## #246, #247, #248 — nothing in the interface wraps on a phone any more — **built 3 Sep 2026; on the two offline sites, server awaits a pull**
+## #246, #247, #248 — nothing in the interface wraps on a phone any more — **done 3 Sep 2026; live on all five sites since the 4 Sep pull**
 
 #245 fitted the Input File buttons for English. These three finish the
 job: the remaining three languages, the summary under the buttons, and
@@ -367,7 +395,7 @@ Cache **v131**; install and the ZIP deployed and verified.
 
 ---
 
-## #245 — the Input File buttons fit a phone — **built 3 Sep 2026; on the two offline sites, server awaits a pull**
+## #245 — the Input File buttons fit a phone — **done 3 Sep 2026; live on all five sites since the 4 Sep pull**
 
 *Upload*, *Download* and *Create new* each carried `min-width: 8.6rem`
 so the trio would read as a set. Three of those plus two gaps is
