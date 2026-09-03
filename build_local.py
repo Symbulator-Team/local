@@ -730,7 +730,7 @@ def check_example_images() -> None:
     card when the image fails, so a reader sees a missing circuit as a page
     with no circuit on it."""
     checker = SERVER / "tools" / "check_example_images.py"
-    docs = SERVER.parent.parent.parent / "Sym Docum" / "Documentation"
+    docs = SERVER.parent.parent.parent / "Documentation"
     if not checker.is_file():
         return
     if not docs.is_dir():
