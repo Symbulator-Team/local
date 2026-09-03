@@ -1,6 +1,6 @@
 # Next build — accepted but not yet done
 
-## #250 - the Plot card's inputs travel with the entry - **built 3 Sep 2026; cache v133 staged, nothing deployed, awaiting the go**
+## #250 - the Plot card's inputs travel with the entry - **built and deployed 3 Sep 2026 at cache v133; the two offline sites are live, the server awaits a pull**
 
 Roberto: *"I want to add the inputs in the fields for the Plot tools to
 the entry that is saved in input files. So, if there are values for a
@@ -101,8 +101,12 @@ x-axis field, so the reference and the field agree. Japanese and Chinese
 keep their full-width parentheses, as their `plottool` already did.
 `i18n.py check` is clean, no orphans.
 
-Build `2026-09-03 11:54 UTC`, cache **v133**, ZIP **31,802,120 bytes**,
-staged into `install_site`. Not deployed. The server needs a pull and a
+Build `2026-09-03 11:54 UTC`, cache **v133**, ZIP **31,802,120 bytes**.
+Both repositories pushed, then **deployed on Roberto's go the same
+day**: `install.symbulator.com` (17 files uploaded, 45 already identical,
+`index.html`, `sw.js`, `bridge.py`, `circuitbook.py` and the dictionaries
+hash-verified live) and `symbulator.com/9/local.zip` (31,802,120 bytes,
+hash-verified). The server is the one site behind: it needs a pull and a
 reload (`app.py`, `circuitbook.py`, the template and the dictionaries all
 changed); no `pip`, no solver release.
 
