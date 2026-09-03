@@ -1,5 +1,121 @@
 # Next build — accepted but not yet done
 
+## #232, #235–#239 — the fine-tuning batch — **done and live, 3 Sep 2026; server awaits Roberto's pull**
+
+One listen-first round on 3 Sep 2026, nine items, six of them app-side.
+The docs-side three (#231, #233, #234) are in `NEXT_DOCS.md`.
+
+### #232 — the ribbon says Documentation / Docs
+
+`templates/index.html` and `templates/eqsheet.html`. The landing page had
+said *Documentation* all along; the app said *Tutorial*, and was the only
+thing out of step. **`banner.css` had already specified this** in its
+29 Aug comment — *"The app says App / Docs / Clear inputs there"* — so
+this was finishing a decision, not making one.
+
+Two new keys, twelve languages each, and then the check that is not
+optional: all thirteen languages measured at 375/481/520/768/1100px for
+clipping or wrap. **All clean, so no wording had to be shortened.** The
+first measurement pass was wrong and said even English clipped — it set
+`document.documentElement.style.width` instead of emulating a viewport,
+so the media query never fired and the *full* labels were being squeezed
+into 375px. Emulate the viewport; a CSS width is not a screen.
+
+### #235 — `image: <url> [200px]`
+
+A cap on how wide an entry's picture is drawn. One spelling only,
+case-insensitive on the `px`, whitespace required before the bracket so
+a URL containing brackets cannot be misread. A cap that does not parse
+leaves the picture at **full width and warns at parse time**: #219's
+rule is that an image *problem* produces silence, but a malformed
+instruction is a typo, and a silent typo is the thing this project keeps
+paying for.
+
+**It forced a fix to a guard.** `check_example_images.py` anchored its
+pattern straight after the URL, so a line carrying a cap would have
+stopped matching *entirely* and that picture would have dropped out of
+the check unnoticed — the same shape as #230. It now reads the cap,
+ignores it, and **reports any `image:` line it cannot parse** instead of
+skipping it. Proved by sabotage: valid cap passes, broken cap and
+missing file both exit 1, restored file clean.
+
+No parser change was needed for the value itself: `circuitbook.py` keeps
+`image` as one opaque string and writes it back verbatim, so the cap
+round-trips through a download for free.
+
+### #236 — the entry note is not shy any more
+
+It was `.84rem` in `--muted` — two separate ways of saying "this matters
+less" on the one thing carrying the instructions. Body size, body ink,
+its own class. The same `.booknote` also carries the transient chatter
+("reading file…", "Could not upload that file."), which stays small;
+the box and left rule are kept on both, because that is what marks the
+text as the entry's rather than the page's.
+
+### #237 — `note:` is repeatable
+
+One paragraph per line, rendered as separate `<p>` elements. It was
+scalar, so a second `note:` **silently replaced the first** — a whole
+paragraph lost without a word. `textContent` throughout, never
+`innerHTML`: a `.cir` can arrive from a stranger.
+
+**It needed the same fix in two places.** `note` sat in hand-written
+scalar field lists in *both* `app.py` and `bridge.py`, where `str()`
+would have written the literal `"['a', 'b']"` into a downloaded file.
+That is the by-hand-field trap `CLAUDE.md` names, and it bites once per
+front end.
+
+### #238 — a repeated scalar key warns
+
+`omega`, `image`, `rounding` and the rest kept the last value silently.
+Only the `_MULTI` keys may repeat.
+
+### #239 — 186 image caps, computed rather than judged
+
+    cap = natural_width x 16px / text_px
+
+The width that puts the lettering *inside the scan* at the app's body
+text size. **That is the documentation's own rule since #153** — the app
+was the one surface that never had it, so a two-element divider and a
+dense op-amp network were both stretched to the full 620px card.
+Roberto's brief was *"examine the image, find the size of text and
+symbols, and extrapolate"*, which is the same rule arrived at
+independently; the measurements were already sitting in the docs tree's
+`figure_sizes.json`.
+
+**Measuring first killed the obvious theory.** The assumption was that
+small pictures were being blown up. They were not: only **6 of 299** are
+narrower than the card, and **200 were already being shrunk**. The
+complaint was never about scaling — it was that every picture got the
+full card regardless of how much was in it. `hk5s-figure-1-26-1.jpg` is
+887px wide with **51px lettering**, so at 620px its letters landed at
+36px against 16px body text; capped at 278px they land at 16px.
+
+186 of 299 gain a cap; the other 111 are already right and get nothing,
+so those lines stay clean. Reviewed as a **59-page PDF contact sheet**
+before a single file was touched — each picture as the app draws it
+today beside the proposal, pictures embedded from the docs tree so it
+reads on a machine with no network. `tools/image_caps.py` computes and
+writes; `tools/image_caps_pdf.py` builds the sheet. Both re-runnable.
+
+`BODY_PX = 16` in `image_caps.py` is the one tunable: move it and all
+186 caps move together.
+
+### Shipped
+
+Cache **v123**; `install.symbulator.com` and the ZIP deployed and
+verified. Live check on the install build found the old page first —
+the service worker had not yet handed over — which is the trap
+`CLAUDE.md` names; after the reload the cache read `symbulator-v123` and
+everything was right: note at 16px in `booknote entry`, HK5's picture at
+exactly 278px, ribbon *Documentation / Docs*.
+
+**No solver release**, so no `pip` upgrade anywhere. The server wants a
+`git pull` and a **Reload**. X has the batch merged and keeps its own
+`branding.py`.
+
+---
+
 ## #229 — The beta mark at 80% of the numeral's height — **done and live, 3 Sep 2026; server awaits a pull**
 
 Roberto, 3 Sep 2026, and **everywhere it appears**: the app's wordmark
