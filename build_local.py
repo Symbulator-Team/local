@@ -694,6 +694,30 @@ def check_banner(template_text: str, where: str = "templates/index.html") -> Non
             "between the markers.")
 
 
+def check_hidden_guards() -> None:
+    """Stop the build if a stylesheet `display` has disabled a `hidden`.
+
+    An author display rule beats the browser's own [hidden] { display:
+    none }, so `el.hidden = true` leaves the element on screen. It has
+    happened three times (#249's docstring lists them), and the DOM lies
+    about it -- `el.hidden` reads back true while the thing renders -- so
+    it is not findable by inspecting state, only by looking or by this.
+
+    Hard failure: unlike the image links, this needs nothing outside the
+    repository, so there is no soft case."""
+    checker = SERVER / "tools" / "check_hidden_guards.py"
+    if not checker.is_file():
+        raise SystemExit("build_local.py: tools/check_hidden_guards.py is "
+                         "missing; the [hidden] guard check cannot run.")
+    result = subprocess.run([sys.executable, str(checker)],
+                            capture_output=True, text=True)
+    if result.returncode != 0:
+        raise SystemExit(
+            (result.stdout or "") + (result.stderr or "")
+            + "build_local.py: a display rule has disabled a hidden "
+              "attribute (see above).")
+
+
 def check_example_images() -> None:
     """Stop the build if an example's `image:` link names a picture that is
     no longer in the docs tree.
@@ -1019,6 +1043,10 @@ def build() -> str:
     # why it runs here even though the offline page never shows these
     # pictures (they are online links, by Roberto's decision on 1 Sep 2026).
     check_example_images()
+
+    # #249: same shape of fault -- invisible in the DOM, visible on
+    # screen. Cheap, so it runs on every build.
+    check_hidden_guards()
 
     # --- drop every server-only block: the "download the offline
     #     version" card, and the "no backend here" notice -- both are

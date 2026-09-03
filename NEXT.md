@@ -1,5 +1,96 @@
 # Next build — accepted but not yet done
 
+## #249 - a `display` rule had been overriding `hidden` - **built 3 Sep 2026; the two offline sites are live, the server awaits a pull**
+
+Roberto, on his phone: the monograph's second entry still showed the
+**Show image** tick with nothing under it. #242 was meant to hide that
+tick on the 31 entries with no picture, and my audit had reported that
+it did.
+
+The audit was wrong, and wrong in the way that is hardest to see.
+
+### Why the DOM lies about this
+
+An author `display` beats the browser's own `[hidden] { display: none }`
+whatever the specificity - the two rules are in different cascade
+origins, and the author origin always wins. `label.checkline` sets
+`display: flex`, so #242's `line.hidden = true` set the attribute, the
+property read back `true`, and the tick went on rendering at 34x229.
+
+Any check that asks the DOM `is this hidden?` therefore agrees with the
+code and disagrees with the screen. Only `getBoundingClientRect()` or
+`getComputedStyle()` tells the truth.
+
+The template already said all of this, in a comment on `.solution-pick`
+ending *"Anything here that sets display has to say this too."* #242 was
+the third time. So this closes with a check rather than a fourth
+comment.
+
+### The check
+
+`repos/server/tools/check_hidden_guards.py`: every element the page ever
+hides - `hidden` in the markup, or `.hidden =` in the script - must have
+a `[hidden]` rule for every `display` rule that targets it.
+
+The one design decision that makes it usable is keying on the
+**rightmost compound** of a selector. `.setnote .hint:last-child` targets
+`.hint`, not `.setnote`; without that it blames the parent for the
+child's rule and reports a guard that is already there. That was its only
+false positive, and it went away.
+
+Proved by sabotage, per the standing rule: deleting
+`label.checkline[hidden]` turns it red and names the right element,
+restoring it turns it green.
+
+It found a **second instance, older and never reported**:
+
+    #vtab,#rtab { display: block }          eqsheet.html
+    <table id="rtab" hidden>
+
+so a blank Numerical Solver has been drawing an empty
+`EQUATION / VARIABLES` header at 33x261 for as long as that page has
+existed. Nobody had mentioned it; it looks like a heading, not a fault.
+
+Wired into `build_local.py` beside `check_example_images()`, and **hard**
+where that one is soft - it needs nothing outside the repository, so
+there is no absent-tree case.
+
+### Verified on the artefact
+
+On the live offline build, not in the DOM:
+
+| | |
+|---|---|
+| monograph entry 2 (no picture) | `display: none`, 0px, not rendered |
+| lesson 1 entry 2 (has one) | tick shown and checked, image loaded 229x136 from 887x501 |
+| eqsheet on a blank sheet | header 0px, not rendered |
+
+One aside worth keeping: the first attempt to verify measured the **old
+build**. `install.symbulator.com` had installed the v132 worker but v123
+was still controlling, so the page under measurement was 3 hours stale
+and reported `hasHiddenAttr: false`. That is the same thing Roberto's
+phone was doing, and it is why the diagnostic below matters more than
+the fix.
+
+Cache **v132**; install and the ZIP deployed and verified.
+
+### Also: `install` needs three commands, not one
+
+`deploy_symbulator.py install` reads `Symbulator/install_site`, which is
+unpacked from `repos/local/local.zip` by `stage_install_site.py`. Running
+the deploy straight after `build_local.py` uploads **the previous
+build** and verifies it as a hash match, honestly and uselessly - stale
+against stale. The order is:
+
+    py build_local.py
+    py build_zip.py --assets ../../local
+    py stage_install_site.py
+
+then `install` and `zip`. It cost two clean-looking no-op deploys here
+before the local and live byte counts were compared.
+
+---
+
 ## #246, #247, #248 — nothing in the interface wraps on a phone any more — **built 3 Sep 2026; on the two offline sites, server awaits a pull**
 
 #245 fitted the Input File buttons for English. These three finish the
