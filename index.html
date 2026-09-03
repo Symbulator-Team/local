@@ -30,7 +30,7 @@ window.MathJax = { tex: { inlineMath: [['\\(', '\\)']] }, svg: { fontCache: 'glo
 //
 // The <script> written below is parser-blocking on purpose: see
 // pack_block() in tools/i18n.py for why it cannot be a fetch.
-window.SYMB_I18N_V = "c632ea45de";
+window.SYMB_I18N_V = "e0a027d3cb";
 // Rewritten to a relative path by build_local.py: the offline page
 // sits at the root of its own folder, and the server serves the
 // app at / and the Numerical Solver at /eqsheet/, so only a
@@ -1133,7 +1133,7 @@ window.SYMB_I18N_CODES = ["bn","de","eo","es","fr","hi","id","ja","ko","pt","uk"
         <!-- The β is temporary (Roberto, 28 Aug 2026): version 9 is in
              beta, and the numeral says so until it is not. Banner
              wordmark only -- nowhere else. -->
-        <h1 class="brand-name notranslate">Symbulator <span class="tm" style="color: #d9a521">X</span></h1>
+        <h1 class="brand-name notranslate">Symbulator <span class="tm">9<span class="beta">β</span></span></h1>
         <!-- #228: the subtitle. Empty brand_sub means version 9, whose
              subtitle is a translated UI string and must stay one; a fork
              sets brand_sub and gets its own untranslated tagline. Both
@@ -1147,7 +1147,7 @@ window.SYMB_I18N_CODES = ["bn","de","eo","es","fr","hi","id","ja","ko","pt","uk"
              stray expression. It now bans Jinja statements and comments
              too, which is why this note cannot spell either of them
              out. -->
-        <p class="brand-sub notranslate">an experimental fork of Symbulator 9 — testing the limits of symbolic simulation</p>
+        <p class="brand-sub" data-i18n="the-best-portable-symbolic.4e2c">the best portable symbolic simulator of linear circuits</p>
             </div>
     </div>
     </div>
@@ -1394,6 +1394,10 @@ units: yes</pre>
          for a reader on a metered connection, and it is why this cannot be
          done in CSS.
 
+         #244: it read "Show image (if available)" until #242 made the
+         control appear only for an entry that has one. The caveat was
+         describing a case that can no longer be on screen.
+
          Above the picture rather than below it, so the control comes before
          the thing it controls; and outside entryImageBox, which is hidden
          whenever there is no picture -- a checkbox that vanished with the
@@ -1401,7 +1405,7 @@ units: yes</pre>
     <label class="checkline" id="showImageLine" hidden
            style="margin-top:.9rem">
       <input type="checkbox" id="showEntryImageOpt" checked>
-      <span data-i18n="show-image-if-available.53ba">Show image (if available)</span>
+      <span data-i18n="show-image.d241">Show image</span>
     </label>
 
     <!-- #219: a picture of this entry's circuit, when the entry names one
@@ -2319,7 +2323,7 @@ units: yes</pre>
   <a href="https://github.com/Symbulator" target="_blank" rel="noopener">GitHub</a> ·
   <a href="https://pypi.org/project/symbulator/" target="_blank" rel="noopener">PyPI</a></span><br>
   <span data-i18n="free-and-open-source.dd6c">Free and open-source software under the MIT licence · results are symbolic, powered by SymPy</span><br>
-  <span class="notranslate">Symbulator 9 version 2026-09-03 02:28 UTC</span>
+  <span class="notranslate">Symbulator 9 version 2026-09-03 02:42 UTC</span>
 </footer>
 
 <script>
