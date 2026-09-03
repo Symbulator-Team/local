@@ -331,7 +331,7 @@ pinned in three places that have to move together.
 6. **Bump `CACHE_VERSION` in `sw.js`.** Without it, returning visitors keep
    the old build indefinitely.
 7. `python build_local.py`, then `python build_zip.py --assets ../../local`.
-8. Refresh `Symbulator/install_site` from the new ZIP.
+8. Refresh `Application/v9/install_site` from the new ZIP.
 9. Deploy `install` and `zip`, then prune the superseded wheel (above).
 10. Server last: push, pull on PythonAnywhere, `pip install --upgrade
     symbulator`, Reload, and run a real solve.
@@ -400,7 +400,7 @@ job.
 | **local** | Build the ZIP, then `py Deploy\deploy_symbulator.py zip`. |
 
 Both upload only what changed and verify over HTTPS afterwards. The `install`
-target's local folder is `Symbulator\install_site`, which is **the ZIP's
+target's local folder is `Application\v9\install_site`, which is **the ZIP's
 contents minus the launchers** (`LICENSE`, `README.txt`, `start.bat`,
 `start.command`, `start.sh` — a hosted copy is reached by URL and never uses
 them). Refresh it from the ZIP you just built, or the two deployments of the
@@ -582,7 +582,7 @@ Anything else that formats a float for the page wants the same guard.
 ## Layout on Roberto's machine
 
 ```
-Claude Code/Symbulator/
+Claude Code/Application/v9/
   local/          extracted copy of the ZIP — also the --assets source
   local.zip       built artefact
   repos/
