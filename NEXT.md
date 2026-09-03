@@ -1,5 +1,21 @@
 # Next build — accepted but not yet done
 
+## #244 — the checkbox just says *Show image* — **built 3 Sep 2026; on the two offline sites, server awaits a pull**
+
+The *"(if available)"* was a caveat about entries that have no picture,
+and since #242 the control does not appear for those at all — so it was
+describing a case that can no longer be on screen. One item creating the
+next: the qualifier was honest right up until the moment the behaviour
+made it unnecessary.
+
+Twelve translations updated to match — the #225 strings with the
+parenthetical dropped, same wording and register otherwise, so this cost
+no new translation work beyond the trimming. `i18n check` clean.
+
+Cache **v127**; install and the ZIP deployed and verified. X merged.
+
+---
+
 ## #241, #242, #243 — the entry picture framed, its checkbox conditional, and Export Output demoted — **built 3 Sep 2026; on the two offline sites, server awaits a pull**
 
 ### #241 — centred, in a white mat
