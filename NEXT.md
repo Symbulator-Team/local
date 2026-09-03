@@ -1,5 +1,86 @@
 # Next build — accepted but not yet done
 
+## #246, #247, #248 — nothing in the interface wraps on a phone any more — **built 3 Sep 2026; on the two offline sites, server awaits a pull**
+
+#245 fitted the Input File buttons for English. These three finish the
+job: the remaining three languages, the summary under the buttons, and
+then every other heading in the app.
+
+### #246 — the last three languages fit the button row
+
+German, Japanese and Ukrainian still wrapped. Both Upload and Download
+now carry the same two-span pair *Create new* got:
+
+    de  Hochladen / Herunterladen  ->  Hoch / Runter
+    ja  アップロード / ダウンロード  ->  アップ / ダウン
+    uk  Вивантажити / Завантажити  ->  Вивант. / Завант.
+
+Ukrainian could not take the Up/Down shorthand Roberto suggested: its
+two words differ by one prefix, so directional wording would have made
+them the same word. The standard clipping is used instead.
+
+The other ten repeat their own word in both spans, and their measured
+widths after the change are **identical** to before — which is the
+evidence that nothing moved for them. de 285→186, ja 290→194,
+uk 325→233, in a 293px row.
+
+A tier at 360px (tighter gap and padding) was added because a 320px
+phone leaves the card 238px, where even English was 4px over. At 320px
+eleven of thirteen now fit; French and Bengali still wrap, and that is
+left as a known limit — 320px is a 2016 screen and wrapping there is
+graceful.
+
+### #247 — the `.cir` format link
+
+From a German screenshot. Measured first: that one summary wrapped in
+**eight of thirteen** languages, English among the five it fits, which
+is why nobody had seen it. The other two summaries in that card fit
+everywhere and were left alone.
+
+`.lbl-full` / `.lbl-short` stopped being the button row's private
+property here and became general, switching at the same 480px as the
+ribbon, the property mark and the subtitle.
+
+### #248 — the rest of the interface
+
+An audit of **30 headings × 13 languages**, plus the Numerical Solver's
+own page, every `details` forced open and every `inactive` card
+un-dimmed. Nine languages were already clean; six instances turned up
+across three headings, plus one Roberto rewrote:
+
+    Run Symbulator 9 locally -> Run locally     (his wording; pt, id)
+    Circuit syntax reference -> Circuit syntax  (eo, fr)
+    Plotting Tools           -> Plotting        (uk)
+    What you can do with it  -> What it does    (id)
+
+*Run locally* is a real rewording in every language, not a phone
+spelling — the card's heading and the two places the page names it in
+prose, so it goes on being called one thing. Each language's
+host-notice sentence had the old name swapped for the new inside its
+existing wording rather than being re-translated. Note that card is
+inside a `server-only` block, so it does not exist in the offline
+builds at all: 4 mentions in the template, 0 in the generated page.
+
+Re-audited after: **all thirteen languages clean, every heading, both
+pages.**
+
+### Three ways to measure a wrap, two of them wrong
+
+Worth keeping, because the first two were convincing:
+
+| measure | what it does |
+|---|---|
+| `height / line-height` | counts padding as a line — claimed *List of Equations* wraps in English; that box is one 19.2px line plus 19.2px of padding |
+| counting line boxes | breaks when a line mixes font sizes — *Input File (optional)* has two distinct rect tops because the hint is smaller |
+| **`nowrap` + overflow** | the actual question: force one line, ask whether it overflows its own box |
+
+The first two would each have had six already-fine headings "fixed".
+Measure the thing, not a model of it.
+
+Cache **v131**; install and the ZIP deployed and verified.
+
+---
+
 ## #245 — the Input File buttons fit a phone — **built 3 Sep 2026; on the two offline sites, server awaits a pull**
 
 *Upload*, *Download* and *Create new* each carried `min-width: 8.6rem`
