@@ -1,5 +1,109 @@
 # Next build — accepted but not yet done
 
+## #250 - the Plot card's inputs travel with the entry - **built 3 Sep 2026; cache v133 staged, nothing deployed, awaiting the go**
+
+Roberto: *"I want to add the inputs in the fields for the Plot tools to
+the entry that is saved in input files. So, if there are values for a
+Bode plot inputs at the time the entry is saved, save those and restore
+them when the entry is loaded."*
+
+The keys already existed - `plottool`, `plotkey`, `plotx`, `plotmin`,
+`plotmax`, `plotpoints`, written by `inputsSnapshot()`, read by
+`applyCircuit()`, known to `parse_book` and `format_book`, listed in the
+format reference. And they worked, for the case they were tested on. Two
+things lost the values anyway, and both were found by trying the round
+trip rather than by reading the code that claimed to do it.
+
+### What was losing them
+
+**The gate.** `inputsSnapshot()` saved the Plot card only when the
+*variable* field was non-empty. A Bode plot's frequencies typed before
+its variable, or a sweep's range typed first, were dropped from the entry
+and came back blank. The card now counts as in use when any of its four
+text fields holds something, or when the point count has been changed
+from the 300 a fresh page shows - so a fresh page still claims no plot,
+which the "have the inputs changed?" comparison depends on.
+
+**Two field lists that were supposed to be one.** The browser's entries
+go to a file through `/api/export` on the server or `export_book` in the
+offline bridge, and each kept its own hand-written list of the fields to
+carry across. `app.py` even had a comment saying this was the trap
+CLAUDE.md warns about. It was. Measured before the fix, by posting one
+entry with every field set:
+
+| lost by | fields |
+|---|---|
+| the server's export | `defines`, `evaluate_conditions`, `polar`, `show_equations` |
+| the offline bridge's export | `plotx`, `defines`, `polar`, `show_equations` |
+
+So the sweep's x-axis variable - the one plot field no other plot type
+has - was silently dropped from every file the offline builds wrote, and
+an AC entry saved with polar phasors came back rectangular from any
+downloaded file. Nothing showed inside a session: the entries live in
+the browser and are restored from there, so the values were lost only
+between **Download** and opening the file again - the one place a
+reader expects them to be safe.
+
+### The fix
+
+One function, `circuitbook.clean_circuits()`, behind both exports, and
+its field lists **derived from the parser's own tables** rather than
+written a third time: `SCALAR_FIELDS`, `BOOL_FIELDS` and `LIST_FIELDS`
+come out of `_KEYS`, `_BOOL_FIELDS` and `_MULTI`, so whatever
+`parse_book` can read, an export can write. The server passes its
+request caps; the offline build passes none, as before. `app.py` and
+`bridge.py` each shrank by thirty lines.
+
+### The guard
+
+`repos/server/tools/check_export_fields.py`, run by every
+`build_local.py`, hard. Three directions:
+
+1. a circuit with every field set is written, parsed, cleaned and
+   written again - every field must come back with its value, and the
+   second file must equal the first byte for byte;
+2. every key `inputsSnapshot()` returns must be one the format knows,
+   read straight out of the template;
+3. both exports must still call the shared function.
+
+Proved red by sabotage four ways before being trusted: `plotx` deleted
+from the parser (caught by 2), a `bogus:` key added to the snapshot
+(2), the bridge's call replaced by `[]` (3), and the writer told to skip
+`plotmin` (1, naming the field). Green again on restore:
+
+    check_export_fields: ok -- 31 fields round-trip, 28 snapshot keys all known, both exports share clean_circuits
+
+### Verified on the artefact
+
+Driven in the local server's page, not read off the code: a Bode plot
+with `10` and `1e5` typed and the variable blank, saved to a new entry,
+exported (`plottool: bode / plotmin: 10 / plotmax: 1e5 / plotpoints:
+300` in the file text), the card wiped with *Clear all*, the entry
+re-applied - all four back, card open. A fresh page's snapshot has no
+`plottool`. Both exports were then posted the same full entry and both
+wrote all 21 lines, `defines:` and `plotx: rx` and `polar: yes` among
+them; the bridge was tested against the server's `circuitbook.py`, since
+the copy in `repos/local` is generated and was stale until the build
+copied it.
+
+Build `2026-09-03 11:40 UTC`, cache **v133**, ZIP **31,801,752 bytes**,
+staged into `install_site`. Not deployed. The server needs a pull and a
+reload (`app.py`, `circuitbook.py` and the template all changed); no
+`pip`, no solver release.
+
+### Left alone, on purpose
+
+The format reference paragraph in the Input File card still describes
+the plot keys as *`plottool` (time/bode) / plotkey / plotmin / plotmax /
+plotpoints* - no `plotx`, and two plot types short. It is one
+translation unit in thirteen languages, so correcting it is a
+translation round, not a text edit; it is accurate for every key it
+names. `verify_bridge.py` was not run: it solves all 330 entries through
+both front ends and times out at five minutes, and it exercises the
+solve path, which this item did not touch.
+
+---
+
 ## #249 - a `display` rule had been overriding `hidden` - **built 3 Sep 2026; the two offline sites are live, the server awaits a pull**
 
 Roberto, on his phone: the monograph's second entry still showed the
