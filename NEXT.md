@@ -1,3 +1,69 @@
+# Next build — accepted but not yet done
+
+## #241, #242, #243 — the entry picture framed, its checkbox conditional, and Export Output demoted — **built 3 Sep 2026; on the two offline sites, server awaits a pull**
+
+### #241 — centred, in a white mat
+
+It matters more since #239: a capped picture no longer fills the card,
+so a small scan sat hard left against the card's own background with
+nothing separating the two — and in dark mode a white-backed scan
+against a dark card had no edge at all. `margin-inline: auto` and 7px of
+padding over the white background it already had, which turns that
+background into a mat instead of something hidden behind the picture.
+
+**The arithmetic is the part worth reading.** `box-sizing` is
+`border-box` throughout this page, so `max-width` would have included
+the mat and every capped picture would have rendered ~16px narrower than
+the width #239 computed for its lettering. `showEntryImage` therefore
+adds the frame to the cap — and *reads* it off the element rather than
+repeating the number, so the stylesheet stays the single source.
+`--entry-frame` is declared once in the rule; `frameAllowance()`
+measures padding plus borders from the computed style.
+
+Measured: with a `[278px]` cap the element is 294px and the picture
+inside it is exactly 278px, gaps equal at 124px. An uncapped picture is
+unchanged — 541px in a 541px box, no overflow of box or card, no
+horizontal scroll.
+
+### #242 — the checkbox appears only when there is a picture
+
+Roberto's idea. *Show image (if available)* is shown for an entry that
+names one and hidden for one that does not; most entries in a reader's
+own file will not have a picture, and a control that governs nothing on
+screen is furniture. **The preference is untouched by the hiding** —
+global, in `localStorage`, and it survives every entry that hides the
+control.
+
+**It keys off whether the entry *names* a usable image, not whether the
+image loads, and it has to.** When the box is unticked nothing is
+fetched, so "does it load" is a question this code cannot answer without
+making the request the reader declined. Naming is also the stable
+answer: it cannot flicker on a slow network the way a load test would.
+
+That reordered `showEntryImage` — the src is parsed and validated
+*before* the unticked early return, because the control's visibility has
+to be decided even when no picture will be drawn. The markup starts
+hidden: nothing is loaded at boot, so there is nothing to govern yet.
+
+Verified through the awkward path: untick on an entry with a picture,
+move to one without (control vanishes, preference still "no"), come back
+(still unticked), re-tick (picture returns, stored "yes").
+
+### #243 — Export Output is a subheading
+
+Its summary drops `results-h section-toggle` and takes the plain
+`summary` styling, which is what *Input File* uses. The app already had
+two tiers of card heading — the big ones for Results, Solve, Plotting
+Tools, and the quiet one for Input File — and this moves Export Output
+into the quiet tier beside the other utility card. Measured after:
+16.8px and weight 600 on both. Their colours differ only because
+`dlCard` still carries `inactive` before a solve.
+
+Cache **v126**; install and the ZIP deployed and verified. No solver
+release. X has all three merged and keeps its own `branding.py`.
+
+---
+
 ## #240 — the entry picker follows the language — **done and everywhere, 3 Sep 2026**
 
 Switching language with a book open left the picker's label and
@@ -152,7 +218,7 @@ exactly 278px, ribbon *Documentation / Docs*.
 
 ---
 
-## #229 — The beta mark at 80% of the numeral's height — **done and live, 3 Sep 2026; server awaits a pull**
+## #229 — The beta mark at 80% of the numeral's height — **done and everywhere, 3 Sep 2026**
 
 Roberto, 3 Sep 2026, and **everywhere it appears**: the app's wordmark
 and the landing page's, which are the two consumers that draw a beta.
