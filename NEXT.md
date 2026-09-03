@@ -3097,7 +3097,7 @@ package to change, and **a code is permanent once published**. Rework
 the wording first, then code it.
 
 There is a handoff brief at
-`C:\Users\perez\Claude Code\Notes\PROMPT_211_spice_warnings.md`, written
+`C:\Users\perez\Claude Symbulator\Notes\PROMPT_211_spice_warnings.md`, written
 31 Aug 2026 at Roberto's ask: the measured chain from `to_spice()` to
 `note(w)` in the page, the four consequences of that shape, the design
 these three items proved, and the precondition above stated first.
@@ -5582,7 +5582,7 @@ It was held back at the time as cosmetic, on the grounds that shipping it alone
 costs a full three-site round, and folded into the next deploy that had a reason
 to happen. Verified live: `translateY(calc(-50% + 1px))` is present in the page
 served by `https://install.symbulator.com/` as well as in
-`C:\Users\perez\Claude Code\Application\v9\repos\local\index.html`.
+`C:\Users\perez\Claude Symbulator\Application\v9\repos\local\index.html`.
 
 ---
 
