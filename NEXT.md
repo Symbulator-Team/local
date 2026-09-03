@@ -1,6 +1,13 @@
 # Next build — accepted but not yet done
 
-## #244 — the checkbox just says *Show image* — **built 3 Sep 2026; on the two offline sites, server awaits a pull**
+> **X is deliberately a version behind, from 3 Sep 2026.** Roberto:
+> *"Will hold on X for now."* The merges are done and pushed — X's
+> repositories carry #241–#244 — but `symbulatorx.pythonanywhere.com`
+> was left on the earlier build rather than reloaded. So X's *source* is
+> current and X's *site* is not, which is the one combination that looks
+> like an oversight from either end. Reload it whenever he says.
+
+## #244 — the checkbox just says *Show image* — **done and live on version 9, 3 Sep 2026**
 
 The *"(if available)"* was a caveat about entries that have no picture,
 and since #242 the control does not appear for those at all — so it was
@@ -16,7 +23,7 @@ Cache **v127**; install and the ZIP deployed and verified. X merged.
 
 ---
 
-## #241, #242, #243 — the entry picture framed, its checkbox conditional, and Export Output demoted — **built 3 Sep 2026; on the two offline sites, server awaits a pull**
+## #241, #242, #243 — the entry picture framed, its checkbox conditional, and Export Output demoted — **done and live on version 9, 3 Sep 2026**
 
 ### #241 — centred, in a white mat
 
