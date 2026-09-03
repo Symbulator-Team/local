@@ -825,7 +825,7 @@ variable called **ap** plus the element name."*
 on 2 Sep 2026 cited it to argue that Lesson 7's AS7 Example 9.9 had the
 two swapped and should be rewritten. The chapter was correct; the change
 would have introduced the error. See #220 in
-`Sym Docum/Documentation/NEXT_DOCS.md`.
+`Documentation/NEXT_DOCS.md`.
 
 Suggested wording: `real (average) power -- ap_ under peak-amplitude
 phasors, p_ under RMS`, with a pointer to the `use_rms` paragraph
@@ -993,9 +993,9 @@ That leaves the app depending on the docs tree, which nothing else joins.
 A figure renamed on the docs side would leave a dead link here, and a dead
 link is *invisible by design* — the card hides itself. So
 **`repos/server/tools/check_example_images.py`** exists: every `image:`
-URL must name a file that is really in `Sym Docum/Documentation/assets/`,
+URL must name a file that is really in `Documentation/assets/`,
 and `--live` fetches all 248 from the real site. `build_local.py` runs the
-plain form on every build — soft when `Sym Docum` is not beside the tree,
+plain form on every build — soft when `Documentation` is not beside the tree,
 since the offline build does not use these pictures, and hard on a link it
 can check and finds broken. Both the tool and the build hook were **watched
 going red** on a deliberately broken link before either was believed.
@@ -2707,7 +2707,7 @@ they are already prose assembled in the engine purely for the interface
 to display.
 
 **A risk that turned out not to exist:** no tutorial chapter quotes a
-solver message. Checked across `Sym Docum/Documentation/src`. So the
+solver message. Checked across `Documentation/src`. So the
 English wording is not pinned by the printed answers and may be reworded
 as well as restructured — unlike every answer in the app.
 
@@ -3168,7 +3168,7 @@ so `15/2` prints `7.5` and `1/3` prints `0.3333333333333333`. No fixed
 count — the number decides the width, where *approx to n digits* makes the
 setting decide.
 
-The write-up with the measurements is in `Sym Docum`'s `NEXT_DOCS.md`,
+The write-up with the measurements is in `Documentation`'s `NEXT_DOCS.md`,
 since the tutorial line that names the option moved with it.
 
 ---
@@ -3852,7 +3852,7 @@ instead of being auto-switched with a note. Example 6.6 keeps its
 Float source (`12.0*u(t)`): dropping the trailing dot made the
 answers come back in exact `sqrt(3999991)` form instead of the
 chapter's decimals — caught by the display-equality check, restored.
-Ten `field 9` blocks in `Sym Docum`'s transient chapter updated to
+Ten `field 9` blocks in `Documentation`'s transient chapter updated to
 match (the DC-interval twins verified untouched), plus the chapter
 date.
 
@@ -4068,7 +4068,7 @@ then verify with a solve, a translation, and a two-port parameter
 circuit. And the wheel prune on the install host (typed DELETE):
 0.5.19 **and** 0.5.20 now sit beside 0.5.21 there. Queued next:
 **#164**, the Lesson 13 two-port documentation revision in the docs
-tree (`Sym Docum`) — Roberto: "in addition to, and independent from,
+tree (`Documentation`) — Roberto: "in addition to, and independent from,
 the SPICE stuff" — documenting the three cases, the naming rule, and
 the guards.
 
@@ -4132,7 +4132,7 @@ the removal to the offline builds.
 Everything below is closed: #140–#150, #158 and #159 landed on
 29 Aug 2026 and #132–#136, #138 and #139 on 28 Aug 2026, each the
 same day it was accepted. (#151–#157, the docs-side visual pass over
-the PDFs, are written up in `Sym Docum/Documentation/NEXT_DOCS.md` on
+the PDFs, are written up in `Documentation/NEXT_DOCS.md` on
 the same running sequence.) The write-ups follow, newest first; the
 next new item is **#160**.
 
@@ -4192,7 +4192,7 @@ a manual on being used from Python/SymPy. The README already *was*
 the manual for the API; what no package user could learn from it was
 what to do with an answer once they had one — every answer is a SymPy
 expression — and the two traps recorded only in
-`Sym Docum/Documentation/VERIFIED-v9-api.md`, which no PyPI reader
+`Documentation/VERIFIED-v9-api.md`, which no PyPI reader
 ever sees.
 
 New README section, **Working with the answers (SymPy)**, between the
@@ -4880,7 +4880,7 @@ header banner above carries the measurements.
 ## Found building the tutorial's example input files, 26 Aug 2026
 
 Written up from the documentation side; the documentation findings from the
-same pass are in `Sym Docum/Documentation/NEXT_DOCS.md`.
+same pass are in `Documentation/NEXT_DOCS.md`.
 
 ---
 
@@ -5462,7 +5462,7 @@ original do?" from inference into a grep.
 **Done 23 Aug 2026.** Where: `server/templates/index.html` (commit `8585e70`),
 `local/build_local.py` (`check_banner`).
 
-`Sym Docum\Documentation\design\banner.css` is now the only place the lockup is
+`Documentation\design\banner.css` is now the only place the lockup is
 stated. The app's header was renamed to the shared class names -- `.topbar`
 wrapping `.topbar-inner`, `.header-flex` to `.header-brand`, `header h1` to
 `.brand-name`, `header p` to `.brand-sub` -- and the file is inlined verbatim
@@ -5471,7 +5471,7 @@ linked because the offline ZIP cannot fetch a stylesheet from another tree.
 
 The guard is the part that works. `check_banner()` in `build_local.py` compares
 the inlined block against the source and stops the build if they differ, naming
-the fix; it warns and carries on when `Sym Docum` is absent, so `repos/` alone
+the fix; it warns and carries on when `Documentation` is absent, so `repos/` alone
 still produces a release. The app's own controls stay in the app, layered on top
 exactly as the version picker is on `learn` and the nav links on the landing
 page.
@@ -5479,9 +5479,9 @@ page.
 Left open, deliberately: the app's build now reads a file from a tree that is
 **not under version control**. Moving `banner.css` into `repos/local` and having
 the docs' `build.py` read it from there would invert that dependency. Worth
-doing when `Sym Docum` becomes a repo; nothing breaks meanwhile.
+doing when `Documentation` becomes a repo; nothing breaks meanwhile.
 
-> **Closed 28 Aug 2026** by doing exactly the inversion above (`Sym Docum`
+> **Closed 28 Aug 2026** by doing exactly the inversion above (`Documentation`
 > had become a repo on the 26th, which removed half the reason, but the
 > commit-pinning half stood): the canonical is `banner.css` in this
 > repository, `check_banner()` reads its own tree and fails hard instead of
