@@ -1,4 +1,40 @@
-# Next build — accepted but not yet done
+## #240 — the entry picker follows the language — **done and live, 3 Sep 2026; server awaits Roberto's pull**
+
+Switching language with a book open left the picker's label and
+placeholder in the previous one — *"Entradas en …"* alone on an
+otherwise English page. Spotted in passing while verifying #239 on the
+live install build, and numbered on Roberto's say-so.
+
+**Why `applyLang` could not reach them.** Those two strings are written
+by the app, not carried on a `data-i18n` element: `populatePicker` built
+that markup at the moment the file was opened, so it froze whatever
+language was current then. `applyLang` repaints tagged markup and has no
+idea the picker exists.
+
+`refreshDynamic()` is the right home — its own comment says
+*"everything on screen that the app itself wrote, redrawn in the new
+language"* — and the picker had simply been left out of the list.
+`pickerStrings()` factors the label and placeholder out of `showFile` so
+both callers build them identically; `syncPicker()` rebuilds them on a
+language change.
+
+**Two details.** The selection is captured and restored around it,
+because `populatePicker` rebuilds every `<option>` and would otherwise
+drop the reader back to the placeholder. And `lastPickerValue` is
+deliberately *not* touched: nothing has actually been picked, so the
+change handler's idea of what is current must not move.
+
+The file's own title stays English inside the label, as it should — the
+built-in books' titles and `note:` lines are English in every language
+by Roberto's ruling of 31 Aug 2026.
+
+Verified in the running app across es, ja, uk and back to en: both
+strings follow, the selected entry survives every switch, and picking a
+*different* entry still works afterwards with the circuit intact.
+
+Cache **v124**; install and the ZIP deployed. No solver release.
+
+---
 
 ## #232, #235–#239 — the fine-tuning batch — **done and live, 3 Sep 2026; server awaits Roberto's pull**
 
