@@ -1,5 +1,45 @@
 # Next build — accepted but not yet done
 
+## #245 — the Input File buttons fit a phone — **built 3 Sep 2026; on the two offline sites, server awaits a pull**
+
+*Upload*, *Download* and *Create new* each carried `min-width: 8.6rem`
+so the trio would read as a set. Three of those plus two gaps is
+**438px**, and the card is **294px** wide at 375px — so the row wrapped,
+in every language.
+
+Two changes, and the order matters. **The equal-width rule goes first**:
+reading as a set is a desktop luxury, not something worth a wrapped row.
+Below 480px each button hugs its own label instead, with a tighter gap
+and padding. **The short spelling is second**, and only for *Create
+new*, which becomes *New* — the same two-span idea `banner.css` uses in
+the ribbon, kept local because that rule is scoped to `.subbar`. Upload
+and Download are short enough in English to stand as they are.
+
+480px because that is where everything else on this page abbreviates:
+the ribbon, the property mark and the subtitle all switch there.
+
+Each language keeps whatever it already said for the full spelling, so
+this cost no re-translation — only the twelve short forms are new.
+
+### Measured, and three that still wrap
+
+At 375px in all thirteen languages. English fits at **228px of buttons
+in a 294px row**, where before the change every language needed 438px.
+**Ten of thirteen fit.**
+
+**German (285px), Japanese (290) and Ukrainian (325)** are still over
+the row once the gaps count. Their *Upload* and *Download* are simply
+long words — *Herunterladen*, アップロード, *Завантажити*. Fixing them
+means a second short spelling on those two buttons: two more keys and
+twenty-four more translations. Roberto asked for English (*"at least for
+the English version"*), so that is what this does. The other three are a
+strict improvement on wrapping at every width, and the rest is one
+decision away.
+
+Cache **v128**; install and the ZIP deployed and verified.
+
+---
+
 > **X is deliberately a version behind, from 3 Sep 2026.** Roberto:
 > *"Will hold on X for now."* The merges are done and pushed — X's
 > repositories carry #241–#244 — but `symbulatorx.pythonanywhere.com`
