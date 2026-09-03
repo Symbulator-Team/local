@@ -1,4 +1,4 @@
-## #240 — the entry picker follows the language — **done and live, 3 Sep 2026; server awaits Roberto's pull**
+## #240 — the entry picker follows the language — **done and everywhere, 3 Sep 2026**
 
 Switching language with a book open left the picker's label and
 placeholder in the previous one — *"Entradas en …"* alone on an
@@ -36,7 +36,7 @@ Cache **v124**; install and the ZIP deployed. No solver release.
 
 ---
 
-## #232, #235–#239 — the fine-tuning batch — **done and live, 3 Sep 2026; server awaits Roberto's pull**
+## #232, #235–#239 — the fine-tuning batch — **done and everywhere, 3 Sep 2026**
 
 One listen-first round on 3 Sep 2026, nine items, six of them app-side.
 The docs-side three (#231, #233, #234) are in `NEXT_DOCS.md`.
