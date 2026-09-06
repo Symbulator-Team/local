@@ -5,6 +5,116 @@ file version 9 never has, so a `git merge v9/main` can never conflict on
 it. `NEXT.md` beside this file is version 9's running list and arrives
 by merge; read it as upstream history, not as a record of X.
 
+## X2 — a transformer or two-port block written with all four terminals — **built and verified on the dev server, 6 Sep 2026; solver `0.5.26+x2`; uncommitted, awaiting Roberto's word**
+
+Roberto, 6 Sep 2026: keep the calculator's two-node forms, and also
+take *two-port name, top left, top right, bottom left, bottom right,
+[parameters]* and *tname, top left, top right, bottom left, bottom
+right, turns on the left, turns on the right*. His three rulings, from
+the design round: **A1** the drawing can come later; **A2** the dots
+stay top-left and top-right, as in the two-node form; **A3** rule 1
+(the four-node form may put 0 anywhere, `z,1,2,0,0` being `z,1,2`
+written out), rule 2 (a port with the same node at both terminals is
+refused) and rule 3, with his correction: *floating* means **the whole
+side of the circuit** has no ground node, not merely that side of the
+element.
+
+**The syntax needs no new letters; the field count says the form.** A
+two-port with its bracket term stripped has two nodes or four; a
+transformer has five terms or seven. Every existing description keeps
+its meaning.
+
+    z,1,2,[100,10,20,50]        two nodes, as before
+    z,1,2,3,4,[100,10,20,50]    top-left, top-right, bottom-left, bottom-right
+    t,1,2,1,3                   as before
+    t,1,2,3,4,1,3               four nodes, then the turns
+
+**One stamp for both forms.** `Element` gained `port_nodes` --
+`((top_left, bottom_left), (top_right, bottom_right))`, with a literal
+`"0"` for the bottoms of the two-node form -- and `four_node`, `turns`,
+`param_idx` and `node_idx` beside it. `engine._stamp_t` and
+`_stamp_two_port` read a port voltage as the difference across its
+pair and put each port current into the top terminal and out of the
+bottom; with the bottoms on 0 that is byte-for-byte what they did
+before, which the tests prove by solving each form and comparing every
+answer. The answer names are unchanged: `i_z12` is still the current
+into the port at node 2, and the bottom terminal carries the negative.
+
+**The rules, where they live.** `_validate_topology` skips the
+no-ground-on-a-port rule for the four-node form and adds
+`E_PORT_SAME_NODE` (218) for a shorted port; `_check_connected` joins
+each port's own two terminals and **does not join the two ports**, so
+an ideal transformer or parameter block conducts nothing across, and a
+secondary side whose nodes never reach 0 -- however much hangs on it --
+is `E_FLOATING_NODES`, the message a dangling resistor gets. That is
+rule 3 as Roberto meant it, and it is what the grounded form had been
+doing silently.
+
+**Field counts and messages, without new dictionary keys.** The
+element-count messages take their expectations as text, so m208 now
+says *3 or 5 terms are expected for a two-port element, or 4 or 6 with
+its parameters as the last term* and m209 says *Exactly 5 or 7* for a
+transformer -- no new key, no translation work, which X does not do.
+The two new codes (218, and 701 below) have English in
+`messages.py` only; the page's `uiMsg` falls back to the engine's text
+for a code it does not know, and the i18n check passes (`tools/i18n.py
+check`: ok) because the check reads the page's own literals, not the
+catalogue.
+
+**Everything that reads a field by position was found and moved.** The
+kind table `_IDENTIFIER_FIELD_IDX` stays for the two-node forms, and
+`identifier_field_idx(el)` / `el.node_idx` answer by element: the
+parser's case folding, the connectivity check, `laplace._is_controlled`,
+`spice.py`'s node set, and in the app `expand_defines_in_desc` (which
+also materialises the tacit `[z11,z12,z21,z22]` term on a four-node
+block, so a Define lands -- verified live), the AC imaginary-unit
+normaliser and the DC complex-value check. `_VALUE_FIELD_IDX`'s `t`
+entry moves to the last two fields when there are four nodes, so a node
+named `2k` on a four-node transformer is never asked about as a value.
+`two_port_param_texts` reads the *last* field.
+
+**SPICE export generalises directly.** A SPICE controlled source takes
+four nodes anyway: the transformer's E/sense/F triple and the two-port's
+VCCS quartet now name each port's pair, with `0` for the two-node form,
+so the netlist for an old description is unchanged. **Ground truth:**
+`test_spice_groundtruth.py` gained nine four-node cases -- a
+transformer with its primary between two live nodes and a secondary
+grounded on its own side, and every one of the six parameter kinds with
+both ports spanning live pairs -- and ahkab agrees with the engine on
+every node voltage to 1e-6. ahkab is installed in `Application\vX\.venv`
+with `--no-deps` (its pins are from 2015; the test module's three shims
+carry it on Python 3.14), which is what makes those tests run here
+rather than skip.
+
+**The drawer refuses, cleanly.** `to_svg` raises `E_DRAW_FOUR_NODE`
+(701, a new 7xx range for `schematic.py`): *'t1' names four nodes. The
+schematic drawer draws a transformer or two-port only in its two-node
+form for now; the circuit still solves.* The layout is one node row
+over one ground rail and both symbols hang between them, which *is* the
+two-node form; drawing a live bottom pair as though it were the rail
+would be a wrong picture rather than none. A four-node symbol is the
+next item when Roberto wants it.
+
+**The app's format reference** shows both forms on the `t` row and the
+six two-port rows (English, `notranslate` cells, so the dictionaries are
+untouched). **Not done:** the solver's `README.md` and the version 9
+tutorial, both of which X shares with 9 and does not edit -- the
+elements.py docstring carries the syntax; and the *Two-port parameters*
+tool, which measures a circuit between two nodes and grounds them, is
+unchanged.
+
+**Verified.** Solver suite in the venv: **370 passed** (337 before,
+33 new: 24 in `test_four_node_ports.py`, 9 ground-truth cases). On the
+dev server: the four-node transformer case answers `i_r0 = 5/202`,
+`i_t12 = 5/202`, `i_r1 = 5/101`, `i_r5 = 0` (reflected 400 Ω in series
+with 4, the referencing resistor carrying nothing); a symbolic
+four-node `z` with its four parameters in Define solves numerically;
+`/api/schematic` on a four-node circuit returns code 701 with the
+sentence above; the floating secondary returns 217 naming both of its
+nodes; `/healthz` reports `0.5.26+x2`. The format reference serves both
+forms (read from the DOM; the browser pane's screenshots came back
+blank for the popup and were not chased).
+
 ## X1 — X runs its own solver checkout, not the PyPI package — **done 6 Sep 2026, live on `symbulatorx.pythonanywhere.com`: `/healthz` reports solver `0.5.26+x1`, build `2026-09-06 03:07 UTC` running and on disk, and a DC solve on the live site answers**
 
 Roberto's first console pass came back reading `0.5.26` -- the checkout
