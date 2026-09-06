@@ -1,6 +1,17 @@
 # Next build — accepted but not yet done
 
-## #314 — a transformer or two-port with all four terminals, and the current into every one of them — **done 6 Sep 2026: solver 0.5.27 then 0.5.28 on PyPI (both hash-verified), the offline pair live at cache v154, learn live web and PDFs, the server pushed and awaiting Roberto's pull with `pip install --upgrade symbulator`**
+## #314 — a transformer or two-port with all four terminals, and the current into every one of them — **done 6 Sep 2026: solver 0.5.27, 0.5.28 and 0.5.29 on PyPI (all hash-verified), the offline pair live at cache v155, learn live web and PDFs, both PythonAnywhere sites pulled by Roberto at 0.5.28 and awaiting one more pull for 0.5.29**
+
+**0.5.29, the same evening.** Two things the shipped examples exposed
+after 0.5.28 was live: the tapped autotransformer's internal unknown
+(`i_t_p1`, the primary current that steps aside when the winding's top
+is another terminal) was reported among the values and would have shown
+under *Expert Mode unknowns* -- `Circuit.internal` drops it now; and the
+exhaustive pixel check found Example 13.11's ratio `80 : 80+120` printed
+through both windings' leads at 0.5px -- a ratio wider than the gap now
+goes above the node row, the name with it, `1 : 2` staying where it was
+(the estimate is 6px a character; 7 lifted `1 : 2` too). Suite 390, the
+review harness 336 clean, cache **v155**, X merged as X5 (`0.5.29+x5`).
 
 **The release, in order.** Roberto: *"Push the package, update the app."*
 0.5.27 went to PyPI (`aa9cb02e…`, the bytes the offline pair bundles),
