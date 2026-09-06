@@ -1,6 +1,6 @@
 # Next build — accepted but not yet done
 
-## #312 — the app's half of one sun-and-moon in the split view — **done 7 Sep 2026, live on the offline pair at cache v151 and on the server since Roberto's pull the same night**
+## #312 — the app's half of one sun-and-moon in the split view — **done 5 Sep 2026, live on the offline pair at cache v151 and on the server since Roberto's pull the same night**
 
 Written up in `Documentation/NEXT_DOCS.md` #312, whose shell half is
 live. Here: `html.embedded .theme-toggle { display: none }` beside #311's
@@ -9,9 +9,9 @@ rule, the click handler refactored into `setDarkTheme()`, and a
 dark}` only when framed and only from `learn.symbulator.com` or the
 page's own origin. Never framed, the offline builds are untouched by it.
 
-## #311 — no wordmark band inside the split view — **done 7 Sep 2026, live on the offline pair at cache v150; the server current since Roberto's pull the same night**
+## #311 — no wordmark band inside the split view — **done 5 Sep 2026, live on the offline pair at cache v150; the server current since Roberto's pull the same night**
 
-Roberto, 7 Sep 2026: *"in split view, you do not show the banner of the
+Roberto, 5 Sep 2026: *"in split view, you do not show the banner of the
 documentation. That's great. Would it be possible to hide also the
 banner of the app in split?"* The app pane is another origin, so the
 shell cannot style it; the app detects being framed itself, the way the
@@ -30,9 +30,9 @@ class, its topbar is `display: none` and its ribbon sits at 0px; the
 top-level page is untouched. The offline builds are never framed, so
 nothing changes there.
 
-## #309 — the theme swatch hidden on a phone — **done 7 Sep 2026, live on the offline pair at cache v149; the server current since Roberto's pull the same night**
+## #309 — the theme swatch hidden on a phone — **done 5 Sep 2026, live on the offline pair at cache v149; the server current since Roberto's pull the same night**
 
-Roberto, 7 Sep 2026, on #308's cost: *"Feel free to hide the theme button
+Roberto, 5 Sep 2026, on #308's cost: *"Feel free to hide the theme button
 in mobile."* One rule below 480px on `.palette-wrap`, the colour-theme
 swatch beside the sun and moon; the sun and moon stay, since dark mode
 matters on a phone, and the theme still applies from the stored
@@ -48,9 +48,9 @@ cache v149: the Ukrainian short labels became *Додаток* (app), *Скла�
 measured -- both links show in all thirteen languages at 375px. The
 ribbon is one row (53px) in every language.
 
-## #308 — *Collapse all cards* in the ribbon — **done 7 Sep 2026, live on the offline pair at cache v148; the server current since Roberto's pull the same night**
+## #308 — *Collapse all cards* in the ribbon — **done 5 Sep 2026, live on the offline pair at cache v148; the server current since Roberto's pull the same night**
 
-Roberto, 7 Sep 2026: *"add a link, next to 'Clear all inputs', reading
+Roberto, 5 Sep 2026: *"add a link, next to 'Clear all inputs', reading
 'Collapse all cards' (shortened to 'Collapse') that, when clicked,
 collapses all the cards in the interface."*
 
@@ -76,9 +76,9 @@ button and re-reading the nav: `Doku` comes back the moment it goes.
 Resolved the same night by #309, at Roberto's word, by hiding the theme
 swatch on a phone instead.
 
-## #307 — the Walnut theme removed — **done 7 Sep 2026, live on the offline pair at cache v146; the server current since Roberto's pull the same night**
+## #307 — the Walnut theme removed — **done 5 Sep 2026, live on the offline pair at cache v146; the server current since Roberto's pull the same night**
 
-Roberto, 7 Sep 2026: *"kill the Walnut theme. It's too close to Earth."*
+Roberto, 5 Sep 2026: *"kill the Walnut theme. It's too close to Earth."*
 One row out of `tools/palettes.py`'s TABLE, `palettes.py write` to
 regenerate both templates' theme blocks, the key out of both
 `PALETTES` lists and `paletteNames()`, and `js.palette.walnut` out of
@@ -88,9 +88,9 @@ Walnut stored gets the default: `currentPalette()` already falls back to
 `palettes check`, `i18n check` and the hidden-guard check clean; the
 served page carries no `walnut` at all.
 
-## #305 — one infinity sign in every result field — **done 7 Sep 2026, live on the offline pair at cache v145 and on the server since Roberto's pull the same night**
+## #305 — one infinity sign in every result field — **done 5 Sep 2026, live on the offline pair at cache v145 and on the server since Roberto's pull the same night**
 
-Roberto, 7 Sep 2026, on an ∞ with a tilde over it in a result: *"If
+Roberto, 5 Sep 2026, on an ∞ with a tilde over it in a result: *"If
 that's the mathematically correct symbol, we can leave it. But if you
 are changing it in the results, then let's have it displayed consistently
 in all other result fields in evaluate and solve as well."*
@@ -113,9 +113,9 @@ Verified: `1/x` at `x = 0` evaluates to ∞ and `req` stored as `zoo` to ∞
 infinite has no finite root to report, so that path shows nothing rather
 than a tilde.
 
-## #300 — the Load-equivalent button moves under the Thévenin answers — **done 7 Sep 2026, live on the offline pair at cache v144; the server current since Roberto's pull of 7 Sep 2026**
+## #300 — the Load-equivalent button moves under the Thévenin answers — **done 5 Sep 2026, live on the offline pair at cache v144; the server current since Roberto's pull of 5 Sep 2026**
 
-Roberto, 7 Sep 2026: *"Move the 'Load circuit equivalent?' button to
+Roberto, 5 Sep 2026: *"Move the 'Load circuit equivalent?' button to
 appear under the results of the Thevenin equivalent at the end of the
 card."* The button and its warning left the Analysis card -- the tick
 stays there, under the port nodes -- for a box at the foot of the Results
@@ -133,9 +133,9 @@ run with the tick on; hidden when the tick comes off (the rows drop to
 four) and back when it returns; the button dead after one edit, with a
 click showing no warning; the box gone after Clear all.
 
-## #299 — the Load-equivalent button follows the solve's freshness — **done 7 Sep 2026, live on the offline pair at cache v143; the server current since Roberto's pull of 7 Sep 2026**
+## #299 — the Load-equivalent button follows the solve's freshness — **done 5 Sep 2026, live on the offline pair at cache v143; the server current since Roberto's pull of 5 Sep 2026**
 
-Roberto, 7 Sep 2026, on #292: *"the 'Load circuit equivalent?' should
+Roberto, 5 Sep 2026, on #292: *"the 'Load circuit equivalent?' should
 not be active until the Thevenin simulation has been run. Until then,
 deactivate it. Also, if any modifications are made to the input, the
 button becomes inactive until run again."*
@@ -158,9 +158,9 @@ after unticking and re-ticking; disabled after one character typed into
 the description; enabled again after re-running; disabled on switching
 the equivalent to resistance.
 
-## #295 — three theme names: *Default*, *Warm Pink*, *Gray & Gold* — **done 7 Sep 2026, live on the offline pair at cache v141; the server current since Roberto's pull of 7 Sep 2026**
+## #295 — three theme names: *Default*, *Warm Pink*, *Gray & Gold* — **done 5 Sep 2026, live on the offline pair at cache v141; the server current since Roberto's pull of 5 Sep 2026**
 
-Roberto, 7 Sep 2026, mid-train: *"In the theme list, please capitalise
+Roberto, 5 Sep 2026, mid-train: *"In the theme list, please capitalise
 'Pink' and 'Gold', and change 'Navy' with 'Default'."* The names live in
 three places that must agree -- `tools/palettes.py`'s TABLE, and the
 `paletteNames()` fallbacks in both templates (the Numerical Solver page
@@ -178,9 +178,9 @@ word anyone reads.
 Shipped with #291/#292 at cache **v141** (v140 had gone out minutes
 earlier without it; ZIP 31,802,167 bytes, hash-verified on both sites).
 
-## #292 — the th tool's load features, ported at last from version 8 — **done 7 Sep 2026, live on the offline pair at cache v141; the server current since Roberto's pull of 7 Sep 2026**
+## #292 — the th tool's load features, ported at last from version 8 — **done 5 Sep 2026, live on the offline pair at cache v141; the server current since Roberto's pull of 5 Sep 2026**
 
-Roberto, 7 Sep 2026: *"The features of the th() tool of Symbulator were
+Roberto, 5 Sep 2026: *"The features of the th() tool of Symbulator were
 not properly ported from v8 to v9."* Version 8's `th`, once it had the
 equivalent, asked *"If you are planning to analyze a load connected to
 this equivalent, we can give you the description of the equivalent
@@ -299,9 +299,9 @@ cPanel deploys; the server needs its pull (`symbulator_ui.py`, `app.py`,
 the template, thirteen dictionaries, the examples), no `pip`. X will
 take it on its next merge.
 
-## #291 — the Evaluate card is active before any solve — **done 7 Sep 2026, live on the offline pair at cache v141 with #292**
+## #291 — the Evaluate card is active before any solve — **done 5 Sep 2026, live on the offline pair at cache v141 with #292**
 
-Roberto, 7 Sep 2026: *"We need to make the Evaluate card active even
+Roberto, 5 Sep 2026: *"We need to make the Evaluate card active even
 without a circuit solved, because people may need to use the pr function
 to reduce resistors. So please make it active always."*
 
@@ -321,7 +321,7 @@ placeholders; the twelve translations moved with them.
 Verified in the browser with nothing solved: `pr(100,220)` evaluates to
 275/4.
 
-## #289 — the tool answers' labels in lower case, like every other label — **done 6 Sep 2026, live on the offline pair at cache v139; the server current since Roberto's pull of 7 Sep 2026**
+## #289 — the tool answers' labels in lower case, like every other label — **done 6 Sep 2026, live on the offline pair at cache v139; the server current since Roberto's pull of 5 Sep 2026**
 
 Roberto, 6 Sep 2026, reading an equivalent-resistance result: *"the label
 says 'Equivalent resistance' ... the other labels use lower case ... make
@@ -345,7 +345,7 @@ shared into the offline build by `build_local.py`; shipped at cache
 UTC`), both offline sites. The server's own `symbulator_ui.py` and
 dictionaries change with the next pull.
 
-## #286 — Lesson 3's four `is1` entries say `is`, as the book now does — **done 6 Sep 2026, live on the offline pair at cache v138; the server current since Roberto's pull of 7 Sep 2026**
+## #286 — Lesson 3's four `is1` entries say `is`, as the book now does — **done 6 Sep 2026, live on the offline pair at cache v138; the server current since Roberto's pull of 5 Sep 2026**
 
 From the docs session, 6 Sep 2026: four entries in
 `repos/server/examples/Lesson_03.cir` used `is1` as the symbolic value of
@@ -367,7 +367,7 @@ cache **v138**, both offline sites, hash-verified. The server serves the
 examples from its own checkout, so the four entries reach
 `symbulator.pythonanywhere.com` with Roberto's next pull.
 
-## #285 — the app's footer, two lines, no copyright sign — **done 6 Sep 2026, live on the offline pair at cache v137; the server current since Roberto's pull of 7 Sep 2026**
+## #285 — the app's footer, two lines, no copyright sign — **done 6 Sep 2026, live on the offline pair at cache v137; the server current since Roberto's pull of 5 Sep 2026**
 
 Roberto, 6 Sep 2026, after ruling that every repository is open source:
 *"Let's remove the copyright, then. Let's use this footer for the app in
