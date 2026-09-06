@@ -1,5 +1,73 @@
 # Next build — accepted but not yet done
 
+## #317 — documentation for using symbulator in Jupyter — **deferred by Roberto, 6 Sep 2026: "later, when the documentation for the app is ready"**
+
+Not the README section #315 wrote, which is the package's own reference
+and is done; this is a documentation *property* for the notebook use,
+in the docs tree, and it waits until the app's documentation is
+finished. Nothing to do until Roberto says so. The material it will
+draw on already exists: the README's *In a notebook* section,
+`notebooks/quickstart.ipynb` and `notebooks/the_monograph.ipynb` in
+the solver repository (#315, #316).
+
+## #316 — the monograph's exemplars as an executed notebook, served beside the PDF and linked from the landing page — **done and live 6 Sep 2026**
+
+Roberto, after #315: *"churn out a few examples of Jupyter notebooks"*,
+then *"Can you do the notebook using the examples from the monograph?"*,
+then *"Include that notebook as a download next to the monograph link."*
+
+**`notebooks/the_monograph.ipynb`** in `repos/solver`: 43 cells, 27 of
+them code, all executed and committed with their outputs, 192 KB. The
+eight entries of `The_Monograph.cir` in order -- the 1999 two-stage
+amplifier (`fd()`, the gain `v4/v5` simplified, and the Bode diagram
+Prof. Yee asked for, `bode_samples()` from 1.6 kHz to 1.6 THz with
+`vg = 1` as a condition), the 2013 showcase (`dc()` with the two power
+equations, the two unknowns and the two sign conditions, `rounded(4)`
+reading 17.61 V and 0.3973 A with `ir5` exactly 0; then the same solve
+without the conditions, which is how a notebook shows all four roots in
+`Result.solutions`), Prof. Boulet's problem (the DC half, then the TR
+half as a `%%tr` cell -- the one place the notebook uses the magic --
+`at(t=0)` giving 9 and SymPy's `plot` over ten seconds), the wye-delta
+(`ac()` at a symbolic omega, `polar()` reading `2.350∠-36.21°` and the
+load line voltage `169.94∠30.811°`), the ideal transformer (`th()`
+returning `vs2/n` and `z2/n**2` as symbols), the coupled coils (`tr()`
+and both modes plotted) and the two op-amps (`(g1 - g2)/(g3 - g4)`).
+
+**The circuits are not retyped.** `notebooks/build_monograph.py` reads
+them by entry name from `repos/server/examples/The_Monograph.cir`, the
+file the app's menu and the monograph's Appendix B are generated from,
+and puts each entry's `note:` into the markdown as the problem
+statement -- so the notebook cannot drift from the app or the
+monograph, and a change to an exemplar is one rebuild away. The script
+needs the project's layout (`repos/solver` beside `repos/server`) and
+stops with a message naming it otherwise, like `build.py`'s
+`SHARED_BANNER`. Two things it taught: the Evaluate line's `vo/vs` does
+not translate to `res["vo"]/res["vs"]`, because `vs` is the source's
+symbolic *value* and not an answer -- the notebook divides by
+`sp.Symbol("vs")` and says why; and the amplifier's full `fd()` result
+is a wall of quartic fractions, so the cell shows `a["v4"]` alone.
+Verified by rendering the executed notebook with nbconvert and reading
+every code cell's output against the monograph's text.
+
+**Shipped three ways.** On GitHub with outputs (`Symbulator/solver`,
+`notebooks/`), which is what the *open in Colab* link reads; at
+`https://learn.symbulator.com/monograph.ipynb`, copied there by
+`Documentation/build.py` beside `monograph.pdf` from the solver tree
+(the docs build reaching across into the app tree once more, a hard
+failure when the file is absent), hash-verified by the `learn` target
+(`deploy_targets.ini` gained the row); and on the landing page, a line
+under the monograph card -- *Its exemplar circuits as a Jupyter
+notebook: download or open in Colab* -- the download link carrying the
+`download` attribute since the host serves `.ipynb` as
+`application/octet-stream` anyway. Both deploys verified: the landing
+page's HTML carries both links, the notebook is served at 192,017
+bytes, and GitHub's raw copy answers 200. A `notebooks/README.md`
+indexes the two notebooks and says how to rebuild.
+
+**Not a release.** The wheel does not include `notebooks/`, so PyPI is
+untouched at 0.5.30; the solver repo simply moved on. X was not merged
+for this (nothing X serves changes); the next merge will carry it.
+
 ## #315 — the package in a notebook: typeset results, the tutorial's spellings, `polar()`, `rounded()`, cell magics, a quickstart notebook — **done 6 Sep 2026: solver 0.5.30 on PyPI (hash-verified), the offline pair live at cache v156, both PythonAnywhere sites on 0.5.30 after Roberto's pulls (`/healthz` build `2026-09-06 09:44 UTC` on version 9, `0.5.30+x6` on X, `needs_reload: false` on both, a real DC solve answering on each), 0.5.29 pruned from the install host; nothing in the app changes**
 
 Roberto, 6 Sep 2026, reading a book built from Jupyter notebooks: *"how
