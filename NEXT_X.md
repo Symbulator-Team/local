@@ -5,7 +5,28 @@ file version 9 never has, so a `git merge v9/main` can never conflict on
 it. `NEXT.md` beside this file is version 9's running list and arrives
 by merge; read it as upstream history, not as a record of X.
 
-## X2 — a transformer or two-port block written with all four terminals — **done 6 Sep 2026, live on `symbulatorx.pythonanywhere.com`: `/healthz` reports solver `0.5.26+x2`, and the four-node transformer case solves on the live site (`i_r0 = 5/202`, `i_r5 = 0`), verified by fetching after Roberto's pull ("Works.")**
+## X4 — version 9's #314 merged; X2 and X3 superseded — **done 6 Sep 2026, pushed; the site awaits Roberto's pull of both clones and a reload**
+
+Roberto took the four-terminal idea into version 9 itself (#314 in
+`NEXT.md`, now upstream history here), with a different syntax from X2's:
+brackets mean a pair, `t,[tl,bl],[tr,br],[N1,N2]` and
+`z,[tl,bl],[tr,br][,[…]]`, and X2's flat `t,n1,n2,n1b,n2b,N1,N2` is
+gone -- he noticed it on this site's reference table and asked whether it
+should not be with brackets; it should, and now is. X3's currents at
+every terminal are in 9 too, and the drawings X2 refused are drawn.
+
+The merge: `git fetch v9 && git merge -X theirs v9/main` in all three
+repositories, then version 9's own copies of `elements.py`,
+`messages.py`, `schematic.py` and `symbulator_ui.py` checked out over the
+X2/X3 hunks the merge had kept, so that X's solver differs from 9's by
+its `CLAUDE.md`, the version label -- **`0.5.28+x4`** -- and the packaging
+test's regex, and X's server by `CLAUDE.md`, `branding.py` and the two
+diagnostics; then `build_local.py`, so X's pages carry the gold X again
+(the merged pages were 9's). X's suite in `Application\vX\.venv`: 390
+passed. The site: `cd /home/symbulatorx/solver && git pull`, then the web
+clone's pull, then Reload; `/healthz` should read `0.5.28+x4`.
+
+## X2 — a transformer or two-port block written with all four terminals — **superseded by version 9's #314 (X4)**; the record below is kept as history — **done 6 Sep 2026, live on `symbulatorx.pythonanywhere.com`: `/healthz` reports solver `0.5.26+x2`, and the four-node transformer case solves on the live site (`i_r0 = 5/202`, `i_r5 = 0`), verified by fetching after Roberto's pull ("Works.")**
 
 Roberto, 6 Sep 2026: keep the calculator's two-node forms, and also
 take *two-port name, top left, top right, bottom left, bottom right,
