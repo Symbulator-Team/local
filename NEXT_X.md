@@ -5,6 +5,22 @@ file version 9 never has, so a `git merge v9/main` can never conflict on
 it. `NEXT.md` beside this file is version 9's running list and arrives
 by merge; read it as upstream history, not as a record of X.
 
+## X8, X9 — version 9's 0.5.32 (#320–#322, ports that float) merged, then its drawing fix; label `0.5.32+x8` — **done 7 Sep 2026, pushed; the site awaits Roberto's pull of both clones and a reload**
+
+Two merges the same morning, both `git merge -X theirs v9/main` in all
+three repos with no conflicts and `branding.py` intact. X8 carried the
+release: `port()` taking `[top,bottom]` pairs, an island behind a port
+given its own reference (message 221), two overlapping blocks stacked in
+lanes, the six Lesson 13 entries, the labels and reference sentence in
+thirteen languages; label `0.5.32+x8`, X's suite 424 passed and 1
+skipped, pages rebuilt with the gold X. X9 carried the fix that
+followed: the drawing takes the port tool's references too, so a
+groundless entry draws around the tool's own ground instead of showing
+an error in the schematic card (`build_local.py`'s schematic rewrite
+changed with it, and X's pages were rebuilt again). The solver did not
+change between X8 and X9, so the label stays. The pull is the same pair
+of commands as X6 and X7, no `pip`.
+
 ## X7 — version 9's 0.5.31 (#318, decimal rounding) merged; label `0.5.31+x7` — **done 6 Sep 2026, live: `/healthz` reports `0.5.31+x7`, build `2026-09-06 10:47 UTC` running and on disk, and the wye-delta solve on the live site prints -36.20, after Roberto's pull**
 
 The same merge as X4–X6, `git merge -X theirs v9/main` in all three
