@@ -5,7 +5,12 @@ file version 9 never has, so a `git merge v9/main` can never conflict on
 it. `NEXT.md` beside this file is version 9's running list and arrives
 by merge; read it as upstream history, not as a record of X.
 
-## X1 — X runs its own solver checkout, not the PyPI package — **done 6 Sep 2026 on the dev server; the PythonAnywhere half awaits Roberto's console pass**
+## X1 — X runs its own solver checkout, not the PyPI package — **done 6 Sep 2026, live on `symbulatorx.pythonanywhere.com`: `/healthz` reports solver `0.5.26+x1`, build `2026-09-06 03:07 UTC` running and on disk, and a DC solve on the live site answers**
+
+Roberto's first console pass came back reading `0.5.26` -- the checkout
+was installed editable, but the version line had not been pushed, so the
+clone read the same as PyPI. The label did its job: the two are
+indistinguishable without it. Pushed, pulled again, reloaded: `+x1`.
 
 Roberto, 6 Sep 2026: *"Is it possible to make modifications to
 Symbulator X without touching 9? I would like to try some experimental
