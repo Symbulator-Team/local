@@ -1,6 +1,130 @@
 # Next build — accepted but not yet done
 
-## #314 — a transformer or two-port with all four terminals, and the current into every one of them — **done 6 Sep 2026: solver 0.5.27 then 0.5.28 on PyPI (both hash-verified), the offline pair live at cache v154, learn live web and PDFs, the server pushed and awaiting Roberto's pull with `pip install --upgrade symbulator`**
+## #315 — the package in a notebook: typeset results, the tutorial's spellings, `polar()`, `rounded()`, cell magics, a quickstart notebook — **done 6 Sep 2026: solver 0.5.30 on PyPI (hash-verified), the offline pair live at cache v156, the server awaiting Roberto's pull with `pip install --upgrade symbulator`; nothing in the app changes**
+
+Roberto, 6 Sep 2026, reading a book built from Jupyter notebooks: *"how
+can we make symbulator easy to use in Jupyter?"* -- and, once the
+assessment was in, that the app and its documentation stay unchanged,
+with the notebook use documented separately to keep the app's
+documentation simple.
+
+**What was measured first.** The PyPI package (0.5.29) was run in a
+fresh kernel with no changes -- a throwaway venv at
+`C:\Users\perez\AppData\Local\Temp\nbenv` (the scratchpad path is
+too long for Windows' 260-character limit; `jedi`'s typeshed tree hit
+it), the notebook executed with `nbclient` and rendered with
+`nbconvert` and headless Chrome. It already worked: one-line install
+with SymPy as the only dependency, both description forms accepted
+(colon-separated and the app's one-per-line), every single answer
+typeset because it is SymPy, `draw()` inline as SVG, SymPy's `plot`
+and `bode_samples` with Matplotlib both fine, and the package's own
+errors with the app's messages. The gaps, in the order a reader met
+them: a bare `Result` was a text dump while the values inside it would
+have typeset; AC answers were fifteen-digit rectangular floats where
+the app shows `9.939∠−6.34°`; the tutorial's `ir1` and `v2` raised
+`KeyError`, the app's alias table living in the server and not the
+package; `help(dc)` showed an example (`r1,1,2,1k`) the package itself
+rejects; nothing anywhere mentioned notebooks; and `port()` returned a
+bare dict.
+
+**What was built**, all in `repos/solver`, nothing in `server` or
+`local`:
+
+* `symbulator/_display.py` -- `name_latex`, `value_latex` (the
+  imaginary unit as `j`, every infinity a plain ∞ as the Results card
+  prints it, #305), and `aligned()`, which sets rows in an `aligned`
+  inside a `gathered` so a caption sits centred above them. A bare
+  `\\` between the caption and the block was the first draft;
+  `gathered` is the form amsmath and MathJax both promise.
+* `Result._repr_latex_`, `TheveninResult._repr_latex_` (labelled `req`
+  or `zeq` as the card is), and `PortResult`, a dict subclass carrying
+  `kind` and a `bmatrix`. Existing `params["11"]` code is untouched.
+* `Result.resolve(key)`: a stored name for either spelling, the
+  quantity letters tried longest first (`ap` before `p`, so `apr1` is
+  `ap_r1`). Only a name that exists is ever returned, so a user's own
+  unknown (`pout`) cannot be captured, and a miss raises a `KeyError`
+  that lists the answers. `__getitem__`, `get`, `at` and the new
+  `__contains__` all go through it; `__iter__` and `__len__` added.
+  **This is a lookup rule, not a rewrite** -- inside an expert-mode
+  expression the underscored form is still required, as the README
+  now says, because rewriting there would change the library's
+  semantics for existing callers and is the server's job at its layer
+  (#94). The server's alias table stays where it is: it rewrites what
+  the reader *types*, a different job from finding what was solved.
+* `Result.rounded(digits)` -- the app's `_round_expr` rule (exact
+  integers stay; everything else through `N()`), as a copy.
+* `polar(value, digits=4)` in `utils.py`, returning a `Phasor` --
+  the app's `aa` mini-tool to the letter: real part taken after
+  evaluating (the `0.e-13*I` crumb), a real value gets 0 or 180, zero
+  is `0∠0°`, a symbolic value raises `ValueError` naming the symbols.
+* `symbulator/notebook.py` -- `%%dc`/`%%ac`/`%%fd`/`%%tr`, registered
+  by `load_ipython_extension` on the package so `%load_ext symbulator`
+  is the whole incantation. Options are parsed with `ast.literal_eval`
+  per token (`omega=1000` a number, `omega=w` text, `a,b` a list). The
+  body is a `run()` that takes a namespace dict, so it is tested
+  without IPython; the IPython round trip is tested too, and skipped
+  where IPython is absent.
+* `pyproject.toml`: a `notebook` extra (JupyterLab, NumPy,
+  Matplotlib). `README.md`: *In a notebook*, before Expert mode.
+  `notebooks/quickstart.ipynb`: 33 cells, executed, 88 KB, built by
+  a script and checked for zero errors; `llms.txt` points at it.
+  `CHANGELOG.md` carries the entry under *Unreleased*.
+* The `help(dc)` example fixed.
+
+**Tests.** `symbulator/tests/test_notebook.py`, 21 tests. Suite 411
+in the shared Python (IPython absent, one test skipped by
+`importorskip`); the 21 all pass under the venv where IPython is
+present, the `%load_ext` round trip included.
+
+**Verified by rendering, not by reading.** The executed quickstart
+was exported with nbconvert and screenshotted: the `gathered`/`aligned`
+block typesets, `j` appears where SymPy would have written `i`,
+`polar()` prints the app's own `9.939∠−6.34°`, the schematic and both
+plots are inline.
+
+**Not done, by decision.** No `Circuit` object (hold until the smaller
+pieces have been used); no rewriting of aliases inside expressions in
+the package (above); no move of the server's alias table (the two do
+different jobs, so there is no duplicate to remove); no landing-page
+link (Roberto: the notebook use is separate documentation, and a line
+under the developer material can wait).
+
+**The release** (Roberto: *"Punch it."*, the same evening). The
+version-metadata test went red first, as it does after every bump
+until `pip install -e .` refreshes the installed distribution's
+metadata -- it read 0.5.29 against the file's 0.5.30 -- and the suite
+was rerun unpiped for its exit status (411, exit 0) before anything
+irreversible. `python -m build`, `twine check` PASSED on both
+artefacts, upload; **0.5.30** on PyPI with wheel sha256
+`4f7bbceb…`, verified against the built file. The same wheel into
+`vendor/`, 0.5.29 deleted, the three pins moved, cache **v156** --
+each change read back in `git diff` before the build --
+`build_local.py`, `build_zip.py` (**31,830,299 b, 30.4 MB**),
+`stage_install_site.py` at `Application/v9/`, then the two deploys,
+all hash checks passing. Verified live by fetching: `install`'s
+`sw.js` says v156 and names the 0.5.30 wheel, and the wheel the host
+serves hashes equal to PyPI's, `dist/` and `vendor/` -- the same
+bytes in four places. 0.5.29 is still on the install host until
+Roberto's typed prune. `requirements.txt` is at `>=0.5.30`; the
+server's pull needs the `pip install --upgrade symbulator`, though
+`symbulator_ui.py` did not change and 0.5.29 would still run it --
+the pin is what enforces the version. The `python3` kernelspec that
+pointed at the throwaway venv was removed before the release; the two
+temporary directories (`Temp\nbenv`, `Temp\nbwork`) remain for
+follow-ups and are safe to delete.
+
+## #314 — a transformer or two-port with all four terminals, and the current into every one of them — **done 6 Sep 2026: solver 0.5.27, 0.5.28 and 0.5.29 on PyPI (all hash-verified), the offline pair live at cache v155, learn live web and PDFs, both PythonAnywhere sites on 0.5.29 after Roberto's pulls, verified by fetching `/healthz`**
+
+**0.5.29, the same evening.** Two things the shipped examples exposed
+after 0.5.28 was live: the tapped autotransformer's internal unknown
+(`i_t_p1`, the primary current that steps aside when the winding's top
+is another terminal) was reported among the values and would have shown
+under *Expert Mode unknowns* -- `Circuit.internal` drops it now; and the
+exhaustive pixel check found Example 13.11's ratio `80 : 80+120` printed
+through both windings' leads at 0.5px -- a ratio wider than the gap now
+goes above the node row, the name with it, `1 : 2` staying where it was
+(the estimate is 6px a character; 7 lifted `1 : 2` too). Suite 390, the
+review harness 336 clean, cache **v155**, X merged as X5 (`0.5.29+x5`).
 
 **The release, in order.** Roberto: *"Push the package, update the app."*
 0.5.27 went to PyPI (`aa9cb02e…`, the bytes the offline pair bundles),
@@ -150,7 +274,7 @@ two-node, a transformer and each block kind between live pairs, one
 bottom ground, a common bottom, the left top as the first node, and a
 bottom node far from its top. Solver suite **387 passed**;
 `review_schematics.py` over all 331 examples `failed=0 with_issues=0`;
-`pixel_clearance.py --all` run after. One thing seen and left: a wide
+`pixel_clearance.py --all`: 336 drawings, tightest 4.00 px, 0 below the 3 px threshold (after the wide-ratio fix of 0.5.29). One thing seen along the way: a wide
 ratio such as `80 : 120` crowds the windings' tops in *both* forms --
 it predates #314 and wants its own item.
 
