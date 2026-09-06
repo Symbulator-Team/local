@@ -5,7 +5,7 @@ file version 9 never has, so a `git merge v9/main` can never conflict on
 it. `NEXT.md` beside this file is version 9's running list and arrives
 by merge; read it as upstream history, not as a record of X.
 
-## X7 — version 9's 0.5.31 (#318, decimal rounding) merged; label `0.5.31+x7` — **done 6 Sep 2026, pushed; the site awaits Roberto's pull of both clones and a reload**
+## X7 — version 9's 0.5.31 (#318, decimal rounding) merged; label `0.5.31+x7` — **done 6 Sep 2026, live: `/healthz` reports `0.5.31+x7`, build `2026-09-06 10:47 UTC` running and on disk, and the wye-delta solve on the live site prints -36.20, after Roberto's pull**
 
 The same merge as X4–X6, `git merge -X theirs v9/main` in all three
 repos, no conflicts, `branding.py` intact (checked). Label
