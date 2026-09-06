@@ -1,6 +1,6 @@
 # Next build — accepted but not yet done
 
-## #320, #321, #322 — ports that float: the extractor takes `[top,bottom]` pairs, two blocks stack in the drawing, and an island behind a port gets its own reference — **done 7 Sep 2026: solver 0.5.32 on PyPI (wheel sha256 `c20c6450…`, hash-verified against PyPI and the install host), the offline pair live at cache v158 (ZIP 31,843,980 b), learn live web and PDFs (v9 289 pages), X merged as X8; the server awaits Roberto's pull with `pip install --upgrade symbulator`**
+## #320, #321, #322 — ports that float: the extractor takes `[top,bottom]` pairs, two blocks stack in the drawing, and an island behind a port gets its own reference — **done 7 Sep 2026: solver 0.5.32 on PyPI (wheel sha256 `c20c6450…`, hash-verified against PyPI and the install host), the offline pair live at cache v158 (ZIP 31,843,980 b), learn live web and PDFs (v9 289 pages), X merged as X8 and X9, both PythonAnywhere sites on 0.5.32 after Roberto's pulls (`/healthz` build `2026-09-06 21:59 UTC` on version 9 and `2026-09-06 22:01 UTC`, `0.5.32+x8`, on X, `needs_reload: false`; verified live by 19.2 through the port tool with pairs, the 19.70 note 221, and a groundless entry drawn on both sites)**
 
 Roberto's friend sent three problems to try the four-terminal forms on
 (7 Sep 2026): Alexander & Sadiku's 19.2 (the z parameters of a ladder
