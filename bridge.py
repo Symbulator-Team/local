@@ -90,6 +90,7 @@ def solve(payload_json: str) -> str:
         conditions = [ui.expand_defines(c, defines) for c in conditions]
         unknowns = [ui.expand_defines(u, defines) for u in unknowns]
 
+    ui.set_port_references(tool, n1, n2)          # #320, for the pre-parses
     err = ui._validate(desc, domain, omega, variables or None)
     if not err:
         err = ui._validate_extras(equations, unknowns, conditions)
@@ -119,7 +120,7 @@ def solve(payload_json: str) -> str:
         # from below, matching app.py's /api/solve. It's still expanded
         # to a real number the normal way when solve_ui parses `desc`
         # again for the actual solve.
-        elements = parse_circuit(desc, expand_si=False)
+        elements = parse_circuit(desc, expand_si=False, references=ui.port_references(tool, n1, n2))
         ambiguous = ambiguous_in_elements(elements)
     except Exception as exc:
         # _exc_msg, not _exc_text: this is the parse step, and it was
@@ -309,7 +310,10 @@ def schematic(payload_json: str) -> str:
     same way as the others; the whole dict is serialised, so a key added
     in symbulator_ui arrives here without this file changing."""
     p = json.loads(payload_json)
-    return json.dumps(ui.schematic_ui(str(p.get("desc") or "")))
+    return json.dumps(ui.schematic_ui(str(p.get("desc") or ""),
+                                      str(p.get("tool") or ""),
+                                      str(p.get("n1") or ""),
+                                      str(p.get("n2") or "")))
 
 
 def evaluate(payload_json: str) -> str:
