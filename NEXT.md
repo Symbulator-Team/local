@@ -1,6 +1,6 @@
 # Next build — accepted but not yet done
 
-## #314 — a transformer or two-port with all four terminals, and the current into every one of them — **done 6 Sep 2026: solver 0.5.27, 0.5.28 and 0.5.29 on PyPI (all hash-verified), the offline pair live at cache v155, learn live web and PDFs, both PythonAnywhere sites pulled by Roberto at 0.5.28 and awaiting one more pull for 0.5.29**
+## #314 — a transformer or two-port with all four terminals, and the current into every one of them — **done 6 Sep 2026: solver 0.5.27, 0.5.28 and 0.5.29 on PyPI (all hash-verified), the offline pair live at cache v155, learn live web and PDFs, both PythonAnywhere sites on 0.5.29 after Roberto's pulls, verified by fetching `/healthz`**
 
 **0.5.29, the same evening.** Two things the shipped examples exposed
 after 0.5.28 was live: the tapped autotransformer's internal unknown
