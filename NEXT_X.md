@@ -5,7 +5,7 @@ file version 9 never has, so a `git merge v9/main` can never conflict on
 it. `NEXT.md` beside this file is version 9's running list and arrives
 by merge; read it as upstream history, not as a record of X.
 
-## X2 — a transformer or two-port block written with all four terminals — **built and verified on the dev server, 6 Sep 2026; solver `0.5.26+x2`; uncommitted, awaiting Roberto's word**
+## X2 — a transformer or two-port block written with all four terminals — **built and verified on the dev server, 6 Sep 2026; solver `0.5.26+x2`; pushed to `Symbulator-Team` on Roberto's "Go"; the site awaits his pull of both clones and a reload**
 
 Roberto, 6 Sep 2026: keep the calculator's two-node forms, and also
 take *two-port name, top left, top right, bottom left, bottom right,
