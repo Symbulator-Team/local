@@ -81,11 +81,50 @@ its own to 0 is `E_FLOATING_NODES` -- *the whole side, not just that side
 of the element* (his correction to the first phrasing). Wrong shapes:
 `E_TERMS_TRANSFORMER` (219) names the three forms; `E_PORT_PAIR` (220)
 catches one bare node beside one pair, or a pair with the wrong count.
-The drawer refuses a four-node element by `E_DRAW_FOUR_NODE` (701, a new
-7xx range for `schematic.py`) rather than drawing its bottoms as ground;
-the circuit still solves. **Four new codes, so four new dictionary keys
-in thirteen languages** -- `js.pkg.m218`, `m219`, `m220`, `m701`,
-tagged, translated into the twelve, packed; `tools/i18n.py check`: ok.
+**Three new codes, so three new dictionary keys in thirteen languages**
+-- `js.pkg.m218`, `m219`, `m220`, tagged, translated into the twelve,
+packed; `tools/i18n.py check`: ok. (A fourth, 701, refused a four-node
+element at the drawer for the hour before the drawing existed; it was
+removed again, dictionaries and all, once it did.)
+
+**The drawing.** Roberto: keep the two-node ground logic exactly, and
+develop a new one for bottoms that are not ground. The two-node logic
+(#212, #218: the rail cut at a block's faces, one ground symbol per run
+of rail, the transformer's two feet on the rail with one symbol between
+them) is untouched -- `_drawn_four()` routes an element to the new path
+only when at least one bottom is a live node, so `z,[1,0],[2,0]` draws
+byte-identically to `z,1,2`, and the review harness over all 331
+examples reports `failed=0 with_issues=0` after the change. The new
+logic, for a live bottom: the symbol still spans between its two top
+nodes, but the block stops short of the rail (the box by 30px, the
+transformer's windings at `TRANS_FOUR_SPAN`, 118px below the row), and
+each lower terminal leaves its face **sideways**, rises through a
+column the layout keeps clear beside the block, and joins its own node
+on the node row; the rail runs beneath uncut. Three things make it read:
+`_node_order` moves each bottom node to the column right beside its own
+top, on the block's outer side (a common bottom takes the left side
+once); `_assign` reserves a spacer column on each outer side of the
+block (`lead_spacer` when the left top is the first node of all) and
+registers the run along the row from the riser to the bottom node as a
+row-0 stub, so nothing else is placed across it; and the lower leads
+leave at a height past the *body* of anything hanging in a neighbouring
+column, so a lead that crosses one crosses its wire, with the drawer's
+ordinary hop, never its symbol. A bottom that is ground still drops to
+the rail from the face, with its symbol. A common bottom: the
+transformer's two feet are joined by one wire under the core, which is
+what an autotransformer looks like in a book; the box hangs lower than
+its terminals, so both its leads drop to one line under it and leave
+together -- one line, so whatever hangs beside the block is crossed
+once, not twice, which is what the first cut did. Eleven shapes were
+rendered through headless Chrome and *read* before any of it was called
+done: both two-node forms unchanged, both forms with zeros identical to
+two-node, a transformer and each block kind between live pairs, one
+bottom ground, a common bottom, the left top as the first node, and a
+bottom node far from its top. Solver suite **387 passed**;
+`review_schematics.py` over all 331 examples `failed=0 with_issues=0`;
+`pixel_clearance.py --all` run after. One thing seen and left: a wide
+ratio such as `80 : 120` crowds the windings' tops in *both* forms --
+it predates #314 and wants its own item.
 
 **Everything that read a field by position was moved.** The parser's
 case folding, the connectivity and port-node checks, `laplace._is_controlled`,
@@ -140,11 +179,9 @@ for both elements comes *after* the drawings and the package.
 changelogged and stays off PyPI until he says; the offline build, the
 cache bump, `requirements.txt` and the PythonAnywhere pass all wait on
 it, and so does `verify_bridge.py`, which needs `build_local.py`'s copy
-of `symbulator_ui.py`. **The schematic drawer is the next piece**: keep
-the two-node ground logic exactly (#212, #218 -- the rail stopping at a
-block, one symbol per run), and give the four-node forms a placement of
-their own. X takes all of this by merge afterwards; its X2/X3 forms are
-superseded.
+of `symbulator_ui.py`. After the package: the documentation pass for
+both elements, with the drawings (his words, 6 Sep 2026). X takes all
+of this by merge afterwards; its X2/X3 forms are superseded.
 
 ## #312 — the app's half of one sun-and-moon in the split view — **done 5 Sep 2026, live on the offline pair at cache v151 and on the server since Roberto's pull the same night**
 
