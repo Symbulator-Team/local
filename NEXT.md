@@ -1,6 +1,6 @@
 # Next build — accepted but not yet done
 
-## #318 — rounding is done in decimal, not at a binary precision: `sp.N(x, digits)` misrounds the last digit — **done 6 Sep 2026, both halves: solver 0.5.31 on PyPI (hash-verified), the app's three rounding sites on the package's `round_sig`, the offline pair live at cache v157, X merged as X7; the server awaits Roberto's pull with `pip install --upgrade symbulator`**
+## #318 — rounding is done in decimal, not at a binary precision: `sp.N(x, digits)` misrounds the last digit — **done 6 Sep 2026, both halves: solver 0.5.31 on PyPI (hash-verified), the app's three rounding sites on the package's `round_sig`, the offline pair live at cache v157, X merged as X7, both PythonAnywhere sites on 0.5.31 after Roberto's pulls (`/healthz` build `2026-09-06 10:43 UTC` on version 9, `0.5.31+x7` on X, a live wye-delta solve printing -36.20 on each); 0.5.30 awaits his typed prune, reminder scheduled for 7 Sep 2026 06:54**
 
 Found by the monograph notebook. Its note reads the wye-delta line
 current as *2.350 at -36.20 degrees*; `polar()` printed `-36.21`, and
