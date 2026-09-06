@@ -87,7 +87,7 @@ I18N_OUT = HERE / "i18n"
 SW_I18N_BEGIN = "  // ==== BEGIN i18n ==== written by build_local.py; do not edit"
 SW_I18N_END = "  // ==== END i18n ===="
 
-WHEEL = "symbulator-0.5.31-py3-none-any.whl"
+WHEEL = "symbulator-0.5.32-py3-none-any.whl"
 
 # The Numerical Solver's one expensive dependency (#208). eqsheet.py
 # calls scipy.optimize.root for a square system and least_squares for a
@@ -1285,10 +1285,10 @@ def build() -> str:
         s,
         """    const r = await fetch('/api/schematic', {
       method: 'POST', headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({ desc: desc })
+      body: JSON.stringify({ desc: desc, tool: _v('tool'), n1: _v('n1'), n2: _v('n2') })
     });
     const data = await r.json();""",
-        """    const data = await py('schematic', { desc: desc });""",
+        """    const data = await py('schematic', { desc: desc, tool: _v('tool'), n1: _v('n1'), n2: _v('n2') });""",
         label="schematic fetch",
     )
 
