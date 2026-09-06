@@ -1,6 +1,6 @@
 # Next build — accepted but not yet done
 
-## #315 — the package in a notebook: typeset results, the tutorial's spellings, `polar()`, `rounded()`, cell magics, a quickstart notebook — **done 6 Sep 2026: solver 0.5.30 on PyPI (hash-verified), the offline pair live at cache v156, the server awaiting Roberto's pull with `pip install --upgrade symbulator`; nothing in the app changes**
+## #315 — the package in a notebook: typeset results, the tutorial's spellings, `polar()`, `rounded()`, cell magics, a quickstart notebook — **done 6 Sep 2026: solver 0.5.30 on PyPI (hash-verified), the offline pair live at cache v156, both PythonAnywhere sites on 0.5.30 after Roberto's pulls (`/healthz` build `2026-09-06 09:44 UTC` on version 9, `0.5.30+x6` on X, `needs_reload: false` on both, a real DC solve answering on each), 0.5.29 pruned from the install host; nothing in the app changes**
 
 Roberto, 6 Sep 2026, reading a book built from Jupyter notebooks: *"how
 can we make symbulator easy to use in Jupyter?"* -- and, once the
@@ -104,8 +104,10 @@ each change read back in `git diff` before the build --
 all hash checks passing. Verified live by fetching: `install`'s
 `sw.js` says v156 and names the 0.5.30 wheel, and the wheel the host
 serves hashes equal to PyPI's, `dist/` and `vendor/` -- the same
-bytes in four places. 0.5.29 is still on the install host until
-Roberto's typed prune. `requirements.txt` is at `>=0.5.30`; the
+bytes in four places. Roberto's typed prune removed 0.5.29 from the install host the same
+evening (404 by HEAD, the 0.5.30 wheel 200), and his two console
+passes put both sites on 0.5.30 -- verified by `/healthz` and by a
+real solve through `/api/solve` on each. `requirements.txt` is at `>=0.5.30`; the
 server's pull needs the `pip install --upgrade symbulator`, though
 `symbulator_ui.py` did not change and 0.5.29 would still run it --
 the pin is what enforces the version. The `python3` kernelspec that
