@@ -1,5 +1,709 @@
 # Next build — accepted but not yet done
 
+## #312 — the app's half of one sun-and-moon in the split view — **done 7 Sep 2026, live on the offline pair at cache v151 and on the server since Roberto's pull the same night**
+
+Written up in `Documentation/NEXT_DOCS.md` #312, whose shell half is
+live. Here: `html.embedded .theme-toggle { display: none }` beside #311's
+rule, the click handler refactored into `setDarkTheme()`, and a
+`message` listener that applies `{from:'symbulator-split', type:'theme',
+dark}` only when framed and only from `learn.symbulator.com` or the
+page's own origin. Never framed, the offline builds are untouched by it.
+
+## #311 — no wordmark band inside the split view — **done 7 Sep 2026, live on the offline pair at cache v150; the server current since Roberto's pull the same night**
+
+Roberto, 7 Sep 2026: *"in split view, you do not show the banner of the
+documentation. That's great. Would it be possible to hide also the
+banner of the app in split?"* The app pane is another origin, so the
+shell cannot style it; the app detects being framed itself, the way the
+docs page does (#224, `window.self !== window.top`, never a flag a
+reload would lose), adds `embedded` to its root before first paint, and
+one rule hides `.topbar`. The ribbon stays: inside the split view its
+controls -- Clear, Collapse, the language, the theme -- are the ones a
+reader reaches for, and the wordmark band is what the shell's own bar
+already provides. The rule sits outside the shared `banner.css` block
+on purpose: that block is the lockup five sites share, and this is one
+host's decision about one frame.
+
+Verified on the dev server by framing the page inside itself (the
+frame-ancestors policy allows `'self'`): the framed copy carries the
+class, its topbar is `display: none` and its ribbon sits at 0px; the
+top-level page is untouched. The offline builds are never framed, so
+nothing changes there.
+
+## #309 — the theme swatch hidden on a phone — **done 7 Sep 2026, live on the offline pair at cache v149; the server current since Roberto's pull the same night**
+
+Roberto, 7 Sep 2026, on #308's cost: *"Feel free to hide the theme button
+in mobile."* One rule below 480px on `.palette-wrap`, the colour-theme
+swatch beside the sun and moon; the sun and moon stay, since dark mode
+matters on a phone, and the theme still applies from the stored
+preference or a wider screen. Its width is what the nav needed: measured
+at 375px on the dev server, both nav links are back in twelve of the
+thirteen languages -- *App+Doku*, *Appli+Docs*, *Aplikasi+Dok*, ローカル+文書,
+অ্যাপ+ডক্স … -- and Ukrainian was the one left showing *Застосунок* without *Док*.
+Roberto asked how a Ukrainian reader would get back to the docs, and the
+answer was that they could not: the ribbon's one-line rule had clipped
+the link and the footer names no documentation. Fixed by wording, at
+cache v149: the Ukrainian short labels became *Додаток* (app), *Скласти*
+(collapse) and *Стерти* (clear), which is the 17px the nav was short by,
+measured -- both links show in all thirteen languages at 375px. The
+ribbon is one row (53px) in every language.
+
+## #308 — *Collapse all cards* in the ribbon — **done 7 Sep 2026, live on the offline pair at cache v148; the server current since Roberto's pull the same night**
+
+Roberto, 7 Sep 2026: *"add a link, next to 'Clear all inputs', reading
+'Collapse all cards' (shortened to 'Collapse') that, when clicked,
+collapses all the cards in the interface."*
+
+A second `.subbar-action` button before *Clear inputs*, with its own dot
+after it, so the two read as one group of page actions at the ribbon's
+right-hand end. Two spellings through the pair `banner.css` already
+switches at 480px -- *Collapse all cards* above, *Collapse* at or below
+-- and translated in the twelve other languages in the same shape as
+*Clear inputs* (`Alle Karten zuklappen` / `Zuklappen`, `Replier les
+cartes` / `Replier`, 收起所有卡片 / 收起 …), plus the hover title. The click
+closes every `<details>` inside a `.card`, the nested boxes included
+(Settings, Expert Mode, the SymPy help), which is the one gesture that
+gives back a page of headings.
+
+Measured on the dev server at 375px: the ribbon stays one row in every
+language tried, both new items showing, and a click took the open cards
+from two to none. **One cost, flagged to Roberto**: the nav's one-line
+rule hides a link that would wrap, and the new button's width is what
+the second link needed in six languages -- at 375px German, French,
+Portuguese, Indonesian, Japanese and Ukrainian now show *App* but not
+*Docs* (English, Spanish and the rest keep both). Measured by hiding the
+button and re-reading the nav: `Doku` comes back the moment it goes.
+Resolved the same night by #309, at Roberto's word, by hiding the theme
+swatch on a phone instead.
+
+## #307 — the Walnut theme removed — **done 7 Sep 2026, live on the offline pair at cache v146; the server current since Roberto's pull the same night**
+
+Roberto, 7 Sep 2026: *"kill the Walnut theme. It's too close to Earth."*
+One row out of `tools/palettes.py`'s TABLE, `palettes.py write` to
+regenerate both templates' theme blocks, the key out of both
+`PALETTES` lists and `paletteNames()`, and `js.palette.walnut` out of
+all thirteen dictionaries. Twelve themes remain. A reader who had
+Walnut stored gets the default: `currentPalette()` already falls back to
+`navy` for a name the list no longer has, so nothing else was needed.
+`palettes check`, `i18n check` and the hidden-guard check clean; the
+served page carries no `walnut` at all.
+
+## #305 — one infinity sign in every result field — **done 7 Sep 2026, live on the offline pair at cache v145 and on the server since Roberto's pull the same night**
+
+Roberto, 7 Sep 2026, on an ∞ with a tilde over it in a result: *"If
+that's the mathematically correct symbol, we can leave it. But if you
+are changing it in the results, then let's have it displayed consistently
+in all other result fields in evaluate and solve as well."*
+
+The tilde is SymPy's `zoo`, complex infinity -- an infinity of undefined
+direction, which is what a nonzero quantity over zero becomes -- and
+SymPy prints it `zoo` in text and `	ilde{\infty}` in LaTeX. The Results
+card had always folded oo, -oo and zoo into a plain ∞ (`fmt`/`fmt0`);
+Evaluate and Solve handed the value to SymPy's printers, so Bo2's 3.11's
+`req` came out with the tilde in Evaluate and would have read `zoo` in
+plain text. `_infinity_pair()` now does what the card does, in both
+closures (`shown_pair`, `once`), sign kept for -oo. And an infinite
+answer that had been *stored* (`values` holds `str(expr)`, so `zoo`)
+read back as a symbol called zoo, because the restricted namespace
+knows `oo` but not `zoo`; `_parse_answer` maps that one word first.
+
+Verified: `1/x` at `x = 0` evaluates to ∞ and `req` stored as `zoo` to ∞
+(both had printed the tilde, the second `zoo` in plain text). Solve's
+`once` calls the same helper; an equation whose stored answer is
+infinite has no finite root to report, so that path shows nothing rather
+than a tilde.
+
+## #300 — the Load-equivalent button moves under the Thévenin answers — **done 7 Sep 2026, live on the offline pair at cache v144; the server current since Roberto's pull of 7 Sep 2026**
+
+Roberto, 7 Sep 2026: *"Move the 'Load circuit equivalent?' button to
+appear under the results of the Thevenin equivalent at the end of the
+card."* The button and its warning left the Analysis card -- the tick
+stays there, under the port nodes -- for a box at the foot of the Results
+card, after the answers. `syncLoadEquivBox()` shows the box when the tick
+is on and the answers on screen are a Thévenin run (`last`, not
+`lastSolve`: an edited input stales the solve without taking the answers
+off the screen, and the button should then go dead per #299 rather than
+vanish); `syncLoadEquivBtn()` still governs the button itself. Clear all
+hides both. The markup moved as a unit, so its four dictionary keys are
+unchanged; `i18n check` and the hidden-guard check clean.
+
+Verified on the dev server: the box is inside the Results card after the
+answers; hidden before a run; shown with the seven rows after a Thévenin
+run with the tick on; hidden when the tick comes off (the rows drop to
+four) and back when it returns; the button dead after one edit, with a
+click showing no warning; the box gone after Clear all.
+
+## #299 — the Load-equivalent button follows the solve's freshness — **done 7 Sep 2026, live on the offline pair at cache v143; the server current since Roberto's pull of 7 Sep 2026**
+
+Roberto, 7 Sep 2026, on #292: *"the 'Load circuit equivalent?' should
+not be active until the Thevenin simulation has been run. Until then,
+deactivate it. Also, if any modifications are made to the input, the
+button becomes inactive until run again."*
+
+The page already tracks exactly that for the Run button -- `freshness.solve`,
+set by `markFresh` after a run and cleared by `markStale` from every input
+listener -- so the button reads the same state: `syncLoadEquivBtn()` runs
+from `paintFreshness('solve')` on every transition and from
+`activatePostSolve` once `last` holds the new run (markFresh fires before
+`last` is replaced, which is why both are needed), and enables the button
+only while the solve is fresh *and* is a Thévenin run with an `ino`. An
+open warning closes when the button goes dead. The tick itself is not an
+input that stales the solve, so ticking after a run leaves the button
+live. The first version's inline *find it first* notice is gone, and its
+key with it, from all thirteen dictionaries.
+
+Verified on the dev server by driving the page: disabled before a run
+and a click shows nothing; enabled after a Thévenin run; still enabled
+after unticking and re-ticking; disabled after one character typed into
+the description; enabled again after re-running; disabled on switching
+the equivalent to resistance.
+
+## #295 — three theme names: *Default*, *Warm Pink*, *Gray & Gold* — **done 7 Sep 2026, live on the offline pair at cache v141; the server current since Roberto's pull of 7 Sep 2026**
+
+Roberto, 7 Sep 2026, mid-train: *"In the theme list, please capitalise
+'Pink' and 'Gold', and change 'Navy' with 'Default'."* The names live in
+three places that must agree -- `tools/palettes.py`'s TABLE, and the
+`paletteNames()` fallbacks in both templates (the Numerical Solver page
+has its own copy, which is what `i18n check` caught: *two different
+English texts for 'js.palette.navy'*). All three say *Default*, *Warm
+Pink* and *Gray & Gold* now; `palettes.py write` rewrote the two theme
+blocks. The twelve translations of *Navy* became each language's
+*Default* (*Standard*, *Predeterminado*, *Par défaut*, *Padrão*,
+*Defaŭlta*, 默认, デフォルト, 기본, *Bawaan*, डिफ़ॉल्ट, ডিফল্ট, *Типова*); the
+pink and gold names keep their own languages' casing, which was already
+what each language does with a colour name. The palette key stays `navy`
+-- it is the stylesheet's attribute value and a stored preference, not a
+word anyone reads.
+
+Shipped with #291/#292 at cache **v141** (v140 had gone out minutes
+earlier without it; ZIP 31,802,167 bytes, hash-verified on both sites).
+
+## #292 — the th tool's load features, ported at last from version 8 — **done 7 Sep 2026, live on the offline pair at cache v141; the server current since Roberto's pull of 7 Sep 2026**
+
+Roberto, 7 Sep 2026: *"The features of the th() tool of Symbulator were
+not properly ported from v8 to v9."* Version 8's `th`, once it had the
+equivalent, asked *"If you are planning to analyze a load connected to
+this equivalent, we can give you the description of the equivalent
+circuit and some key equations that will help. Interested? [y/n]"* and on
+yes defined `irl`, `vrl` and `prl` in the variable `load` and wrote the
+equivalent circuit into `eqcir`. None of that had crossed to version 9;
+the tutorial had been made to work around the gap with hand-typed
+`vth/(req+2)` expressions -- the *"nonsense added by the AI"* that #293
+removes on the docs side.
+
+What the app does now, to his brief:
+
+* **A question under the two node boxes**, shown only when the
+  equivalent asked for is *Thévenin / Norton*: *Are you running a problem
+  with a load connected to this equivalent circuit?* Unticked, the app
+  behaves exactly as before.
+* **Ticked, Results shows three more answers under the four**, each a
+  function of `load`, in the calculator's words: `irl` *current in load*,
+  `vrl` *voltage drop in load*, `prl` *power consumed in load*. The
+  formulas are v8's, decoded from `calculator/decoded/v8_programs.txt`
+  and not re-derived: `ino*req/(load+req)`, `load*ino*req/(load+req)`,
+  `load*ino^2*req^2/(load+req)^2` in DC; the same with `zeq` in AC and
+  FD, the power as the real part of S = V I* -- `prl` for RMS phasors,
+  `aprl` (*average power consumed in load*) with the extra half for peak
+  ones, as v8 named them. They are computed in `symbulator_ui.py`
+  (`_load_answers`) on every th run and returned apart from the four, in
+  `load_extras`, so the page decides whether to show them and ticking or
+  unticking after a solve redraws Results without solving again. They are
+  in `values` either way, so **Evaluate** takes `irl` with `load = 2` in
+  **Conditions** whether or not the tick is on -- B11's 9.6 gives 3/2,
+  and 0.0588 at 100, the book's .059. A source with nothing in series
+  (the op-amp case, `ino` unbounded) has no load formulas through `ino`,
+  so the list is empty rather than three infinities. No solver release:
+  the solver's `th()` is untouched, so the server variant needs its pull
+  and nothing from PyPI.
+* **Beneath the tick, a button: *Load circuit equivalent?*** It asks
+  first, inline rather than in a browser dialog so it translates and the
+  circuit stays visible: the equivalent will overwrite the Circuit
+  Description, Define and Expert Mode fields and switch the analysis to
+  *Solve circuit* -- cancel and save first if the circuit is unsaved.
+  Cancel hides the warning and nothing moves. Proceed clears the
+  description, Define and the three Expert Mode fields (and the Enable
+  tick), sets the analysis to *Solve circuit*, and writes v8's `eqcir` in
+  version 9's fields --
+
+      jN,0,n,iNo
+      rE,n,0,rEq
+      rL,n,0,load
+
+  with **Define** holding `iNo=` and `rEq=` at their **exact** values
+  from `values`, not the rounded display (RM3's 9-8 gets `iNo=-9/25`,
+  `rEq=84`), and `load=` too if a `load = …` line was standing in Define
+  or in Evaluate's Conditions -- the calculator's `load` variable
+  surviving into its eqcir. In AC and FD the second line is `zEq`, a
+  complex resistor value being legal there. The answers on screen are
+  cleared, as they are whenever a circuit is loaded over another; the
+  Define box opens; the inputs count as edited, so *Update* offers itself.
+  **The button is disabled until a Thévenin run has been made, and
+  disabled again the moment any input changes** (Roberto, later the same
+  evening, #299): it writes `ino` and `req`, so it lives only while a
+  fresh Thévenin result is on screen, following the same freshness the
+  Run button reads. The inline *find it first* notice of the first
+  version went with that.
+
+Element names are lower-cased by the parser, so `rE` becomes `re`, which
+is not a collision -- the parse and a DC solve of the loaded equivalent
+were run first. `irl`/`vrl`/`prl` are typeset `i_{rl}`, `v_{rl}`,
+`p_{rl}` (`TEXNAME`), and their four labels joined the engine vocabulary
+(`srv.*`), translated in the twelve other languages along with the
+question, the button, the warning, *Proceed*, *Cancel* and the two new
+Evaluate placeholders (#291); `i18n check` clean, 650 keys.
+
+**The tick is saved with the entry** (Roberto, the same day: *"Save the
+tick to input files, and update built in examples"*): a `with_load`
+key, yes/no, written beside the port nodes only when on, read back as a
+boolean like `si` and `units`, restored by the loader and cleared by
+Clear all; `check_export_fields.py` sees it in `inputsSnapshot()` and
+round-trips it. The format reference names it after `kind`, in all
+thirteen languages. The eleven built-in entries whose problem connects a
+load -- B11's 9.6 and RM3's 9-8, Bo2's 3.10, 3.5, 3.7 and Drill 3.7,
+RM3's 9-7, 9-13 and Practice Problem 9.5, B11's 9.15, AS2's 4.8, and
+Lesson 5's TR5 Figure 4-32 -- carry `with_load: yes`, so they open with
+the question ticked and the load answers on screen.
+
+Guards: `check_hidden_guards.py` clean (the new `[hidden]` boxes have no
+author `display`); `build_local.py --check` runs its JavaScript check
+clean and then reports STALE, as it must until the build; the bridge
+passes the response through whole, but `app.py` lists its fields by hand
+(its own comment warns of this) and needed `load_extras` added -- found
+because the first browser run showed four rows, not seven. The
+`evaluate fetch` rewrite rule in `build_local.py` was updated for #291's
+change to the request body.
+
+Verified on the Flask dev server by driving the page: the question is
+`display: none` for *Solve circuit* and for the other two equivalents and
+`block` for Thévenin; ticked, B11's 9.6 shows seven rows with the seven
+labels, unticked four, re-ticked seven; `irl` at `load = 2` evaluates to
+3/2; the button before a run shows the *find it first* notice; after a
+run, Cancel leaves the description as it was, Proceed leaves
+`jN,0,n,iNo / rE,n,0,rEq / rL,n,0,load`, Define `iNo=3 / rEq=2 / load=2`
+(the 2 carried from Conditions), Expert Mode empty and off, the analysis
+*Solve circuit*, the results cleared.
+
+The example books follow the chapter (#293): B11's 9.6, Bo2's 3.10, 3.5,
+3.7 and Drill 3.7, RM3's 9-7, 9-13 and Practice Problem 9.5, B11's 9.15,
+AS2's 4.8 and Lesson 5's TR5 Figure 4-32 now carry `evaluate: irl` (or
+`vrl`, `prl`) with an `evaluate_conditions: load = …`, and RM3's 9-8
+follow-up entry is the circuit the button writes, with its two
+`defines:`. `verify_lesson.py --quiet`: Lesson_04a 7 entries, 0
+problems; Lesson_04b 46 entries, the one standing deliberate failure
+(Bo2's 3.11) and nothing else.
+
+**To ship**: bump `sw.js` `CACHE_VERSION` to v140, `build_local.py`,
+`build_zip.py --assets ../../local`, `stage_install_site.py`, the two
+cPanel deploys; the server needs its pull (`symbulator_ui.py`, `app.py`,
+the template, thirteen dictionaries, the examples), no `pip`. X will
+take it on its next merge.
+
+## #291 — the Evaluate card is active before any solve — **done 7 Sep 2026, live on the offline pair at cache v141 with #292**
+
+Roberto, 7 Sep 2026: *"We need to make the Evaluate card active even
+without a circuit solved, because people may need to use the pr function
+to reduce resistors. So please make it active always."*
+
+`evaluate_ui` never needed a solve -- `pr(100, 220)` with an empty
+answer set already came back 275/4 -- only the page held the card back:
+`activatePostSolve` enabled it and `clearResults` disabled it, and
+`evaluate()` returned early with no `last`. Now the field, the button and
+the Conditions box start live with their working placeholders, the card
+is never `inactive`, and with nothing solved the request carries an
+empty `values` and no domain, so the evaluator works on the expression
+and Define alone. The label's hint says so: *Works with no circuit
+solved, too: `pr(100, 220)` is the parallel of two resistors.* The
+Solve-equations card still waits for a solve, and the *solve a circuit
+first…* wording stays for it. Two `js.eval.*` keys became markup
+placeholders; the twelve translations moved with them.
+
+Verified in the browser with nothing solved: `pr(100,220)` evaluates to
+275/4.
+
+## #289 — the tool answers' labels in lower case, like every other label — **done 6 Sep 2026, live on the offline pair at cache v139; the server current since Roberto's pull of 7 Sep 2026**
+
+Roberto, 6 Sep 2026, reading an equivalent-resistance result: *"the label
+says 'Equivalent resistance' ... the other labels use lower case ... make
+all labels be lower case, unless they refer to a proper name like
+Thevenin or Norton."*
+
+The engine's element and port labels were already lower case (*current
+through*, *voltage drop*, *open-circuit input impedance*); the one table
+that was not is `_TOOL_LABELS` in `symbulator_ui.py`, the th/er tool's
+five named answers. Three change -- *equivalent resistance*, *equivalent
+impedance*, *maximum deliverable power* -- and *Thevenin voltage* and
+*Norton current* keep their capitals for the names. A sweep of every
+`srv.` word in `en.json` found no other capital.
+
+The engine's words are the dictionary keys, so the three moved to new
+keys and the twelve translations moved with them, first letter lowered
+where the language has case; **German keeps its capitals**, since
+*Ersatzwiderstand* is a noun. `i18n check` clean. `symbulator_ui.py` is
+shared into the offline build by `build_local.py`; shipped at cache
+**v139** (ZIP 31,793,970 bytes, hash-verified; build `2026-09-05 06:35
+UTC`), both offline sites. The server's own `symbulator_ui.py` and
+dictionaries change with the next pull.
+
+## #286 — Lesson 3's four `is1` entries say `is`, as the book now does — **done 6 Sep 2026, live on the offline pair at cache v138; the server current since Roberto's pull of 7 Sep 2026**
+
+From the docs session, 6 Sep 2026: four entries in
+`repos/server/examples/Lesson_03.cir` used `is1` as the symbolic value of
+a current source where the chapter now prints `is` -- which the app
+accepts, since the Python-keyword guard bans an *element* named `s`, not
+a value symbol called `is`. Renamed in every field that carried it,
+word-bounded so nothing else moved: B11's Example 6.21 (the circuit line
+and `unknowns:`), TR5's Figure 4-4, Bo2's Example 1.11 (Symbolic), and
+TR5's Example 4.5 (Symbolic), whose `jd,b,a,β*is1` became `β*is`. Eight
+lines in the book; `tools/Lesson_03.expected.json` moved with it, six
+occurrences in three answers, since the chapter and the JSON move
+together.
+
+Verified: `verify_lesson.py Lesson_03 --quiet` -- 48 entries, 0 problems
+(the two "book names not found" entries, 6.22 and RM3's 9-12, are the
+standing ones and untouched); `check_example_plots.py Lesson_03` -- its
+one plot runs. `build_local.py` regenerated `repos/local/examples/`;
+cache **v138**, both offline sites, hash-verified. The server serves the
+examples from its own checkout, so the four entries reach
+`symbulator.pythonanywhere.com` with Roberto's next pull.
+
+## #285 — the app's footer, two lines, no copyright sign — **done 6 Sep 2026, live on the offline pair at cache v137; the server current since Roberto's pull of 7 Sep 2026**
+
+Roberto, 6 Sep 2026, after ruling that every repository is open source:
+*"Let's remove the copyright, then. Let's use this footer for the app in
+all its forms"* --
+
+    Symbulator by Roberto Perez-Franco (1999–2026) · Release 2026-09-05 04:22 UTC
+    symbulator.com · Free and open-source under the MIT licence · Runs on Python+SymPy
+
+His words exactly. Gone with it: the © sign, the Facebook, GitHub and
+PyPI links, *results are symbolic*, and the version numeral -- the foot
+names no version now, only the release stamp. `symbulator.com` stays a
+link. The first line and the link are `notranslate`; the licence phrase
+is the one translation unit, re-keyed by `i18n.py tag`
+(`free-and-open-source.d231`) and translated in all twelve languages.
+
+**The stamp moved, and two readers with it.** `build_local.py`'s
+`STAMP_RE` and `app.py`'s `_BUILD_RE` both keyed on *Symbulator 9
+version*; both now key on *Release*, and both were proved to find the
+stamp exactly once in the new template before anything else was run.
+`/healthz` therefore keeps reporting the build. `branding.py`'s note on
+the footer (the ruling of 4 Sep 2026 that a fork's foot reads the same)
+was reworded to the new line; the ruling stands.
+
+**A third reader turned up on the deploy.** `Deploy/deploy_targets.ini`
+verifies the install page by the marker *Symbulator 9 version*, and the
+first deploy uploaded every file correctly and then reported FAIL on that
+line -- the right outcome, since the marker names the footer. It now
+reads *Symbulator by Roberto Perez-Franco*, and the re-run verified
+clean. Shipped with #282 at cache **v137** (ZIP 31,794,098 bytes,
+hash-verified; build `2026-09-05 05:40 UTC`).
+
+## #283 — every repository carries the MIT licence — **done 6 Sep 2026, nothing to deploy**
+
+Roberto asked whether *Symbulator © 1999–2026 Roberto Perez-Franco* still
+made sense now that the code is open source, and ruled: *"All repositories
+are open source, for everything."* The line stays -- MIT works by
+copyright and asks that the notice be kept -- and the footer's next line
+already says *Free and open-source software under the MIT licence*, so
+the page needed nothing. What was missing was the file: `server` and the
+docs repository were public with no `LICENSE`, which reads as all rights
+reserved. Both now carry the same MIT text as `solver` and `local`,
+byte-identical, committed and pushed. Not a build, not a deploy.
+
+## #282 — two theme names: *Gray & gold*, *Contrast* — **done 6 Sep 2026, live on the offline pair at cache v137; the server current since Roberto's pull of 6 Sep 2026**
+
+Roberto, 6 Sep 2026: *"Change 'Gray and gold' to 'Gray & gold', and 'High
+contrast' to 'Contrast'."* The table in `tools/palettes.py`, the two
+templates' picker calls and the dictionaries. The twelve *Contrast*
+translations shortened to match (*Contraste*, *Kontrast*, *대비* ...);
+*Gray & gold*'s keep each language's own conjunction. `palettes check`
+and `i18n check` clean. The keys (`graygold`, `highcontrast`) and the
+stored values are unchanged, so a reader's saved choice survives.
+
+Asked the same day whether the theme could be *"a setting that is
+remembered across sessions, like the mode"*: it already is -- stored as
+`symbulator-palette` beside `symbulator-theme` and applied by the head
+script before first paint (#278). Proved on the live install site by
+choosing Burgundy, reloading, and reading the root attribute and the band
+colour back: `burgundy`, `#4f1424`. If it does not persist somewhere, that
+is the server before its pull (no picker there yet), or a browser that
+blocks storage -- the mode would fail there the same way.
+
+Shipped with #285 at cache **v137**.
+
+## #280 — answers set at full size: display-style maths in the results — **done 6 Sep 2026, live on the offline pair at cache v136; the server current since Roberto's pull of 6 Sep 2026**
+
+Roberto, 6 Sep 2026: *"when there are mathematical expressions that have
+nominator and denominator, the font is shrunk to make it fit in the fix
+height. But there's no need for that. I'd rather enlarge the space ...
+making the spaces taller, but also making the blocks longer, fitting one
+per line instead of two per line when needed."*
+
+**Measured first.** Nothing in the stylesheet scales a result, and no
+height is fixed: a `.result-row` and an `.elcard` are both sized by their
+content, and the cards are `flex: 0 0 auto` with a 250px minimum, so a
+wide card already widens and wraps to a line of its own. What shrinks a
+fraction is TeX itself: every result was typeset as inline maths,
+`\( ... \)`, and inline (text-style) TeX sets a numerator and a
+denominator at script size so the fraction fits one text line. That is
+the "shrunk font", and it is the only shrink there is.
+
+**The fix is one word in four places**: `\displaystyle` at the head of
+every result the app typesets -- the Results card and the element cards
+(one helper), the Equations card, Evaluate, and the Mini-Tools. The plain
+text fallback is untouched, and the Numerical Solver typesets nothing.
+
+Measured on the Flask server with a symbolic divider (`e1,1,0,vs`,
+`r1,1,2,ra`, `r2,2,0,rb`, `r3,2,0,rc`), same page width, before and after:
+
+| | before | after |
+|---|---|---|
+| node 2's fraction, rendered | 143 × 24 px | 199 × 40 px |
+| its row | 52 px | 66 px |
+| the widest element card | 250 × 279 px | 261 × 322 px |
+| cards per line at 798 px | 3 then 1 | 3 then 1 (each wider) |
+
+So the rows are taller and the cards wider, and nothing had to be told to
+wrap: the layout was already the reader's, only the type was not. On a
+phone (≤ 520 px) an `.el-item` keeps its horizontal scroll for a fraction
+wider than the screen, as before.
+
+Shipped with #279 at cache **v136** (ZIP 31,794,299 bytes, hash-verified; build
+`2026-09-05 04:22 UTC`), both offline sites the same evening; the server
+pull is Roberto's, and it is a real pull (the template changed).
+
+## #279 — Expert Mode's three labels say *equation(s)*, *unknown(s)*, *condition(s)* — **done 6 Sep 2026, live on the offline pair at cache v136; the server current since Roberto's pull of 6 Sep 2026**
+
+Roberto, 6 Sep 2026: *"In the interface, in the Expert Mode, add
+parentheses around the s in 'Add equation(s)', 'Add unknown(s)' and 'Add
+condition(s)'."* Then: *"apply this only to the English one."*
+
+Three words in `templates/index.html`. The English text is the key, so
+`i18n.py tag` gave the three labels new keys (`add-equation-s-one.e3a4`,
+`add-unknown-s-one.7f55`, `add-condition-s-one.7e29`) and the twelve
+translations moved under them unchanged -- *Agregar ecuaciones*, *Ajouter
+des équations* and the rest keep their plain plurals, per the ruling.
+`i18n check` clean. Shipped with #280 at cache **v136**.
+
+## #278 — thirteen colour themes, each with light and dark, and the scorpion on a transparent ground — **done 6 Sep 2026, live on the four cPanel sites at cache v135; the server current since Roberto's pull of 6 Sep 2026**
+
+Roberto's brief, 6 Sep 2026: *"I would like to allow the user to select
+a theme. Each theme would have a dark and a light versions, switchable
+using the toggle. The default theme would be the light and dark navy
+blue currently in place."* He listed seven alternatives, asked for three
+more (burgundy, forest, pastels), accepted a fourth proposed here (high
+contrast), named all twelve, and then added Walnut (the palette of Leonardo's
+notebooks), thirteen. Settled over a rendered sheet of
+twenty-six miniatures of the app, one per theme and mode; the sheet and
+the script that generates it are kept in
+`C:\Users\perez\Claude Symbulator\Notes\themes_2026-09-06\` — edit
+`make_themes.py`'s table, run it, and the sheet is regenerated. **The
+palettes below are the spec**; the sheet is what Roberto approved.
+
+### The decisions
+
+- **The sun-and-moon toggle keeps its job.** It switches light and dark
+  *within* the chosen theme. A second control picks the theme.
+- **The control is a round swatch beside the toggle in the ribbon**, the
+  toggle's size and ring, whose dot is the theme's band colour and numeral
+  colour split diagonally. Behind it, a native `<select>` built the way
+  the language menu is (#201): thirteen entries are too many for a custom
+  menu and a phone renders a select as a proper picker.
+- **Stored as `symbulator-palette` in `localStorage`**, beside
+  `symbulator-theme` and `symbulator-lang`, applied by the head script
+  before first paint like dark mode is. A root attribute `data-palette`;
+  Navy is the absence of the attribute, so today's page is byte-for-byte
+  the default.
+- **The banner keeps its theme colour in both modes**, as it does now.
+  `banner.css` is **not edited**: it already reads `--navy`, `--navy-2`
+  and `--sky` with fallbacks, so a theme paints the bands by setting three
+  variables on the root. The guarded copies stay identical. Two banner
+  colours are literals in `banner.css` today and stay so for Navy but need
+  variables with fallbacks for the others: the subtitle `#b7c3d6` and the
+  ribbon link `#dbe6f5`. That is a two-line change to the shared file
+  (`var(--banner-sub, #b7c3d6)`, `var(--banner-link, #dbe6f5)`),
+  propagated to all three consumers as the banner section of the root
+  `CLAUDE.md` describes.
+- **The results panel takes the theme's tint.** Today `.lcd` and
+  `.elcard` are hard-wired blue in both modes. Each theme supplies seven
+  panel values.
+- **Both pages**: `index.html` and `eqsheet.html` share the banner and
+  the store, so the Numerical Solver follows the theme too.
+- **Names are translated, Firefly included** (Roberto: *"I'd suggest
+  translating the word 'firefly' unless it doesn't exist in the
+  language"* — luciérnaga, luciole, Glühwürmchen, vagalume, and the
+  English word where a language has none). Thirteen names plus the picker's
+  label in all thirteen dictionaries.
+- **Firefly** was retuned at Roberto's ask from a Matrix-green terminal to
+  *a firefly in a dark forest*: night-wood bands, the insect's yellow-green
+  glow for the numeral, keyline and readout, a moss-lit light side.
+- **The scorpion loses its navy ground** (Roberto, 6 Sep 2026: *"convert the
+  navy background into an alpha channel, so that only the white drawing
+  remains, and the background appears as the colour of the banner"*).
+  `Notes/themes_2026-09-06/logo_alpha.png` is the converted file: each
+  pixel unmixed as a blend of white and the corner navy, white kept and the
+  blend kept as alpha, so the anti-aliased edges survive; recomposited on
+  navy it reproduces the original to within one level per channel. **It
+  replaces every copy of the logo in the build**: `repos/server/static/logo.png`
+  (which `build_local.py` carries into the offline pages), the landing's and
+  learn's copies in the docs tree, and the icons if they carry the same
+  ground. On Navy nothing changes to the eye.
+- **Walnut**: the palette of Leonardo's notebooks. Parchment page,
+  iron-gall-ink bands, red-chalk accent; the one theme whose light ground is
+  a colour rather than an off-white. Named Leonardo for an hour.
+- **The menu is in chromatic order** (Roberto, 6 Sep 2026: *"sort the
+  themes chromatically"*): Navy first as the default, then round the wheel
+  — Violet, Pastels, Warm pink, Burgundy, Brick, Walnut, Earth, Gray and
+  gold, Firefly, Forest, Turquoise — and High contrast, the achromatic one,
+  last. The tables below and the sheet are in that order.
+- **Gray and gold** is the one theme with a gradient: a brushed sheen on
+  the top band (`#4a5059` to the band colour over 70%), and the ribbon
+  the reverse. **High contrast** drops the panel's gradient and both
+  inset glows and the card shadow.
+- **Pastels bends the lockup on purpose**: its bands are a dusty lavender,
+  the only bands that are not dark, just deep enough for white text; and
+  its Solve button is the only one with dark lettering. Roberto saw it and
+  kept it.
+
+### The palettes
+
+Twenty-two values each. Banner (five): top band, ribbon, numeral and
+keyline, subtitle, ribbon link. Panel (seven): gradient top, ground,
+border, row line, readout ink, dim text, element name. Page (ten, per
+mode): ground, card, ink, muted, accent, accent ink, rule, field, field
+border, button hover. The app's other variables (notices, warnings, code
+and callout backgrounds, placeholder, focus ring) derive from these at
+build time and are not specified here.
+
+| Theme | Banner | Panel |
+|---|---|---|
+| Navy (default) | `#203864 #2a4576 #8ec7f5 #b7c3d6 #dbe6f5` | `#102338 #0d1e30 #081525 #173352 #8ecbff #4a7098 #6fb8f0` |
+| Violet | `#363a80 #42478f #b9bdff #bfc1e6 #e0e1f8` | `#1b1d44 #14163a #0a0b22 #2b2e60 #c6c5ff #6b6ca8 #a3a1ff` |
+| Pastels | `#7f74ad #8d83b8 #ffe9a8 #ece7f7 #f6f3fc` | `#47406c #3e3860 #2e2a48 #565080 #c8f5dc #9a93bf #f7c7d9` |
+| Warm pink | `#5c1a45 #6c2654 #f3a6d3 #d9b3cb #f3dbe9` | `#2b0f22 #21091a #12050e #43203a #ffb6de #8a5a78 #f08cc4` |
+| Burgundy | `#4f1424 #5f1d30 #f0a9b8 #d4aab4 #f3dae0` | `#2a0c14 #200810 #100408 #44182a #ffb8c6 #8c5868 #f28aa0` |
+| Brick | `#6a2c20 #7b392c #f4b79e #d8b3a6 #f5e1da` | `#2d1611 #23100c #120705 #4a2820 #ffbfa6 #8f5c4c #f39678` |
+| Walnut | `#3a2718 #4a3323 #e6cf9a #cdb992 #eadcbd` | `#33251a #281c13 #140d08 #4a3826 #efd9a6 #8a7455 #d9a56b` |
+| Earth | `#4a3a2a #594736 #dcbb87 #cdbca4 #ecdfcc` | `#2a2016 #201810 #100b07 #43352a #eacd9e #8a7250 #d7b078` |
+| Gray and gold | `#3b4048 #484e57 #d9aa4c #b8bec6 #e2e6ea` | `#23282e #1a1e22 #0d0f11 #343a41 #f0c070 #7d7466 #d9aa4c` |
+| Firefly | `#0a1810 #122419 #e3f56b #8fb09a #d2e8c8` | `#0e2418 #081a10 #030d07 #1a3a26 #e8ff7a #4e7a56 #b9ec5c` |
+| Forest | `#1e3d2b #294a36 #a8d8a0 #b3c9b8 #dcebdf` | `#14301f #0f2418 #061209 #1f4430 #b8ecb8 #5a8a66 #8fd49a` |
+| Turquoise | `#0f4a58 #175a69 #7fe3d6 #a9d3cf #d6f1ec` | `#0b2f36 #08252b #041418 #164048 #8ef0e2 #3f8a84 #5fd6c8` |
+| High contrast | `#000000 #111111 #ffd400 #dddddd #ffffff` | `#000000 #000000 #ffffff #444444 #ffffff #bbbbbb #ffd400` |
+
+| Theme | Light page | Dark page |
+|---|---|---|
+| Navy | `#f4f6fa #ffffff #1c2330 #5b6472 #2f5fa8 #ffffff #e2e5ea #fbfcfd #cfd6df #1f4a86` | `#12161d #1b212c #e4e8ee #97a3b6 #5b96e0 #0d1420 #2b3341 #11161e #38424f #4a86d0` |
+| Violet | `#f5f5fc #ffffff #1f1f38 #5f6180 #5652c8 #ffffff #e0e1f0 #fbfbff #cbcde6 #4340a8` | `#13142a #1c1d38 #e7e7f6 #9c9ec4 #9d9bff #12132a #2d2f52 #0f1024 #3b3d66 #b4b2ff` |
+| Pastels | `#f8f6fb #ffffff #3a3550 #7a7494 #e79ab0 #3a3550 #e8e3f2 #fcfbfe #d8d1e8 #f0b0c2` | `#221f30 #2c2840 #ece8f5 #aaa3c4 #f2b8c8 #221f30 #3f3a56 #1d1a2a #4c4666 #f8cbd8` |
+| Warm pink | `#fbf5f8 #ffffff #2a1a24 #6f5866 #b02a72 #ffffff #ecdde5 #fdfafc #dcc6d3 #8f1f5b` | `#1a1015 #24161f #f2e6ed #ad93a3 #ea6fb4 #1a1015 #3a2833 #160d12 #4a3341 #f08cc4` |
+| Burgundy | `#faf4f5 #ffffff #2c1a1f #6f5860 #8c1d38 #ffffff #ebdde0 #fdfafb #dcc6cb #6e1329` | `#1a1114 #251a1e #f2e6e9 #ad949b #e3708c #1a1114 #3c2a30 #150e11 #4c373e #ee92a8` |
+| Brick | `#faf4f1 #fffdfc #2e1c17 #715a53 #a53f2b #ffffff #ecdcd6 #fdfaf8 #dcc6bf #86311f` | `#1b1210 #261915 #f1e4df #b0958c #e27a5e #1b1210 #3d2a25 #160e0c #4e3730 #ee9a82` |
+| Walnut | `#ece0c4 #f4ead3 #3a2a1c #7a6549 #9c4a2c #ffffff #d8c7a3 #f7efdc #c9b58c #7d3a20` | `#1e160f #2a1f16 #e8dcc0 #a89474 #d18a5a #1e160f #3f3225 #17110c #4d3e2d #e0a070` |
+| Earth | `#f8f4ee #fffdf9 #2d2419 #6f6152 #8a5a2b #ffffff #e6dccf #fdfaf5 #d5c8b6 #6e4620` | `#1a1512 #241d18 #ede4d8 #ab9c8a #d3a262 #1a1512 #3a3028 #15100d #4a3e33 #e2b87d` |
+| Gray and gold | `#f2f3f4 #ffffff #1e2125 #5f666e #b3781e #ffffff #dde0e3 #fafbfb #c8cdd3 #8f5e14` | `#141618 #1d2023 #e6e8ea #9aa1a8 #e0a83c #141618 #2d3135 #101214 #3d4247 #f0bd5e` |
+| Firefly | `#f1f5ee #fbfdf8 #16261b #52685a #4f7f21 #ffffff #d5e1d3 #f7faf4 #bdd0bf #3d6418` | `#070f0a #0d1a12 #d9ecd2 #7fa088 #d6f253 #0a1a10 #1c3324 #050b07 #23402c #e8ff7a` |
+| Forest | `#f3f7f3 #fffefc #172519 #566b5a #2c6e42 #ffffff #dbe6dc #fbfdfb #c6d8c9 #215532` | `#0f1712 #16221a #e4eee5 #92ab97 #6cc488 #0f1712 #26362b #0c130e #33473a #8ad8a1` |
+| Turquoise | `#f4f8f5 #fffefb #14302e #56706c #0f8a82 #ffffff #dbe8e3 #fbfdfb #c4d9d3 #0b6d67` | `#0e1b1c #142628 #e3f0ec #8fb2ac #45d0c2 #0a1a1a #23393a #0b1617 #2f4a4b #6ee0d4` |
+| High contrast | `#ffffff #ffffff #000000 #333333 #0000c8 #ffffff #000000 #ffffff #000000 #000080` | `#000000 #000000 #ffffff #dddddd #ffd400 #000000 #ffffff #000000 #ffffff #ffe866` |
+
+### How it was built
+
+Everything the list below planned, and these facts from doing it:
+
+- **`repos/server/tools/palettes.py` is the table.** Thirteen rows of
+  twenty-two values; everything else the two stylesheets need (the soft
+  rule, the code and note tints, the placeholder, the focus ring, the
+  scrollbar, the panel's glow) is derived there, the same way for every
+  theme, and written into both templates between `BEGIN/END palettes`
+  markers. `write` regenerates, `check` fails on drift, and
+  `build_local.py` runs the check on every build. A new theme is a row.
+  Navy has no block: it is the templates' own `:root` and dark block,
+  and `data-palette` is absent for it, so the default page is the page
+  before this item but for the dark hover fix and the new variables.
+- **Fourteen literals became variables** in `index.html` (the panel's
+  gradient top, border, row line, name colour, scrollbar and glow; the
+  button and link hover; the focus line; the disabled button; the Solve
+  button's shadow as an rgb triple; the language face's colour), and the
+  two toggle icons take `currentColor` from `--sky` instead of a fixed
+  `#8ec7f5`. The Solver page's mode buttons lost two literals the same
+  way. The `<select>` arrow's grey stroke was left alone: it reads on
+  every ground.
+- **`banner.css` changed by two variables with fallbacks**, `--banner-sub`
+  and `--banner-link`, and its header comment says why. Propagated to
+  both templates (`check_banner` passes) and to the landing copy
+  (`stamp_assets.py` re-stamped it, `build.py --check` clean).
+- **The picker is the language menu's construction**: a native `<select>`
+  stretched invisibly over a face, here a dot split between `--navy` and
+  `--sky`, so it follows the theme with no script. Option labels are
+  `t()` calls, so `i18n.py tag` collected them and `check` demanded
+  the twelve translations; Firefly is luciérnaga, luciole, Glühwürmchen,
+  vaga-lume, lampiro, 萤火虫, ホタル, 반딧불이, kunang-kunang, जुगनू,
+  জোনাকি, світлячок. `syncPaletteMenu()` runs from `refreshDynamic()`
+  in the app and from the language handler in the Solver, and
+  `build_local.py`'s Solver anchor (the language handler it extends
+  with the boot bar) had to learn the new line -- the build said so.
+- **Measured live on the Flask server before deploying**, both pages: 13
+  options, the choice stored and applied, `--navy` and `--bg` following
+  it, the toggle switching dark within the theme, the icon colour
+  following `--sky`, the Solver arriving in the app's theme and mode.
+  The ribbon stays one row: 59px at 1280 wide, the swatch and toggle
+  40px each; at 375 the swatch and toggle are 34px, the row 50px, App ·
+  Docs on the left, Clear · EN and the pair on the right, nothing
+  clipped. Spanish names read back from the live menu. The offline
+  build measured the same on a static server, both pages.
+- **The scorpion**: `logo.png` replaced in five places -- the server's
+  static copy, `repos/local`, the `--assets` source folder, and the
+  landing's and learn's copies -- all one file, 40,586 bytes. The icons
+  keep their navy ground: a home-screen icon wants one.
+- **Deployed**: install and the ZIP at cache **v135** (ZIP 31,794,040
+  bytes, hash-verified; build `2026-09-05 03:56 UTC`), the landing page
+  (four files) and learn (`assets/logo.png` and `assets/banner.css`
+  only -- no `build.py --web` ran, on purpose: the docs tree had three
+  chapter sources with someone else's uncommitted edits, and a rebuild
+  would have shipped them; the two assets were copied straight into
+  `build/web/assets/` instead). **`symbulator.pythonanywhere.com` needs
+  its pull and reload** -- the template and the dictionaries changed, so
+  this is a real pull, no `pip`.
+- **Not done, deliberately**: X has not been merged (`git fetch v9 &&
+  git merge v9/main` in its three repos, keeping `branding.py`, then a
+  rebuild -- the root `CLAUDE.md` describes it), and the mockup sheet
+  stays in `Notes/`, not in a repo.
+
+### What the build touched (the plan, kept for the record)
+
+- `templates/index.html` and `templates/eqsheet.html`: the token blocks
+  become one `:root` (Navy light), one `html[data-theme="dark"]` (Navy
+  dark), and then a `html[data-palette="…"]` and
+  `html[data-palette="…"][data-theme="dark"]` pair per theme. Fifteen
+  colours are literal hex in the template today and become variables
+  first: the panel gradient top `#102338`, border `#081525`, row line
+  `#173352`, result name `#6fb8f0`, scrollbar thumb `#25517a`, the
+  button hover `#1f4a86`, link hover `#1f4a86`, focus outline `#2f6fc0`,
+  disabled button `#9fb0c8`, the Solve button's shadow `rgba(32,56,100)`,
+  the select arrow's stroke in its data URI (two copies), the
+  `a.toplinks:hover` `#b8ddff`, and the toggle's `fill="#8ec7f5"` in the
+  markup, which should be `var(--sky)`.
+- **A bug to fix on the way**: `button:hover` is `#1f4a86` in dark mode
+  too, the light theme's dark blue on a `#5b96e0` button. Dark Navy gets
+  `#4a86d0`.
+- The head script: read `symbulator-palette`, set `data-palette`.
+- The ribbon: the swatch and its select, after the language menu and
+  before the toggle; `applyLang` must reach the option labels the way
+  #240 taught it to reach the entry picker's.
+- Thirteen dictionaries: thirteen names and the picker's label.
+- `build_local.py` regenerates both offline pages; **cache bump**; the
+  three-command chain and both offline deploys; the server pull is
+  Roberto's. No solver release.
+- `banner.css`: the two-line variable change above, then the propagation
+  and both checks (`build_local.py`'s `check_banner()` and the docs
+  `build.py --check`). The landing page and learn are unaffected in
+  appearance — Navy's literals are the fallbacks.
+- `tools/check_hidden_guards.py` and the heading audit of #248 both run
+  again: a new control in the ribbon at 375px is exactly what #245–#248
+  measured.
+
 ## #255 - every built-in entry that can be plotted carries its plot - **done 3 Sep 2026, live on all five sites**
 
 > **Numbered #251 when it was written, and renumbered on 4 Sep 2026.** A

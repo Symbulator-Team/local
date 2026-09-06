@@ -110,7 +110,7 @@ SCIPY_WHEEL = "scipy-1.18.0-cp314-cp314-pyemscripten_2026_0_wasm32.whl"
 # point of it: it is what tells you which build a site is actually
 # running, when three of them are deployed separately and any one of
 # them can silently be a version behind.
-STAMP_RE = re.compile(r"(Symbulator 9 version )\d{4}-\d{2}-\d{2} \d{2}:\d{2} UTC")
+STAMP_RE = re.compile(r"(Release )\d{4}-\d{2}-\d{2} \d{2}:\d{2} UTC")
 
 
 def stamp_template() -> str:
@@ -740,6 +740,26 @@ def check_export_fields() -> None:
               "round trip (see above).")
 
 
+def check_palettes() -> None:
+    """Stop the build if a theme block in either template is stale.
+
+    #278: the thirteen themes are one table in tools/palettes.py, written
+    into both templates between markers. A hand edit inside the markers,
+    or a table edit nobody re-ran the writer for, is invisible on the page
+    that was not rebuilt -- so the writer's own `check` runs here."""
+    checker = SERVER / "tools" / "palettes.py"
+    if not checker.is_file():
+        raise SystemExit("build_local.py: tools/palettes.py is missing; the "
+                         "theme blocks cannot be checked.")
+    result = subprocess.run([sys.executable, str(checker), "check"],
+                            capture_output=True, text=True)
+    if result.returncode != 0:
+        raise SystemExit(
+            (result.stdout or "") + (result.stderr or "")
+            + "build_local.py: a theme block is stale (see above); run "
+              "`python tools/palettes.py write` in repos/server.")
+
+
 def check_example_images() -> None:
     """Stop the build if an example's `image:` link names a picture that is
     no longer in the docs tree.
@@ -1015,9 +1035,11 @@ def build_eqsheet() -> str:
         s,
         """    applyLang(next);
     syncLangMenu();
+    syncPaletteMenu();
     syncThemeToggle();""",
         """    applyLang(next);
     syncLangMenu();
+    syncPaletteMenu();
     syncThemeToggle();
     syncBootBar();""",
         label="the Solver's boot bar, on a language change")
@@ -1074,6 +1096,9 @@ def build() -> str:
     # hand-kept field lists had drifted apart; there is one now, and this
     # proves it against the parser, the writer and the front end.
     check_export_fields()
+
+    # #278: the theme blocks in both templates come from one table.
+    check_palettes()
 
     # --- drop every server-only block: the "download the offline
     #     version" card, and the "no backend here" notice -- both are
@@ -1312,18 +1337,19 @@ def build() -> str:
       headers: {'Content-Type': 'application/json'},
       // The domain rides with the values: `{...}` converts from time into
       // s, so it means something only when the answers are in s.
-      body: JSON.stringify({ expr: $('evalExpr').value, values: last.values,
+      body: JSON.stringify({ expr: $('evalExpr').value,
+                             values: last ? last.values : {},
                              conditions: $('evalConds').value,
                              defines: linesOf($('defines').value),
-                             domain: last.domain || '',
+                             domain: last ? (last.domain || '') : '',
                              ...roundingState(), si: $('siUnits').checked })
     });
     const data = await r.json();""",
         """    const data = await py('evaluate', {
-      expr: $('evalExpr').value, values: last.values,
+      expr: $('evalExpr').value, values: last ? last.values : {},
       conditions: $('evalConds').value,
       defines: linesOf($('defines').value),
-      domain: last.domain || '',
+      domain: last ? (last.domain || '') : '',
       ...roundingState(), si: $('siUnits').checked });""",
         label="evaluate fetch",
     )

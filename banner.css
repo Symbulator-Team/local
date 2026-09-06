@@ -17,7 +17,9 @@
 
    It is self-contained on purpose. Every colour is var(--name, #literal), so
    it works whether or not the host defines the tokens, and whatever the host
-   calls them.
+   calls them. The app's themes (#278) set --navy, --navy-2, --sky,
+   --banner-sub and --banner-link per theme; the two websites set none of
+   them, so the literals here are Navy, the default, everywhere.
 
    Scope widened 23 Aug 2026. It used to style the bands and nothing inside
    them, leaving every property to dress its own ribbon -- which produced
@@ -141,7 +143,7 @@
      the literal is here for a host that defines nothing. */
   font-family: var(--sans, -apple-system, "Segoe UI", Roboto, Helvetica,
                 Arial, sans-serif);
-  color: #dbe6f5; text-decoration: none;
+  color: var(--banner-link, #dbe6f5); text-decoration: none;
   font-size: 0.875rem; line-height: 1.4;
   border-radius: 4px;
 }
@@ -169,7 +171,7 @@
   appearance: none; background: none; border: 0; padding: 0;
   font-family: var(--sans, -apple-system, "Segoe UI", Roboto, Helvetica,
                 Arial, sans-serif);
-  font-weight: 400; color: #dbe6f5; font-size: 0.875rem; line-height: 1.4;
+  font-weight: 400; color: var(--banner-link, #dbe6f5); font-size: 0.875rem; line-height: 1.4;
   cursor: pointer; border-radius: 4px;
 }
 .subbar button.subbar-action:hover { color: #fff; text-decoration: underline; }
@@ -309,7 +311,7 @@
 .brand-name .tm .beta { font-size: 0.8em; }
 .brand-sub {
   margin: 0.4rem 0 0; font-family: var(--banner-sans);
-  font-size: 1rem; line-height: 1.55; color: #b7c3d6;
+  font-size: 1rem; line-height: 1.55; color: var(--banner-sub, #b7c3d6);
 }
 
 .theme-toggle {
