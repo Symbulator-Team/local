@@ -1,6 +1,34 @@
 # Next build — accepted but not yet done
 
-## #314 — a transformer or two-port with all four terminals, and the current into every one of them — **built and verified on the dev server, 6 Sep 2026; solver 0.5.27 unreleased at Roberto's word ("don't publish the package yet"); the schematic drawer is the next piece; nothing deployed**
+## #314 — a transformer or two-port with all four terminals, and the current into every one of them — **done 6 Sep 2026: solver 0.5.27 then 0.5.28 on PyPI (both hash-verified), the offline pair live at cache v154, learn live web and PDFs, the server pushed and awaiting Roberto's pull with `pip install --upgrade symbulator`**
+
+**The release, in order.** Roberto: *"Push the package, update the app."*
+0.5.27 went to PyPI (`aa9cb02e…`, the bytes the offline pair bundles),
+the wheel into `vendor/`, the three pins moved, cache **v153** -- v152
+had already been used by the date correction, which the first `sed`
+silently missed, so the bump was checked in `git diff` before the build
+-- `build_local.py`, `build_zip.py` (31,820,008 b), `stage_install_site`
+(which lives at `Application/v9/`, not in `repos/local`), and the two
+deploys, hash-verified. Then the examples exposed one drawing the
+drawer had wrong: a bottom that is the *other* port's top
+(`t,[1,0],[2,1]`, the autotransformer as one tapped winding) sent its
+lead along the block's own top. `_Layout.return_col` now decides the
+side of every four-terminal lead by the node's column, and a far-side
+lead runs below the feet with a hop on the grounded foot's drop -- a
+one-file fix, but the published wheel draws the tutorial's own example
+wrong without it, so **0.5.28** followed the same hour (`c61c69c8…`),
+the pins moved again, cache **v154**, both deploys re-run. Suite 390.
+The full lesson sweep (all twenty books) and the review harness (336
+drawings, the five new entries included) are clean.
+
+**The five examples** (Roberto: *"create examples for the new things.
+Also add them to the built in examples input files"*) are in
+`NEXT_DOCS.md` #314: three in `Lesson_10.cir`, two in `Lesson_13.cir`,
+each titled as its tutorial problem so the app link joins, each with a
+`note:` carrying the answers and an `image:` that is the app's own
+drawing rendered to `assets/circuit/sym_*.png`. The *first-time* markers
+in the notes: the tapped autotransformer is where a transformer is first
+written with four terminals, the h-parameter stage where a two-port is.
 
 Roberto's brief, 6 Sep 2026, given as a listen-first round after the
 same feature had been tried in X (X2/X3, now superseded and discarded):
