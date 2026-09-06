@@ -5,7 +5,7 @@ file version 9 never has, so a `git merge v9/main` can never conflict on
 it. `NEXT.md` beside this file is version 9's running list and arrives
 by merge; read it as upstream history, not as a record of X.
 
-## X5 — version 9's 0.5.29 merged — **done 6 Sep 2026, pushed; label `0.5.29+x5`; the site wants `cd /home/symbulatorx/solver && git pull`, the web clone's pull, and a reload**
+## X5 — version 9's 0.5.29 merged — **done 6 Sep 2026, live: `/healthz` reports `0.5.29+x5` after Roberto's pull**
 
 The same merge as X4, an hour later, for the two fixes 0.5.29 carries
 (the tapped autotransformer's internal unknown dropped from the answers,
