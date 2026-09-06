@@ -161,7 +161,7 @@ two-node, a transformer and each block kind between live pairs, one
 bottom ground, a common bottom, the left top as the first node, and a
 bottom node far from its top. Solver suite **387 passed**;
 `review_schematics.py` over all 331 examples `failed=0 with_issues=0`;
-`pixel_clearance.py --all` run after. One thing seen and left: a wide
+`pixel_clearance.py --all`: 336 drawings, tightest 4.00 px, 0 below the 3 px threshold (after the wide-ratio fix of 0.5.29). One thing seen along the way: a wide
 ratio such as `80 : 120` crowds the windings' tops in *both* forms --
 it predates #314 and wants its own item.
 
