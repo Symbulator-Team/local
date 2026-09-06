@@ -5,7 +5,7 @@ file version 9 never has, so a `git merge v9/main` can never conflict on
 it. `NEXT.md` beside this file is version 9's running list and arrives
 by merge; read it as upstream history, not as a record of X.
 
-## X6 — version 9's 0.5.30 (#315, the package in a notebook) merged; label `0.5.30+x6` — **done 6 Sep 2026, pushed; the site awaits Roberto's pull of both clones and a reload**
+## X6 — version 9's 0.5.30 (#315, the package in a notebook) merged; label `0.5.30+x6` — **done 6 Sep 2026, live: `/healthz` reports `0.5.30+x6`, build `2026-09-06 09:49 UTC` running and on disk, and a DC solve on the live site answers, after Roberto's pull**
 
 The same merge as X4 and X5: `git fetch v9 && git merge -X theirs
 v9/main` in all three repos, all three auto-merged with no conflict to
