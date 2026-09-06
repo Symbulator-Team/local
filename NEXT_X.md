@@ -5,6 +5,19 @@ file version 9 never has, so a `git merge v9/main` can never conflict on
 it. `NEXT.md` beside this file is version 9's running list and arrives
 by merge; read it as upstream history, not as a record of X.
 
+## X7 — version 9's 0.5.31 (#318, decimal rounding) merged; label `0.5.31+x7` — **done 6 Sep 2026, pushed; the site awaits Roberto's pull of both clones and a reload**
+
+The same merge as X4–X6, `git merge -X theirs v9/main` in all three
+repos, no conflicts, `branding.py` intact (checked). Label
+`0.5.31+x7`, X's editable checkout refreshed, X's suite **412 passed,
+1 skipped** (the IPython round trip), `build_local.py` re-run with X's
+interpreter, the page differing from version 9's by `cmp`. What X
+gains: the app's Rounding setting, its polar display and the `aa` tool
+round in decimal, half away from zero, through the package's
+`round_sig` -- twelve of the tutorial's rounded answers move to the
+book's digit, and the wye-delta current reads `2.350∠-36.20°`. The
+pull is the same pair of commands as X6, no `pip`.
+
 ## X6 — version 9's 0.5.30 (#315, the package in a notebook) merged; label `0.5.30+x6` — **done 6 Sep 2026, live: `/healthz` reports `0.5.30+x6`, build `2026-09-06 09:49 UTC` running and on disk, and a DC solve on the live site answers, after Roberto's pull**
 
 The same merge as X4 and X5: `git fetch v9 && git merge -X theirs
