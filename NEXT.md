@@ -1,5 +1,105 @@
 # Next build — accepted but not yet done
 
+## #315 — the package in a notebook: typeset results, the tutorial's spellings, `polar()`, `rounded()`, cell magics, a quickstart notebook — **built and tested 6 Sep 2026, committed in `repos/solver`, unreleased; nothing in the app changes**
+
+Roberto, 6 Sep 2026, reading a book built from Jupyter notebooks: *"how
+can we make symbulator easy to use in Jupyter?"* -- and, once the
+assessment was in, that the app and its documentation stay unchanged,
+with the notebook use documented separately to keep the app's
+documentation simple.
+
+**What was measured first.** The PyPI package (0.5.29) was run in a
+fresh kernel with no changes -- a throwaway venv at
+`C:\Users\perez\AppData\Local\Temp\nbenv` (the scratchpad path is
+too long for Windows' 260-character limit; `jedi`'s typeshed tree hit
+it), the notebook executed with `nbclient` and rendered with
+`nbconvert` and headless Chrome. It already worked: one-line install
+with SymPy as the only dependency, both description forms accepted
+(colon-separated and the app's one-per-line), every single answer
+typeset because it is SymPy, `draw()` inline as SVG, SymPy's `plot`
+and `bode_samples` with Matplotlib both fine, and the package's own
+errors with the app's messages. The gaps, in the order a reader met
+them: a bare `Result` was a text dump while the values inside it would
+have typeset; AC answers were fifteen-digit rectangular floats where
+the app shows `9.939∠−6.34°`; the tutorial's `ir1` and `v2` raised
+`KeyError`, the app's alias table living in the server and not the
+package; `help(dc)` showed an example (`r1,1,2,1k`) the package itself
+rejects; nothing anywhere mentioned notebooks; and `port()` returned a
+bare dict.
+
+**What was built**, all in `repos/solver`, nothing in `server` or
+`local`:
+
+* `symbulator/_display.py` -- `name_latex`, `value_latex` (the
+  imaginary unit as `j`, every infinity a plain ∞ as the Results card
+  prints it, #305), and `aligned()`, which sets rows in an `aligned`
+  inside a `gathered` so a caption sits centred above them. A bare
+  `\\` between the caption and the block was the first draft;
+  `gathered` is the form amsmath and MathJax both promise.
+* `Result._repr_latex_`, `TheveninResult._repr_latex_` (labelled `req`
+  or `zeq` as the card is), and `PortResult`, a dict subclass carrying
+  `kind` and a `bmatrix`. Existing `params["11"]` code is untouched.
+* `Result.resolve(key)`: a stored name for either spelling, the
+  quantity letters tried longest first (`ap` before `p`, so `apr1` is
+  `ap_r1`). Only a name that exists is ever returned, so a user's own
+  unknown (`pout`) cannot be captured, and a miss raises a `KeyError`
+  that lists the answers. `__getitem__`, `get`, `at` and the new
+  `__contains__` all go through it; `__iter__` and `__len__` added.
+  **This is a lookup rule, not a rewrite** -- inside an expert-mode
+  expression the underscored form is still required, as the README
+  now says, because rewriting there would change the library's
+  semantics for existing callers and is the server's job at its layer
+  (#94). The server's alias table stays where it is: it rewrites what
+  the reader *types*, a different job from finding what was solved.
+* `Result.rounded(digits)` -- the app's `_round_expr` rule (exact
+  integers stay; everything else through `N()`), as a copy.
+* `polar(value, digits=4)` in `utils.py`, returning a `Phasor` --
+  the app's `aa` mini-tool to the letter: real part taken after
+  evaluating (the `0.e-13*I` crumb), a real value gets 0 or 180, zero
+  is `0∠0°`, a symbolic value raises `ValueError` naming the symbols.
+* `symbulator/notebook.py` -- `%%dc`/`%%ac`/`%%fd`/`%%tr`, registered
+  by `load_ipython_extension` on the package so `%load_ext symbulator`
+  is the whole incantation. Options are parsed with `ast.literal_eval`
+  per token (`omega=1000` a number, `omega=w` text, `a,b` a list). The
+  body is a `run()` that takes a namespace dict, so it is tested
+  without IPython; the IPython round trip is tested too, and skipped
+  where IPython is absent.
+* `pyproject.toml`: a `notebook` extra (JupyterLab, NumPy,
+  Matplotlib). `README.md`: *In a notebook*, before Expert mode.
+  `notebooks/quickstart.ipynb`: 33 cells, executed, 88 KB, built by
+  a script and checked for zero errors; `llms.txt` points at it.
+  `CHANGELOG.md` carries the entry under *Unreleased*.
+* The `help(dc)` example fixed.
+
+**Tests.** `symbulator/tests/test_notebook.py`, 21 tests. Suite 411
+in the shared Python (IPython absent, one test skipped by
+`importorskip`); the 21 all pass under the venv where IPython is
+present, the `%load_ext` round trip included.
+
+**Verified by rendering, not by reading.** The executed quickstart
+was exported with nbconvert and screenshotted: the `gathered`/`aligned`
+block typesets, `j` appears where SymPy would have written `i`,
+`polar()` prints the app's own `9.939∠−6.34°`, the schematic and both
+plots are inline.
+
+**Not done, by decision.** No `Circuit` object (hold until the smaller
+pieces have been used); no rewriting of aliases inside expressions in
+the package (above); no move of the server's alias table (the two do
+different jobs, so there is no duplicate to remove); no landing-page
+link (Roberto: the notebook use is separate documentation, and a line
+under the developer material can wait).
+
+**What ships it.** A solver release -- 0.5.30 -- is the whole train:
+PyPI, then the wheel into `vendor/`, the three pins, a cache bump and
+the offline pair, `requirements.txt` to `>=0.5.30` and the server's
+pull with `pip install --upgrade symbulator`. None of that changes
+what the app does; the offline builds would merely bundle the new
+wheel. The commit is local and unpushed pending Roberto's go, and the
+two temporary directories (`Temp\nbenv`, `Temp\nbwork`) and the
+`python3` kernelspec that pointed at the venv are to be removed when
+the topic closes -- the kernelspec first, since a real Jupyter install
+would otherwise find a kernel whose interpreter is a deleted venv.
+
 ## #314 — a transformer or two-port with all four terminals, and the current into every one of them — **done 6 Sep 2026: solver 0.5.27, 0.5.28 and 0.5.29 on PyPI (all hash-verified), the offline pair live at cache v155, learn live web and PDFs, both PythonAnywhere sites on 0.5.29 after Roberto's pulls, verified by fetching `/healthz`**
 
 **0.5.29, the same evening.** Two things the shipped examples exposed
