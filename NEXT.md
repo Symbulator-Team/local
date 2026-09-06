@@ -1,6 +1,6 @@
 # Next build — accepted but not yet done
 
-## #315 — the package in a notebook: typeset results, the tutorial's spellings, `polar()`, `rounded()`, cell magics, a quickstart notebook — **built and tested 6 Sep 2026, committed in `repos/solver`, unreleased; nothing in the app changes**
+## #315 — the package in a notebook: typeset results, the tutorial's spellings, `polar()`, `rounded()`, cell magics, a quickstart notebook — **done 6 Sep 2026: solver 0.5.30 on PyPI (hash-verified), the offline pair live at cache v156, the server awaiting Roberto's pull with `pip install --upgrade symbulator`; nothing in the app changes**
 
 Roberto, 6 Sep 2026, reading a book built from Jupyter notebooks: *"how
 can we make symbulator easy to use in Jupyter?"* -- and, once the
@@ -89,16 +89,29 @@ different jobs, so there is no duplicate to remove); no landing-page
 link (Roberto: the notebook use is separate documentation, and a line
 under the developer material can wait).
 
-**What ships it.** A solver release -- 0.5.30 -- is the whole train:
-PyPI, then the wheel into `vendor/`, the three pins, a cache bump and
-the offline pair, `requirements.txt` to `>=0.5.30` and the server's
-pull with `pip install --upgrade symbulator`. None of that changes
-what the app does; the offline builds would merely bundle the new
-wheel. The commit is local and unpushed pending Roberto's go, and the
-two temporary directories (`Temp\nbenv`, `Temp\nbwork`) and the
-`python3` kernelspec that pointed at the venv are to be removed when
-the topic closes -- the kernelspec first, since a real Jupyter install
-would otherwise find a kernel whose interpreter is a deleted venv.
+**The release** (Roberto: *"Punch it."*, the same evening). The
+version-metadata test went red first, as it does after every bump
+until `pip install -e .` refreshes the installed distribution's
+metadata -- it read 0.5.29 against the file's 0.5.30 -- and the suite
+was rerun unpiped for its exit status (411, exit 0) before anything
+irreversible. `python -m build`, `twine check` PASSED on both
+artefacts, upload; **0.5.30** on PyPI with wheel sha256
+`4f7bbceb…`, verified against the built file. The same wheel into
+`vendor/`, 0.5.29 deleted, the three pins moved, cache **v156** --
+each change read back in `git diff` before the build --
+`build_local.py`, `build_zip.py` (**31,830,299 b, 30.4 MB**),
+`stage_install_site.py` at `Application/v9/`, then the two deploys,
+all hash checks passing. Verified live by fetching: `install`'s
+`sw.js` says v156 and names the 0.5.30 wheel, and the wheel the host
+serves hashes equal to PyPI's, `dist/` and `vendor/` -- the same
+bytes in four places. 0.5.29 is still on the install host until
+Roberto's typed prune. `requirements.txt` is at `>=0.5.30`; the
+server's pull needs the `pip install --upgrade symbulator`, though
+`symbulator_ui.py` did not change and 0.5.29 would still run it --
+the pin is what enforces the version. The `python3` kernelspec that
+pointed at the throwaway venv was removed before the release; the two
+temporary directories (`Temp\nbenv`, `Temp\nbwork`) remain for
+follow-ups and are safe to delete.
 
 ## #314 — a transformer or two-port with all four terminals, and the current into every one of them — **done 6 Sep 2026: solver 0.5.27, 0.5.28 and 0.5.29 on PyPI (all hash-verified), the offline pair live at cache v155, learn live web and PDFs, both PythonAnywhere sites on 0.5.29 after Roberto's pulls, verified by fetching `/healthz`**
 
