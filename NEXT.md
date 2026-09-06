@@ -1,5 +1,151 @@
 # Next build — accepted but not yet done
 
+## #314 — a transformer or two-port with all four terminals, and the current into every one of them — **built and verified on the dev server, 6 Sep 2026; solver 0.5.27 unreleased at Roberto's word ("don't publish the package yet"); the schematic drawer is the next piece; nothing deployed**
+
+Roberto's brief, 6 Sep 2026, given as a listen-first round after the
+same feature had been tried in X (X2/X3, now superseded and discarded):
+*"What I'm going to tell you now will be applicable to v9 as well."*
+
+**Where it started.** Checking X2's answers he asked for *"the current
+going into the transformer into node 1, node 2, node 3 and node 4. Same
+for the two-ports"*, and then whether version 8 had given the
+secondary current of a transformer -- *"I'm sure it does."* It did: the
+2023 page for version 8 lists two variables, `ita1` and `ita2`, *the
+current entering the transformer through each of the two non-ground
+nodes*, and its Example 13.11, the autotransformer, reads `it2` and
+`-it1-it2`. **Version 9 had lost it in the port**: `engine._stamp_t`
+named the primary alone, that one answer was not in the transformer's
+card (#168's fix covered the six two-port kinds and not `t`, so it
+dropped into *Expert Mode unknowns*), the tutorial's answer paragraph
+had been flattened to one variable for 7, 8 and 9 alike, and Example
+13.11 was missing from the lesson. This item fixes all of that and adds
+the four-node forms in the same push.
+
+**The syntax, as he ruled it.** Brackets mean a pair. The calculator's
+forms stay; the four-node form is written one way only.
+
+    t,tl,tr,#l,#r                       kept
+    t,tl,tr,[#l,#r]                     new
+    t,[tl,bl],[tr,br],[#l,#r]           new, the four-node form
+
+    z,1,2                               kept, tacit parameters
+    z,1,2,[p11,p12,p21,p22]             kept
+    z,[1,2],[3,4]                       new, tacit parameters
+    z,[1,2],[3,4],[p11,p12,p21,p22]     new, the four-node form
+
+A bracketed node term is `[top,bottom]`. He first proposed making the
+brackets mandatory everywhere and dropping `t,tl,tr,#l,#r`; the
+recommendation he took was to keep the calculator's two-node forms (they
+are in the tutorial for 7, 8 and 9, in the Lesson 10 and monograph
+books, in the 2023 pages and in every saved `.cir`) and make brackets
+mandatory only where four nodes are involved -- which also removed the
+flat seven-field form X2 had, the one place the order could be got wrong
+(X2 had written top-left, top-right, bottom-left, bottom-right; his
+brief has each port as a pair). Paired nodes require paired turns:
+`t,[a,b],[c,d],1,2` is refused, so there is one four-node form. And
+`[…]` in the reference tables no longer means *optional* -- brackets are
+syntax for these elements now, so the reference writes the forms out.
+
+**One stamp for both forms.** `Element` gained `four_node`,
+`port_nodes` -- `((tl, bl), (tr, br))` with a literal `"0"` for the
+bottoms of the two-node form -- `nodes`, `turns` and `param_idx`;
+`_pair_entries()` reads a bracketed term (which arrives as `pr(…)`, the
+parser's encoding, or as `[…]` when the app materialises a tacit term).
+The node *fields* are still fields 0 and 1 in every form, so
+`_IDENTIFIER_FIELD_IDX` stays right about which fields are structural
+-- a pair field simply holds two names -- and `_VALUE_FIELD_IDX`'s `t`
+entry shortens to `(2,)` when the turns are a pair. `engine._stamp_t`
+and `_stamp_two_port` read a port voltage as the difference across its
+pair and put each port current into the top terminal and out of the
+bottom; with the bottoms on 0 that is what they always did, which the
+tests prove by solving each form and comparing every answer.
+
+**The currents.** `engine._stamp_port_currents` reports `i_<name><node>`
+for every distinct live terminal, the current entering the element
+there: four in the paired form, two in the grounded form (ground has no
+KCL and is nobody's answer). A node named at two terminals -- a
+three-terminal block with a common bottom, `z,[1,3],[2,3]` -- reports one
+sum. Each is an unknown bound by its own equation, as the two-port stamp
+always did; the transformer's primary is the free unknown itself and
+needs none, unless its top node is also another terminal, when it steps
+aside to an internal `i_<name>_p1` and the sum carries the reader's
+name. The two-node transformer now answers `i_t11` **and** `i_t12`,
+which is version 8's `ita1`/`ita2`.
+
+**The rules.** A paired form may put 0 anywhere (`z,[1,0],[2,0]` is
+`z,1,2` written out); the two-node form keeps its no-ground rule. A port
+with the same node at both terminals is `E_PORT_SAME_NODE` (218). Each
+port joins its own two terminals in the connectivity check and **the two
+ports never join each other**, so a side of the circuit with no path of
+its own to 0 is `E_FLOATING_NODES` -- *the whole side, not just that side
+of the element* (his correction to the first phrasing). Wrong shapes:
+`E_TERMS_TRANSFORMER` (219) names the three forms; `E_PORT_PAIR` (220)
+catches one bare node beside one pair, or a pair with the wrong count.
+The drawer refuses a four-node element by `E_DRAW_FOUR_NODE` (701, a new
+7xx range for `schematic.py`) rather than drawing its bottoms as ground;
+the circuit still solves. **Four new codes, so four new dictionary keys
+in thirteen languages** -- `js.pkg.m218`, `m219`, `m220`, `m701`,
+tagged, translated into the twelve, packed; `tools/i18n.py check`: ok.
+
+**Everything that read a field by position was moved.** The parser's
+case folding, the connectivity and port-node checks, `laplace._is_controlled`,
+`spice.py`'s node set and the drawer's turns label (`e.turns`, so
+`t,1,2,[1,-2]` draws with its dots); and in the app `expand_defines_in_desc`
+(which materialises the tacit `[z11,…]` term on a paired block, so a
+Define lands -- verified live), the AC imaginary-unit normaliser (a
+transformer's bracketed turns are the same list shape as a parameter
+term), the banned-node check and the answer-name warning (`el.nodes`),
+the results card (the transformer joins the six kinds, walking the
+element's distinct terminals in the order written), and `answer_aliases`
+-- which had been measured on a probe circuit whose port nodes were
+literally called 2 and 3, so `iz12`-style aliases only ever existed for
+circuits with those node names; it now follows the element's own nodes.
+
+**SPICE export generalises directly.** A SPICE controlled source takes
+four nodes anyway: the transformer's E/sense/F triple and the two-port's
+VCCS quartet name each port's pair, with `0` for the two-node form, so an
+old description's netlist is unchanged. Nine paired cases joined the
+ahkab ground truth, and ahkab agrees on every node voltage to 1e-6 --
+**ahkab is installed in the machine's Python now** (`--no-deps`; its
+2015 pins would have downgraded numpy), which is what makes those tests
+run rather than skip. **And version 9's solver checkout is installed
+editable in the machine's Python** (`pip install -e repos/solver`),
+which is what version 9's dev server now runs: until 6 Sep 2026 it had
+been importing a stale 0.5.23 from `site-packages`.
+
+**Verified.** Solver suite: **380 passed** (346 before; 26 in
+`test_four_node_ports.py`, 9 ground-truth cases, and the version test,
+which now finds the editable install). On the dev server: Example 13.11
+as version 8 wrote it, `e,1,0,(120∠30°):t,1,2,80,80+120:rl,2,0,8+6j`,
+puts `i_t1 = 75∠-6.87°` and `i_t2 = 30∠173.13°` in the transformer's
+card with nothing in the extras -- version 8's `it1` and `-it2` to the
+digit; a paired transformer between live nodes answers `5/202`,
+`-5/202`, `-5/101`, `5/101` at its four terminals; a paired `z` with its
+parameters in Define solves; `it2` resolves as an alias; codes 217, 218,
+219, 220 and 701 come back from `/api/solve` and `/api/schematic` with
+their sentences; a two-node transformer with bracketed turns draws.
+`verify_lesson.py` is clean on Lesson 10, Lesson 13 (the two gain-tool
+notes are the documented exception) and the monograph book; the full
+sweep ran after.
+
+**The docs' half is in `NEXT_DOCS.md` #314**: the coupling and two-port
+lessons describe the paired forms (version 9 only), the answer paragraph
+says two currents again for all three versions, and Example 13.11 is
+restored -- with its figure recovered from the 2023 website's master
+folder, since neither the docs tree nor the live site had it -- and given
+an entry in `Lesson_10.cir`. Roberto's word: the full documentation pass
+for both elements comes *after* the drawings and the package.
+
+**Not done, by his order of work.** No release: 0.5.27 is versioned and
+changelogged and stays off PyPI until he says; the offline build, the
+cache bump, `requirements.txt` and the PythonAnywhere pass all wait on
+it, and so does `verify_bridge.py`, which needs `build_local.py`'s copy
+of `symbulator_ui.py`. **The schematic drawer is the next piece**: keep
+the two-node ground logic exactly (#212, #218 -- the rail stopping at a
+block, one symbol per run), and give the four-node forms a placement of
+their own. X takes all of this by merge afterwards; its X2/X3 forms are
+superseded.
+
 ## #312 — the app's half of one sun-and-moon in the split view — **done 5 Sep 2026, live on the offline pair at cache v151 and on the server since Roberto's pull the same night**
 
 Written up in `Documentation/NEXT_DOCS.md` #312, whose shell half is
