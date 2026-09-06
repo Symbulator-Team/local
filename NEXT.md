@@ -1,5 +1,7 @@
 # Next build — accepted but not yet done
 
+## #319 — claimed by the docs tree, 6 Sep 2026: the monograph's pseudo-code updated for #314's four-terminal forms — **open, at Roberto's reminder**. Entry in `Documentation/NEXT_DOCS.md`
+
 ## #318 — rounding is done in decimal, not at a binary precision: `sp.N(x, digits)` misrounds the last digit — **done 6 Sep 2026, both halves: solver 0.5.31 on PyPI (hash-verified), the app's three rounding sites on the package's `round_sig`, the offline pair live at cache v157, X merged as X7, both PythonAnywhere sites on 0.5.31 after Roberto's pulls (`/healthz` build `2026-09-06 10:43 UTC` on version 9, `0.5.31+x7` on X, a live wye-delta solve printing -36.20 on each); 0.5.30 awaits his typed prune, reminder scheduled for 7 Sep 2026 06:54**
 
 Found by the monograph notebook. Its note reads the wye-delta line
