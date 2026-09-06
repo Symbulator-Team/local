@@ -5,6 +5,39 @@ file version 9 never has, so a `git merge v9/main` can never conflict on
 it. `NEXT.md` beside this file is version 9's running list and arrives
 by merge; read it as upstream history, not as a record of X.
 
+## X6 — version 9's 0.5.30 (#315, the package in a notebook) merged; label `0.5.30+x6` — **done 6 Sep 2026, pushed; the site awaits Roberto's pull of both clones and a reload**
+
+The same merge as X4 and X5: `git fetch v9 && git merge -X theirs
+v9/main` in all three repos, all three auto-merged with no conflict to
+resolve by hand (`symbulator/__init__.py`, the server template's build
+stamp and the generated `index.html` were the files that moved).
+`branding.py` untouched by v9, so X's four values are intact -- checked
+after the merge, not assumed. The version label set to **`0.5.30+x6`**,
+X's editable checkout refreshed in `Application\vX\.venv`, X's suite
+**410 passed, 1 skipped** (the skip is #315's IPython round trip, which
+`importorskip` passes over where IPython is absent; the other 20
+notebook tests ran). `build_local.py` re-run with X's interpreter so
+X's pages carry the gold X and the fork's subtitle; the built page
+differs from version 9's, verified by `cmp`. X's `sw.js` is at cache
+v156 with the 0.5.30 wheel named, as version 9's is.
+
+What X gains is what #315 is: typeset results in a notebook, the
+tutorial's `ir1`/`v2` spellings on a `Result`, `polar()`, `rounded()`,
+the cell magics, the quickstart notebook. None of it touches the app,
+so X's site will look the same after the pull; `/healthz` will report
+`0.5.30+x6`, which is the one visible change.
+
+**The pull, on the X account** (bash, in a PythonAnywhere console;
+lowercase home):
+
+    cd /home/symbulatorx/solver && git pull
+
+    cd /home/symbulatorx/symbulator_web && source ~/.virtualenvs/symbulator-venv/bin/activate && git pull
+
+Then **Reload** on the Web tab. No `pip`: the solver is the editable
+checkout, so the first `git pull` is the solver upgrade, and
+`requirements.txt`'s `>=0.5.30` is satisfied by `0.5.30+x6`.
+
 ## X5 — version 9's 0.5.29 merged — **done 6 Sep 2026, live: `/healthz` reports `0.5.29+x5` after Roberto's pull**
 
 The same merge as X4, an hour later, for the two fixes 0.5.29 carries
