@@ -5,7 +5,7 @@ file version 9 never has, so a `git merge v9/main` can never conflict on
 it. `NEXT.md` beside this file is version 9's running list and arrives
 by merge; read it as upstream history, not as a record of X.
 
-## X8, X9 — version 9's 0.5.32 (#320–#322, ports that float) merged, then its drawing fix; label `0.5.32+x8` — **done 7 Sep 2026, pushed; the site awaits Roberto's pull of both clones and a reload**
+## X8, X9 — version 9's 0.5.32 (#320–#322, ports that float) merged, then its drawing fix; label `0.5.32+x8` — **done 7 Sep 2026, live: `/healthz` reports `0.5.32+x8`, build `2026-09-06 22:01 UTC` running and on disk, and the live site draws a groundless entry (X9's fix), after Roberto's pull**
 
 Two merges the same morning, both `git merge -X theirs v9/main` in all
 three repos with no conflicts and `branding.py` intact. X8 carried the
