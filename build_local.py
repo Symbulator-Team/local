@@ -1285,10 +1285,10 @@ def build() -> str:
         s,
         """    const r = await fetch('/api/schematic', {
       method: 'POST', headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({ desc: desc })
+      body: JSON.stringify({ desc: desc, tool: _v('tool'), n1: _v('n1'), n2: _v('n2') })
     });
     const data = await r.json();""",
-        """    const data = await py('schematic', { desc: desc });""",
+        """    const data = await py('schematic', { desc: desc, tool: _v('tool'), n1: _v('n1'), n2: _v('n2') });""",
         label="schematic fetch",
     )
 
