@@ -1,5 +1,110 @@
 # Next build — accepted but not yet done
 
+## #320, #321, #322 — ports that float: the extractor takes `[top,bottom]` pairs, two blocks stack in the drawing, and an island behind a port gets its own reference — **done 7 Sep 2026: solver 0.5.32 on PyPI (wheel sha256 `c20c6450…`, hash-verified against PyPI and the install host), the offline pair live at cache v158 (ZIP 31,843,980 b), learn live web and PDFs (v9 289 pages), X merged as X8; the server awaits Roberto's pull with `pip install --upgrade symbulator`**
+
+Roberto's friend sent three problems to try the four-terminal forms on
+(7 Sep 2026): Alexander & Sadiku's 19.2 (the z parameters of a ladder
+with 1 Ω in *both* rails), 19.19 (the y parameters in s of a network
+whose ports are the outer ends and the junctions) and 19.70 (the g
+parameters of a parallel-series connection of two z blocks). None has a
+grounded port, and each found something.
+
+**#320 -- the extractor.** #314 gave the four-terminal form to the
+two-port *element* only. The Two-port parameters tool and `port()`
+still took two node names and grounded the other two terminals
+themselves, and on a floating port they did not refuse: with the
+bottoms grounded they solved a neighbouring circuit -- 19.2's lower rail
+shorted out -- and returned 11/5 and 3/5 for the book's 41/15 and 1/15,
+plausible numbers with no warning, the worst of the three ways a tool
+can fail. Now a port is a node name (its other terminal ground, the
+calculator's form) or a `[top,bottom]` pair, the same spelling the
+element uses. `equiv._port_pair` reads either; each test source sits
+across its own port, bottom to top, and the port voltage is the
+difference of its terminals; the two-node form stamps exactly what it
+always did. The app: `app.py`'s `_PORT_RE` accepts the pair for the port
+tool only (`th`/`er` keep `_NODE_RE`); the two node labels say *or
+[top,bottom]* and the format reference gained a sentence, in all
+thirteen languages (`i18n.py tag`, the twelve translations by hand,
+`pack`, `check: ok`); `Lesson_13.cir` gained the three problems as
+entries with the tool's keys (`n1: [a,f]`), verified through
+`verify_lesson.py`, and the tutorial's Lesson 13 the three worked
+problems, version 9 only, with the section's sentence *the two bottom
+nodes are always assumed to be ground* now true of 7 and 8 alone.
+
+**#322 -- the island.** Roberto asked whether the *ground on the other
+side* rule was circuit theory or something he had imposed. The answer:
+a bookkeeping requirement of nodal analysis, not of the physics -- an
+island behind a port has well-defined currents and differences and
+undefined absolute potentials, and SPICE refuses it too, which is why
+the rule felt like theory. The relaxation is narrow and it is what he
+asked for: `elements._islands` finds the pieces with no path to 0;
+`local_references` gives a reference to each piece that holds a port
+terminal (a caller's preferred node first -- `port()`, `th()` and `er()`
+name their ports' bottoms -- else the first port bottom mentioned, else
+the first node); the engine holds those nodes at 0 exactly as it holds
+"0" (`Circuit.references`, in `v()` and `add_current()`); `_run`
+reports `v_<ref> = 0` among the values, fills `Result.references` and
+`Result.notes` with code **221** (a warning: *Node(s) m, q, n have no
+path to node 0 (they lie behind a port), so their voltages are measured
+against m, taken as 0*), and `tr()` carries both through. An island of
+ordinary elements -- `r1,2,3,1` on its own -- is still E217, and a
+description with no ground and no port is still E216. Two of #314's
+tests asserted the old rule and were rewritten to assert the new one.
+The app publishes the tool's references through a `ContextVar`
+(`symbulator_ui.set_port_references`, set by `app.py`, `bridge.py` and
+`solve_ui` itself, since the server solves in a subprocess) so its ten
+pre-parses of the description -- the alias rewrite, the hijack scan,
+the complex-value guard -- accept a groundless ladder; the solve's
+notes join the page's other notes and `UI_MESSAGES` renders 221. **A
+note from the debugging:** a source named `e` on a circuit with a node
+`e` has `v_e` overwritten by the element's drop; the test names its
+source `es`. Pre-existing and not fixed here.
+
+**#321 -- the drawing.** Two four-terminal blocks sharing an input pair
+were drawn on top of each other, one box through the other's
+parameters. Blocks whose column spans overlap now go into *lanes* down
+the band, the op-amp lanes' greedy colouring reused
+(`_Layout.block_lane`, `BLOCK_LANE_H = ROW_H + 100`, `y_bot` grows by a
+lane's height); a laned block is drawn one lane lower with risers from
+its upper faces to the node row at its own columns; a block whose bottom
+is another's top is placed above it (Kahn's walk, the series
+connection); a block with another beneath it grounds at its own faces
+with a stub and a symbol rather than a drop through the lower box; a
+two-node block in that position hands back its faces instead of
+drawing legs (`_draw_port_box(..., legs_to_rail=False)`); a grounded
+element keeps its body in the first band when lanes exist, since
+centred on the taller band it landed on the top block's ground
+symbols. Cascades stay in a row; transformers are untouched. Measured,
+not guessed: parallel-series, parallel-parallel, series-series and
+cascade were each drawn and looked at, and the review harness is
+`total=336 failed=0 with_issues=0` -- the pixel harness over all 342 drawings, the six new entries included and drawn the way the app draws them, reports tightest 4.00 px and 0 below the 3 px threshold (a first run, before the drawing took the tool's references, had refused the two groundless entries -- which is how that gap was found).
+
+**Three more problems the same morning** (Roberto: *"Solve these
+problems as well"*): AS7's 19.17, the lattice (z = 9.6, -0.8, -0.8,
+8.4 Ω and y its inverse, 0.105, 0.01, 0.01, 0.12 S); 19.63, an ideal
+1:3 transformer with 4 Ω across the primary and 9 Ω across the
+secondary, both ports the windings' own pairs (z = 0.8, 2.4, 2.4,
+7.2 Ω -- each side its own island, the tool taking **b** and **d**);
+and 19.71, Figure 19.118 as read from the drawing (z = 91/11, 10, 10,
+28 Ω; the reading is stated in the entry's note and the chapter, since
+the thumbnail leaves the diagonal's landing to judgement). All six are
+entries in `Lesson_13.cir` and problems in Lesson 13, `app_links.py`
+at 320 of 322. The drawer put 19.71's transformer tops in reversed
+column order and drew a picture no one could follow; the description's
+line order sets the node order, and starting from **t1** along the top
+with the secondary last draws it cleanly -- that order is the one the
+entry and the chapter use.
+
+**Also from this session.** `port()` returns a `ValueError` for a pair
+with the same node twice or the wrong count. The README gained *A port
+that floats* and *A side of the circuit with no path to node 0*, both
+examples run; `llms.txt` a bullet; `CHANGELOG.md` the 0.5.32 entry. The
+six figures are the app's own drawings (`sym_as7_p1902.png` and kin;
+the groundless ones drawn with the tool's own reference grounded, and
+the captions say so), which is also the limit worth knowing: `to_svg()`
+still wants a reference, so a groundless network typed into the app
+draws nothing until it is given one.
+
 ## #319 — claimed by the docs tree, 6 Sep 2026: the monograph's pseudo-code updated for #314's four-terminal forms — **open, at Roberto's reminder**. Entry in `Documentation/NEXT_DOCS.md`
 
 ## #318 — rounding is done in decimal, not at a binary precision: `sp.N(x, digits)` misrounds the last digit — **done 6 Sep 2026, both halves: solver 0.5.31 on PyPI (hash-verified), the app's three rounding sites on the package's `round_sig`, the offline pair live at cache v157, X merged as X7, both PythonAnywhere sites on 0.5.31 after Roberto's pulls (`/healthz` build `2026-09-06 10:43 UTC` on version 9, `0.5.31+x7` on X, a live wye-delta solve printing -36.20 on each); 0.5.30 awaits his typed prune, reminder scheduled for 7 Sep 2026 06:54**
