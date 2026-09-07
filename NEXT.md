@@ -58,6 +58,25 @@ reference and says so; the entry's note in `Lesson_10.cir` corrected
 too), and Lesson 13's four-terminal two-port paragraph -- now describe
 #322. The review harness is clean over all 350 drawings and the pixel harness over the same 350 reports tightest 4.00 px, 0 below the 3 px threshold, the eight new entries included. The PDFs were rebuilt and deployed: v7 235, v8 222, v9 295 pages.
 
+**Three more, from the 12th edition, the same afternoon** (Roberto:
+*"I found three problems in the 12th edition ... Are they different?"*).
+Different in kind: single-interval, nothing stored, a switch closing
+onto a source, so the coupled pair reduces to one equivalent
+inductance and the transient is a plain RL rise -- 7.68 (4 H and 8 H
+in series, dots opposing, 2 H, i = 4(1 − e^-25t) A, v1 = −100e^-25t V,
+v2 = 300e^-25t V, the negative v1 being the point), 7.70 (0.5 H and
+0.25 H in parallel, dots opposing, 0.05 H, io = 0.04(1 − e^-5000t) A)
+and 7.71 (8 mH and 20 mH in parallel, dots aiding, 7.5 mH,
+io = 0.2(1 − e^-10000t) A, with i2 = −0.05(1 − e^-10000t) A running
+backwards, the split set by flux linkage). Each matches the
+equivalent-inductance hand result. Three entries in `Lesson_10.cir`
+titled *NR12's Problem 7.68/7.70/7.71*, three problems in the chapter's
+section (its lead-in now says seven problems from two editions),
+figures the app's own, `app_links.py` 331 of 333; web-only deploy of
+learn (the PDFs pick them up next time), the offline pair rebuilt at
+cache **v161**, X merged as X11. No solver change. The server's next
+pull carries the entries; nothing forces one.
+
 ## #320, #321, #322 — ports that float: the extractor takes `[top,bottom]` pairs, two blocks stack in the drawing, and an island behind a port gets its own reference — **done 7 Sep 2026: solver 0.5.32 on PyPI (wheel sha256 `c20c6450…`, hash-verified against PyPI and the install host), the offline pair live at cache v158 (ZIP 31,843,980 b), learn live web and PDFs (v9 289 pages), X merged as X8 and X9, both PythonAnywhere sites on 0.5.32 after Roberto's pulls (`/healthz` build `2026-09-06 21:59 UTC` on version 9 and `2026-09-06 22:01 UTC`, `0.5.32+x8`, on X, `needs_reload: false`; verified live by 19.2 through the port tool with pairs, the 19.70 note 221, and a groundless entry drawn on both sites)**
 
 Roberto's friend sent three problems to try the four-terminal forms on
