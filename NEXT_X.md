@@ -5,6 +5,11 @@ file version 9 never has, so a `git merge v9/main` can never conflict on
 it. `NEXT.md` beside this file is version 9's running list and arrives
 by merge; read it as upstream history, not as a record of X.
 
+## X11 — version 9's three 12th-edition Nilsson & Riedel entries merged; label stays `0.5.33+x10` — **done 7 Sep 2026, pushed; rides the site's next pull**
+
+Examples and the server template's stamp only; the solver did not
+move. Merged clean, `branding.py` intact, X's pages rebuilt.
+
 ## X10 — version 9's 0.5.33 (#323, an island behind a coupling) merged; label `0.5.33+x10` — **done 7 Sep 2026, live: `/healthz` reports `0.5.33+x10`, build `2026-09-06 23:37 UTC` running and on disk, and a floating-secondary transient solves on the live site, after Roberto's pull**
 
 The same merge, no conflicts, `branding.py` intact. X's suite 425
