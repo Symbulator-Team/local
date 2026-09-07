@@ -1,6 +1,6 @@
 # Next build — accepted but not yet done
 
-## #326 — two more themes: Bayerische and Macaw — **built for the dev server, unbuilt and undeployed, awaiting Roberto's go**
+## #326 — two more themes: Bayerische and Macaw — **done 7 Sep 2026: the offline pair live at cache v162 (ZIP 31,849,538 b), hash-verified on install.symbulator.com and symbulator.com/9/local.zip; `symbulator.pythonanywhere.com` awaits Roberto's pull and reload -- no `pip`, the solver did not move; X unmerged**
 
 Roberto, 7 Sep 2026: *"Can you mock up a theme in the colour palette of
 the BMW brand? Call it Bayerische."* and *"Make a Macaw theme as well,
@@ -59,7 +59,7 @@ of the link and summary colour, the way `app_block()` already special-cases
 Gray & Gold's gradient and Contrast's shadows.
 
 
-## #324 — the ribbon says *Clear all inputs*, and abbreviates sooner to keep the Documentation link — **built for the dev server, unbuilt and undeployed, awaiting Roberto's go**
+## #324 — the ribbon says *Clear all inputs*, and abbreviates sooner to keep the Documentation link — **done 7 Sep 2026: the offline pair live at cache v162 (ZIP 31,849,538 b), hash-verified on install.symbulator.com and symbulator.com/9/local.zip; `symbulator.pythonanywhere.com` awaits Roberto's pull and reload -- no `pip`, the solver did not move; X unmerged**
 
 Roberto, 7 Sep 2026: *"Unless you are short on space, make 'Clear inputs'
 read 'Clear all inputs'."*
@@ -109,7 +109,7 @@ line each and a re-measure.
 Both templates changed — the app and the Numerical Solver share the
 button and the key.
 
-## #325 — the Aqua theme — **built for the dev server, unbuilt and undeployed, awaiting Roberto's go**
+## #325 — the Aqua theme — **done 7 Sep 2026: the offline pair live at cache v162 (ZIP 31,849,538 b), hash-verified on install.symbulator.com and symbulator.com/9/local.zip; `symbulator.pythonanywhere.com` awaits Roberto's pull and reload -- no `pip`, the solver did not move; X unmerged**
 
 Roberto, 7 Sep 2026: *"Rename the Turquoise theme to Aqua."*
 
