@@ -1,6 +1,6 @@
 # Next build — accepted but not yet done
 
-## #326 — two more themes: Bayerische and Macaw — **done 7 Sep 2026: the offline pair live at cache v162 (ZIP 31,849,538 b), hash-verified on install.symbulator.com and symbulator.com/9/local.zip; `symbulator.pythonanywhere.com` awaits Roberto's pull and reload -- no `pip`, the solver did not move; X unmerged**
+## #326 — two more themes: Bayerische and Macaw — **done and live everywhere, 7 Sep 2026: the offline pair at cache v162 (ZIP 31,849,538 b), hash-verified on install.symbulator.com and symbulator.com/9/local.zip; `symbulator.pythonanywhere.com` on build `2026-09-07 10:40 UTC` running *and* on disk after Roberto's pull, and `symbulatorx.pythonanywhere.com` on `2026-09-07 10:48 UTC` as X12 -- both verified by `/healthz` and by fetching the served pages (both carry the two theme blocks, `'Aqua'` and *Clear all inputs*; X's alone carries the gold X and the fork's subtitle). No solver release, so no `pip` anywhere**
 
 Roberto, 7 Sep 2026: *"Can you mock up a theme in the colour palette of
 the BMW brand? Call it Bayerische."* and *"Make a Macaw theme as well,
@@ -59,7 +59,7 @@ of the link and summary colour, the way `app_block()` already special-cases
 Gray & Gold's gradient and Contrast's shadows.
 
 
-## #324 — the ribbon says *Clear all inputs*, and abbreviates sooner to keep the Documentation link — **done 7 Sep 2026: the offline pair live at cache v162 (ZIP 31,849,538 b), hash-verified on install.symbulator.com and symbulator.com/9/local.zip; `symbulator.pythonanywhere.com` awaits Roberto's pull and reload -- no `pip`, the solver did not move; X unmerged**
+## #324 — the ribbon says *Clear all inputs*, and abbreviates sooner to keep the Documentation link — **done and live everywhere, 7 Sep 2026: the offline pair at cache v162 (ZIP 31,849,538 b), hash-verified on install.symbulator.com and symbulator.com/9/local.zip; `symbulator.pythonanywhere.com` on build `2026-09-07 10:40 UTC` running *and* on disk after Roberto's pull, and `symbulatorx.pythonanywhere.com` on `2026-09-07 10:48 UTC` as X12 -- both verified by `/healthz` and by fetching the served pages (both carry the two theme blocks, `'Aqua'` and *Clear all inputs*; X's alone carries the gold X and the fork's subtitle). No solver release, so no `pip` anywhere**
 
 Roberto, 7 Sep 2026: *"Unless you are short on space, make 'Clear inputs'
 read 'Clear all inputs'."*
@@ -109,7 +109,7 @@ line each and a re-measure.
 Both templates changed — the app and the Numerical Solver share the
 button and the key.
 
-## #325 — the Aqua theme — **done 7 Sep 2026: the offline pair live at cache v162 (ZIP 31,849,538 b), hash-verified on install.symbulator.com and symbulator.com/9/local.zip; `symbulator.pythonanywhere.com` awaits Roberto's pull and reload -- no `pip`, the solver did not move; X unmerged**
+## #325 — the Aqua theme — **done and live everywhere, 7 Sep 2026: the offline pair at cache v162 (ZIP 31,849,538 b), hash-verified on install.symbulator.com and symbulator.com/9/local.zip; `symbulator.pythonanywhere.com` on build `2026-09-07 10:40 UTC` running *and* on disk after Roberto's pull, and `symbulatorx.pythonanywhere.com` on `2026-09-07 10:48 UTC` as X12 -- both verified by `/healthz` and by fetching the served pages (both carry the two theme blocks, `'Aqua'` and *Clear all inputs*; X's alone carries the gold X and the fork's subtitle). No solver release, so no `pip` anywhere**
 
 Roberto, 7 Sep 2026: *"Rename the Turquoise theme to Aqua."*
 
