@@ -1,5 +1,63 @@
 # Next build — accepted but not yet done
 
+## #323 — an island behind a coupling gets its own reference, and four Nilsson & Riedel switching problems with coupled coils in Lesson 10 — **done 7 Sep 2026: solver 0.5.33 on PyPI (wheel sha256 `4077cecc…`, hash-verified against PyPI and the install host), the offline pair live at cache v160 (ZIP 31,846,755 b), learn live web and PDFs, X merged as X10, both PythonAnywhere sites on 0.5.33 after Roberto's pulls (`/healthz` build `2026-09-06 23:33 UTC` on version 9 and `2026-09-06 23:37 UTC`, `0.5.33+x10`, on X, `needs_reload: false`; the 60 V problem's transient solves on each with its floating secondary and note 221)**
+
+Roberto sent four two-interval transients from Nilsson & Riedel's
+*Electric Circuits*, 11th edition, without problem numbers or answers
+(*"I don't have the answers"*), each with a switch at t = 0 and a pair
+of coupled coils: a 60 V source with 2 H and 8 H coils (find i1 and
+i2), two switches with 3 H and 15 H coils (find i1), a 90 V source with
+3 H and 2 H coils (find io), and a capacitor shorted by a switch with
+0.8 H and 1.6 H coils (find vo). The blue variable is the question, for
+t > 0. Two readings corrected on the way: in the second drawing switch
+1 *closes* at t = 0 and switch 2 moves a→b, so before the switch the
+15 H carries 2 A from the 20 V and there is no impulse anywhere.
+
+**The answers**, each substituted back into its circuit's own
+differential equations with zero residual, initial values checked, and
+the transient solved from the DC solve's coil currents as Lesson 6
+does: i1 = (5/2)(e^-t + e^-3t), i2 = (5/4)(e^-t − e^-3t) A; i1 = 1/5 −
+(31/20)e^-20t + (27/20)e^-60t A; io = 12e^-2t + 6e^-20t A; vo =
+e^-5t(60 cos 10t − 120 sin 10t) − 60e^-25t V. Roberto will bring
+problems with printed answers later in the week to compare against.
+
+**#323, the solver's one change.** Typed as drawn, every secondary here
+floats: the coupled side reaches the rest of the circuit only through
+the `m` element, which conducts nothing, so under #322 it was an island
+of the *wrong* kind (no port terminal) and was refused, as it always
+had been -- the tutorial's coupled examples all ground the secondary
+for that reason. An inductor named by an `m` element now counts as a
+coupling's terminal pair in `elements._islands`: the island is
+legitimate, its reference is the coil's second node (a port's bottom,
+in spirit), and note 221 says *behind a port or a coupling* -- the text
+changed in the page's `UI_MESSAGES` and the twelve translations. The
+stamps, the transform and every answer for a grounded secondary are
+unchanged; the suite stands at 426 with a test that types the 60 V
+problem as drawn and one that a dangling coil nothing couples is still
+floating. **Roberto asked whether the solver itself was changed: yes,
+this rule and nothing else.**
+
+**The examples and the chapter.** Eight entries in `Lesson_10.cir`, a
+DC and a TR one per problem, titled *NR11's …*, with notes carrying
+the answers and the dot reading, `vars:` where the book asks for one
+current, an `evaluate: v4-v5` for vo, and `plottool: plot_time` on the
+transients; verified through `verify_lesson.py Lesson_10`. Lesson 10
+gained a version 9 section, *Switching with coupled coils*, crediting
+Nilsson and Riedel (11th edition) with no problem numbers, four worked
+problems in the book's two-interval form (DC field, applink, TR field,
+applink, `::: result` panels), and figures that are the app's own
+drawings of the after-switch circuits -- the floating secondary drawn
+as a loop beside the primary, the coupling named in the caption the
+drawer writes. `app_links.py` reports 328 of 330.
+
+**Three passages that said the old rule** -- Lesson 10's four-terminal
+transformer paragraph, its problem *Both windings between live nodes,
+and why a side needs a ground* (whose closing claim, *delete `r5` and
+Symbulator stops*, is no longer true: it solves, takes node 5 as the
+reference and says so; the entry's note in `Lesson_10.cir` corrected
+too), and Lesson 13's four-terminal two-port paragraph -- now describe
+#322. The review harness is clean over all 350 drawings and the pixel harness over the same 350 reports tightest 4.00 px, 0 below the 3 px threshold, the eight new entries included. The PDFs were rebuilt and deployed: v7 235, v8 222, v9 295 pages.
+
 ## #320, #321, #322 — ports that float: the extractor takes `[top,bottom]` pairs, two blocks stack in the drawing, and an island behind a port gets its own reference — **done 7 Sep 2026: solver 0.5.32 on PyPI (wheel sha256 `c20c6450…`, hash-verified against PyPI and the install host), the offline pair live at cache v158 (ZIP 31,843,980 b), learn live web and PDFs (v9 289 pages), X merged as X8 and X9, both PythonAnywhere sites on 0.5.32 after Roberto's pulls (`/healthz` build `2026-09-06 21:59 UTC` on version 9 and `2026-09-06 22:01 UTC`, `0.5.32+x8`, on X, `needs_reload: false`; verified live by 19.2 through the port tool with pairs, the 19.70 note 221, and a groundless entry drawn on both sites)**
 
 Roberto's friend sent three problems to try the four-terminal forms on
