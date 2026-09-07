@@ -1,6 +1,6 @@
 # Next build — accepted but not yet done
 
-## #323 — an island behind a coupling gets its own reference, and four Nilsson & Riedel switching problems with coupled coils in Lesson 10 — **done 7 Sep 2026: solver 0.5.33 on PyPI (wheel sha256 `4077cecc…`, hash-verified against PyPI and the install host), the offline pair live at cache v160 (ZIP 31,846,755 b), learn live web and PDFs, X merged as X10; the server awaits Roberto's pull with `pip install --upgrade symbulator`**
+## #323 — an island behind a coupling gets its own reference, and four Nilsson & Riedel switching problems with coupled coils in Lesson 10 — **done 7 Sep 2026: solver 0.5.33 on PyPI (wheel sha256 `4077cecc…`, hash-verified against PyPI and the install host), the offline pair live at cache v160 (ZIP 31,846,755 b), learn live web and PDFs, X merged as X10, both PythonAnywhere sites on 0.5.33 after Roberto's pulls (`/healthz` build `2026-09-06 23:33 UTC` on version 9 and `2026-09-06 23:37 UTC`, `0.5.33+x10`, on X, `needs_reload: false`; the 60 V problem's transient solves on each with its floating secondary and note 221)**
 
 Roberto sent four two-interval transients from Nilsson & Riedel's
 *Electric Circuits*, 11th edition, without problem numbers or answers
