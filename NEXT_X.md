@@ -5,7 +5,7 @@ file version 9 never has, so a `git merge v9/main` can never conflict on
 it. `NEXT.md` beside this file is version 9's running list and arrives
 by merge; read it as upstream history, not as a record of X.
 
-## X12 — version 9's #324, #325 and #326 merged: *Clear all inputs*, Aqua, and the Bayerische and Macaw themes; label stays `0.5.33+x10` — **done 7 Sep 2026, pushed; awaits Roberto's pull**
+## X12 — version 9's #324, #325 and #326 merged: *Clear all inputs*, Aqua, and the Bayerische and Macaw themes; label stays `0.5.33+x10` — **done and live 7 Sep 2026 after Roberto's pull: `/healthz` reports build `2026-09-07 10:48 UTC` running *and* on disk with solver `0.5.33+x10`, and the served page carries both theme blocks, `'Aqua'`, *Clear all inputs* — and still the gold X and the fork's subtitle**
 
 Roberto's ask, 7 Sep 2026: *"Please publish the new themes to X as
 well."* Three app items, no solver change, so X's local label is
