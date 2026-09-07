@@ -5,7 +5,7 @@ file version 9 never has, so a `git merge v9/main` can never conflict on
 it. `NEXT.md` beside this file is version 9's running list and arrives
 by merge; read it as upstream history, not as a record of X.
 
-## X10 — version 9's 0.5.33 (#323, an island behind a coupling) merged; label `0.5.33+x10` — **done 7 Sep 2026, pushed; the site awaits Roberto's pull of both clones and a reload**
+## X10 — version 9's 0.5.33 (#323, an island behind a coupling) merged; label `0.5.33+x10` — **done 7 Sep 2026, live: `/healthz` reports `0.5.33+x10`, build `2026-09-06 23:37 UTC` running and on disk, and a floating-secondary transient solves on the live site, after Roberto's pull**
 
 The same merge, no conflicts, `branding.py` intact. X's suite 425
 passed and 1 skipped, pages rebuilt with the gold X. What X gains: a
