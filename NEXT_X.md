@@ -5,6 +5,39 @@ file version 9 never has, so a `git merge v9/main` can never conflict on
 it. `NEXT.md` beside this file is version 9's running list and arrives
 by merge; read it as upstream history, not as a record of X.
 
+## X12 — version 9's #324, #325 and #326 merged: *Clear all inputs*, Aqua, and the Bayerische and Macaw themes; label stays `0.5.33+x10` — **done 7 Sep 2026, pushed; awaits Roberto's pull**
+
+Roberto's ask, 7 Sep 2026: *"Please publish the new themes to X as
+well."* Three app items, no solver change, so X's local label is
+untouched.
+
+* **#324** — the ribbon reads *Clear all inputs* above 640px and falls
+  back to *Clear* below it, through an app-local media query scoped by
+  the button's id. X inherits the wording and the breakpoint.
+* **#325** — the *Turquoise* theme is called **Aqua**; the palette key
+  stays `turquoise`, so nobody's stored choice resets.
+* **#326** — two themes join the picker: **Bayerische** (the BMW M
+  stripe — `#16588e` bands, `#81c4ff` numeral, red accent) and
+  **Macaw** (cobalt bands, gold numeral, gold button on a warm page).
+  Fourteen themes now.
+
+**The merge.** One conflict in each of `server` and `local`, both the
+build stamp, both taken from v9. `branding.py` auto-merged with X's four
+values intact, and `build_local.py` was re-run afterwards -- the step
+that matters here, because taking v9's side on the *generated* pages
+leaves X byte-identical to version 9, which is the shape that got the
+account disabled in September. Verified after the rebuild: X's
+`index.html` hashes differently from version 9's, carries the gold
+`#d9a521` X and the fork's subtitle, has **no** beta mark, and carries
+all three items (`bayerische` and `macaw` blocks, `'Aqua'`, and thirteen
+*Clear all inputs*).
+
+**X is English-only by decision (31 Aug 2026), and this changed nothing
+about that.** The twelve dictionaries carry the new theme names because
+they live in files X shares with 9 and the merge brings them across on
+its own. That is the documented outcome, not a mistake: let it happen,
+do not strip them back out.
+
 ## X11 — version 9's three 12th-edition Nilsson & Riedel entries merged; label stays `0.5.33+x10` — **done 7 Sep 2026, pushed; rides the site's next pull**
 
 Examples and the server template's stamp only; the solver did not

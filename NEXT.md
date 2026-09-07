@@ -1,5 +1,138 @@
 # Next build — accepted but not yet done
 
+## #326 — two more themes: Bayerische and Macaw — **done 7 Sep 2026: the offline pair live at cache v162 (ZIP 31,849,538 b), hash-verified on install.symbulator.com and symbulator.com/9/local.zip; `symbulator.pythonanywhere.com` awaits Roberto's pull and reload -- no `pip`, the solver did not move; X unmerged**
+
+Roberto, 7 Sep 2026: *"Can you mock up a theme in the colour palette of
+the BMW brand? Call it Bayerische."* and *"Make a Macaw theme as well,
+based on the colors from this guy"*, with his own photograph of two
+scarlet macaws on a log. Both were drawn first on a sheet in the same
+generator that produced the thirteen he approved on 6 Sep --
+`Notes/themes_2026-09-07/bayerische_and_macaw.html`, made by
+`make_new_themes.py` beside it -- each shown twice, because the one real
+decision in either was where the third colour goes. He chose
+**Bayerische with the red button** and **Macaw with the gold button**.
+
+**Bayerische** is the M stripe read as a theme: `#16588e` bands (the M
+dark blue), `#81c4ff` numeral and keyline (the M light blue), and
+`#e7222e` as the accent -- darkened to `#cf1f2a` in the light mode so
+white lettering on the Solve button clears 4.5:1, lifted to `#ff5a63` in
+the dark. The results panel is the same blue at instrument depth with a
+red readout name, so all three stripe colours are on screen at once.
+
+**Macaw** is the bird: `#14418f` cobalt bands from the wing, `#ffc61e`
+gold numeral and keyline from the shoulder, a warm light page (`#fbf7f0`
+-- sunlight on the grass, not a cool white), and the gold as the accent
+with dark lettering on the button, the way Pastels does it. The scarlet
+`#ff6a4d` moves to the readout name in the results panel.
+
+Two rows in `tools/palettes.py`'s TABLE, `palettes.py write` to re-emit
+both theme blocks, and the key added to `PALETTES` and `paletteNames()`
+in each of the two templates. Placed after Default in the menu, where
+the blues are: **Default, Bayerische, Macaw, Violet, ...**. Fourteen
+themes now.
+
+The names in the twelve languages: **Bayerische** stays the German word
+in the six Latin-script languages and is the country's own name in the
+six that are not (巴伐利亚, バイエルン, 바이에른, बवेरियन, বাভারিয়ান,
+Баварська); **Macaw** is each language's word for the bird (Guacamayo,
+Arao, Ara, Ara, Arara, Makau, 金刚鹦鹉, コンゴウインコ, 마코앵무, मकाऊ,
+ম্যাকাও, Ара). Worth Roberto's eye, as Aqua's are.
+
+**One measured consequence of the gold button, told rather than fixed.**
+`--accent` is not only the Solve button: `main a`, `footer a` and every
+`<summary>` heading take it as *text*. Measured on the running app:
+
+| theme, light mode | button (ink on accent) | accent as text on the page |
+|---|---|---|
+| Default | 6.32 | 5.84 |
+| Pastels | 5.34 | **2.03** |
+| Bayerische | 5.41 | 5.03 |
+| Macaw | 7.83 | **1.94** |
+
+So Macaw's light mode has exactly the characteristic Pastels has had
+since #278 and shipped with: a pale accent makes a handsome button and a
+faint link. Bayerische has no such issue in either mode. Macaw's dark
+mode is fine (11.5 both ways -- gold on near-black). Nothing was changed
+on the strength of this: he picked the gold button from a sheet, and the
+number is his to weigh. If he wants it fixed it is a per-theme override
+of the link and summary colour, the way `app_block()` already special-cases
+Gray & Gold's gradient and Contrast's shadows.
+
+
+## #324 — the ribbon says *Clear all inputs*, and abbreviates sooner to keep the Documentation link — **done 7 Sep 2026: the offline pair live at cache v162 (ZIP 31,849,538 b), hash-verified on install.symbulator.com and symbulator.com/9/local.zip; `symbulator.pythonanywhere.com` awaits Roberto's pull and reload -- no `pip`, the solver did not move; X unmerged**
+
+Roberto, 7 Sep 2026: *"Unless you are short on space, make 'Clear inputs'
+read 'Clear all inputs'."*
+
+The wording is a straight reversal of his own instruction of 31 Aug 2026
+(#197's menu section: *Clear all inputs* became *Clear inputs* to make
+room in the ribbon), so the proviso is the whole item. It was measured on
+the running app rather than guessed, at every width from 375px up, with
+the nav asked directly which of its links had wrapped out of the one-line
+box:
+
+| viewport | *Clear inputs* | *Clear all inputs* |
+|---|---|---|
+| 375px | short spelling, App / Docs both shown | the same — the label is *Clear* below 480px either way |
+| 482px | Documentation clipped | Documentation clipped |
+| 570px | Documentation clipped | Documentation clipped |
+| 620px | **Documentation back** | Documentation clipped |
+| 630px | Documentation shown | Documentation clipped |
+| 640px | Documentation shown | **Documentation back** |
+
+So the longer wording costs 19px and, with nothing else changed, takes
+the only link out of the app off the screen between 620 and 639px. That
+is exactly the failure #201 was written to prevent, so the fix is the
+mechanism #201 already built: the button falls back to its short
+spelling, *Clear*, sooner. banner.css switches every ribbon label at
+480px; an **app-local** media query switches this one button at 640px,
+scoped by its id so it beats the shared file's class rules in both
+directions. banner.css itself is untouched — it is the lockup five sites
+share, and this is one app's wording.
+
+Measured after: ≥641px reads *Clear all inputs* with Documentation
+shown; 481–640px reads *Clear* — and with the short spelling
+Documentation comes back at **570px**, fifty pixels earlier than it does
+today; ≤480px is unchanged. The breakpoint is 640 rather than the
+measured 635 because 640 is a breakpoint banner.css already uses and the
+measurement moves with the font.
+
+The English is a translation unit, so the key re-keyed:
+`clear-inputsclear.9b7a` → `clear-all-inputsclear.97d7`. **The twelve
+translations were carried across unchanged**, as #279's *(s)* labels
+were: three of them already said *all* (`Alles leeren`, `Tout effacer`,
+`Limpar tudo`), the wording refinement is English, and lengthening
+twelve labels is the crowding risk this item just spent its whole
+measurement avoiding. If Roberto wants *all* in the other twelve it is a
+line each and a re-measure.
+
+Both templates changed — the app and the Numerical Solver share the
+button and the key.
+
+## #325 — the Aqua theme — **done 7 Sep 2026: the offline pair live at cache v162 (ZIP 31,849,538 b), hash-verified on install.symbulator.com and symbulator.com/9/local.zip; `symbulator.pythonanywhere.com` awaits Roberto's pull and reload -- no `pip`, the solver did not move; X unmerged**
+
+Roberto, 7 Sep 2026: *"Rename the Turquoise theme to Aqua."*
+
+The English name lives in three places that must agree — `tools/palettes.py`'s
+TABLE and the `paletteNames()` fallback in each of the two templates (the
+Numerical Solver has its own copy; #295 found that out through `i18n check`
+saying *two different English texts*). All three say *Aqua*, and
+`palettes.py write` re-emitted the two theme blocks so the generated CSS
+comment reads `/* Aqua */`.
+
+**The palette key stays `turquoise`.** It is the stylesheet's attribute
+value and the stored preference in `localStorage`, not a word anyone
+reads; changing it would silently reset the theme for every reader who
+had chosen it. Same ruling as #295's `navy`, which still keys the theme
+now called *Default*.
+
+The twelve translations became each language's own word for the colour:
+Aguamarina, Akvamarino, Aigue-marine, Aquamarin, Água-marinha, 水蓝,
+アクア, 아쿠아, Akuamarin, एक्वा, অ্যাকোয়া, Аквамариновий. Worth Roberto's
+eye — a colour name is the kind of thing a native speaker corrects in one
+word.
+
+
 ## #323 — an island behind a coupling gets its own reference, and four Nilsson & Riedel switching problems with coupled coils in Lesson 10 — **done 7 Sep 2026: solver 0.5.33 on PyPI (wheel sha256 `4077cecc…`, hash-verified against PyPI and the install host), the offline pair live at cache v160 (ZIP 31,846,755 b), learn live web and PDFs, X merged as X10, both PythonAnywhere sites on 0.5.33 after Roberto's pulls (`/healthz` build `2026-09-06 23:33 UTC` on version 9 and `2026-09-06 23:37 UTC`, `0.5.33+x10`, on X, `needs_reload: false`; the 60 V problem's transient solves on each with its floating secondary and note 221)**
 
 Roberto sent four two-interval transients from Nilsson & Riedel's
@@ -57,6 +190,25 @@ Symbulator stops*, is no longer true: it solves, takes node 5 as the
 reference and says so; the entry's note in `Lesson_10.cir` corrected
 too), and Lesson 13's four-terminal two-port paragraph -- now describe
 #322. The review harness is clean over all 350 drawings and the pixel harness over the same 350 reports tightest 4.00 px, 0 below the 3 px threshold, the eight new entries included. The PDFs were rebuilt and deployed: v7 235, v8 222, v9 295 pages.
+
+**Three more, from the 12th edition, the same afternoon** (Roberto:
+*"I found three problems in the 12th edition ... Are they different?"*).
+Different in kind: single-interval, nothing stored, a switch closing
+onto a source, so the coupled pair reduces to one equivalent
+inductance and the transient is a plain RL rise -- 7.68 (4 H and 8 H
+in series, dots opposing, 2 H, i = 4(1 − e^-25t) A, v1 = −100e^-25t V,
+v2 = 300e^-25t V, the negative v1 being the point), 7.70 (0.5 H and
+0.25 H in parallel, dots opposing, 0.05 H, io = 0.04(1 − e^-5000t) A)
+and 7.71 (8 mH and 20 mH in parallel, dots aiding, 7.5 mH,
+io = 0.2(1 − e^-10000t) A, with i2 = −0.05(1 − e^-10000t) A running
+backwards, the split set by flux linkage). Each matches the
+equivalent-inductance hand result. Three entries in `Lesson_10.cir`
+titled *NR12's Problem 7.68/7.70/7.71*, three problems in the chapter's
+section (its lead-in now says seven problems from two editions),
+figures the app's own, `app_links.py` 331 of 333; web-only deploy of
+learn (the PDFs pick them up next time), the offline pair rebuilt at
+cache **v161**, X merged as X11. No solver change. The server's next
+pull carries the entries; nothing forces one.
 
 ## #320, #321, #322 — ports that float: the extractor takes `[top,bottom]` pairs, two blocks stack in the drawing, and an island behind a port gets its own reference — **done 7 Sep 2026: solver 0.5.32 on PyPI (wheel sha256 `c20c6450…`, hash-verified against PyPI and the install host), the offline pair live at cache v158 (ZIP 31,843,980 b), learn live web and PDFs (v9 289 pages), X merged as X8 and X9, both PythonAnywhere sites on 0.5.32 after Roberto's pulls (`/healthz` build `2026-09-06 21:59 UTC` on version 9 and `2026-09-06 22:01 UTC`, `0.5.32+x8`, on X, `needs_reload: false`; verified live by 19.2 through the port tool with pairs, the 19.70 note 221, and a groundless entry drawn on both sites)**
 
