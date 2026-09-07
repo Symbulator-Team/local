@@ -5,6 +5,14 @@ file version 9 never has, so a `git merge v9/main` can never conflict on
 it. `NEXT.md` beside this file is version 9's running list and arrives
 by merge; read it as upstream history, not as a record of X.
 
+## X10 — version 9's 0.5.33 (#323, an island behind a coupling) merged; label `0.5.33+x10` — **done 7 Sep 2026, pushed; the site awaits Roberto's pull of both clones and a reload**
+
+The same merge, no conflicts, `branding.py` intact. X's suite 425
+passed and 1 skipped, pages rebuilt with the gold X. What X gains: a
+coupled pair's secondary may float, with note 221 saying *behind a port
+or a coupling*, and eight Nilsson & Riedel entries in Lesson 10. The
+pull is the same pair of commands, no `pip`.
+
 ## X8, X9 — version 9's 0.5.32 (#320–#322, ports that float) merged, then its drawing fix; label `0.5.32+x8` — **done 7 Sep 2026, live: `/healthz` reports `0.5.32+x8`, build `2026-09-06 22:01 UTC` running and on disk, and the live site draws a groundless entry (X9's fix), after Roberto's pull**
 
 Two merges the same morning, both `git merge -X theirs v9/main` in all
