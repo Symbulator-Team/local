@@ -5,6 +5,105 @@ file version 9 never has, so a `git merge v9/main` can never conflict on
 it. `NEXT.md` beside this file is version 9's running list and arrives
 by merge; read it as upstream history, not as a record of X.
 
+## X16 — every by-hand run draws its own working on the circuit; and a branch that lies on no mesh carries no current — **done 8 Sep 2026, label `0.5.33+x16`; needs a pull of both clones**
+
+Roberto, 8 Sep 2026: *"I would like a schematic in each run of the
+by-hands equations. For the nodal, mark the nodes... For the supernodes,
+either colour them separately or circle them or something. For the
+supermesh, the same."*
+
+So the card now draws a picture on **every** run, not only a mesh one,
+and the picture is that run's own working:
+
+| | |
+|---|---|
+| every node whose KCL is written | ringed |
+| each supernode | a dashed enclosure round its nodes *and the source between them*, captioned |
+| each mesh | the circulating arrow, `I1`, `I2`, `I3` |
+| each supermesh | a dashed enclosure over the loops it merged, captioned |
+
+All of it in `var(--accent, currentColor)`, so the overlay reads as one
+layer distinct from the circuit, follows whichever of the fifteen themes
+is on (verified live: the enclosure computes to the theme's gold), and
+still renders standalone where that variable does not exist.
+
+Two placement rules that are not obvious:
+
+* **A supernode's box must not swallow a node that is not in it.** Where
+  another node sits on the row between two members, the box is dropped
+  in favour of a ring round each member and a dashed tie between them.
+  A box that quietly includes a stranger is worse than no box.
+* **The box reaches up to the source.** A voltage source between two
+  non-reference nodes is drawn above the node row, so the enclosure is
+  grown over every element whose *both* ends are inside the group --
+  otherwise it encloses two nodes and not the thing that ties them.
+
+`to_svg` now takes one `marks=` dict rather than `loops=`, and
+`byhand.nodal()/mesh()` expose `.marks` in exactly that shape, so the
+caller does not branch on which method it has. With no `marks` the
+drawing is byte-identical to what it always produced;
+`review_schematics.py` still reports `failed=0 with_issues=0`.
+
+Measured over the book: **543 drawings, 537 node rings, 38 supernode
+boxes, 523 mesh arrows, 64 supermesh boxes, and nothing — no caption,
+no mesh label — landing on a symbol's ink.**
+
+### The sweep, and the bug it found
+
+Roberto also asked for every example to be run both ways and compared.
+`tools/check_byhand.py` gained **`--cover`**, which asks the wider
+question: not *is every entry checked* but *is every circuit in the book
+checked somewhere*. A transient's circuit is run in FD (the domain its
+own system is built in anyway) and a tool entry's circuit as a plain
+solve. Neither is that entry's own answer, and the default run does not
+pretend otherwise.
+
+That wider net found a real bug in mesh analysis, on two circuits the
+ordinary sweep never reaches because both are tool entries:
+
+    Lesson_04b / HK5's Figure 2-29        (er)   i_e:  classic 0 / by hand -0.3*i_s1
+    Lesson_13  / AS7's Example 19.4       (port) i_j:  classic 0 / by hand 2*i_r1
+
+**A branch that lies on no mesh carries no current, and `mesh()` never
+said so.** In both circuits one element hangs off a node nothing else
+touches -- which is what an open port looks like -- so it is a bridge in
+the graph, on no loop, with zero current. Both circuits then have a
+dependent source that *reads* that current (`e,3,0,1.5*is1`), and with
+no mesh-current expression to substitute, the symbol stayed free and
+nothing in the system ever bound it. The classic solve answers 0.
+
+Now every such branch is bound to 0 and gets its own bridge line -- *no
+mesh runs through it, so none flows*. The one case that cannot be
+rescued is a **current source** on such a branch: it is driving an open
+circuit, there is no mesh current for it to set, and a sentence beats a
+contradiction dressed as an equation, so that is a refusal. It is
+reachable only on a connected circuit (a source into a genuinely
+floating piece is refused by the parser first), and there is a test for
+each.
+
+### The sweep's results
+
+| | nodal | mesh |
+|---|---|---|
+| **default** (each entry in its own domain) | 194 built, **194 agree** | 143 built, **143 agree** |
+| **`--cover`** (every circuit, TR in FD, tools as plain solves) | 319 built, **319 agree** | 247 built, **247 agree** |
+| differ / unsure / unsolved | 0 | 0 |
+
+Six entries are skipped under `--cover`, all because **the classic solve
+itself refuses them**, so there is nothing to compare against: Lesson 4's
+*Bo2's Example 3.11 (Tricky, as it comes)*, which the tutorial teaches
+as a failure, and five of Lesson 13's *AS7's Problem 19.x*, which are
+two-port circuits that only mean anything through the `port` tool.
+
+**So every circuit in the book that the classic solve can solve at all
+has been compared, both ways where both apply, and every one agrees.**
+
+X's suite is **477 passed, 1 skipped**. Solver label `0.5.33+x16`.
+
+**Open:** the site needs Roberto's pull of both clones —
+`/home/symbulatorx/solver` and `/home/symbulatorx/symbulator_web` — and
+a reload. No `pip`.
+
 ## X15 — the branch reader extracted into `symbulator/branches.py`, and proposed to version 9 on its own — **done 8 Sep 2026; the pull request is open and Roberto's to review**
 
 X14's front half answers a question that has nothing to do with by-hand
