@@ -1,5 +1,58 @@
 # Next build — accepted but not yet done
 
+## #342 — every browser tab says which property it is — **built 9 Sep 2026, cache v171; unbuilt and undeployed, awaiting Roberto's go**
+
+Roberto: the tab text. The documentation read *Symbulator 9*, the server
+app *Symbulator — symbolic circuit analysis online*, the offline build
+*Symbulator — symbolic circuit simulation*, the landing page *Symbulator
+— a symbolic simulator of linear electric circuits*. Four properties,
+and nothing in a tab strip to tell the first two apart. Now:
+
+| property | tab |
+|---|---|
+| `learn.symbulator.com` | **Symbulator 9 Documentation** (and *Direct current analysis — Symbulator 9 Documentation* on a chapter; 7 and 8 say their own numbers) |
+| `symbulator.pythonanywhere.com` | **Symbulator 9 Online App** |
+| `install.symbulator.com` and the ZIP | **Symbulator 9 Local Version** |
+| `symbulator.com` | **Symbulator 9 Welcome!** |
+
+**The app's two titles carry `{{ brand_tm }}`, not a literal 9.** A
+hard-coded *Symbulator 9 Online App* in `templates/index.html` is exactly
+the shape #228 exists to prevent: the template is shared, the merge rule
+is *take v9's side everywhere but `branding.py`*, and X's tab would
+therefore announce itself as version 9 — under a hostname one letter
+from the canonical, which is the thing that got X's account disabled.
+With the mark, X reads *Symbulator X Online App* and *Symbulator X Local
+Version* with no fork-side edit at all, and no fifth branding value: the
+four in `branding.py` are still the whole list.
+
+That cost one line in `build_local.py`. `resolve_banner()` resolved
+`{{ brand_tm }}` through `sub()`, whose whole job is to fail when a
+replacement does not happen *exactly once* — a second mark in the
+`<title>` made it two, and the build stopped. It now takes a `marks=`
+count, stated at the call site (`marks=2` for `index.html`, still 1 for
+`eqsheet.html`), so the guard keeps its teeth rather than being widened
+to "however many you find". The local title substitution reads the mark
+from `branding.py` too and rewrites *Online App* to *Local Version*.
+
+Verified by rendering, not by reading: `build()` emits
+`<title>Symbulator 9 Local Version</title>` with zero surviving `{{ `,
+and Flask's test client returns `<title>Symbulator 9 Online App</title>`
+from `/`.
+
+Two things deliberately left alone. **`manifest.webmanifest`'s `name`**
+still reads *Symbulator — symbolic circuit simulation*: it names an
+installed launcher entry, not a tab, and the reason the title used to
+have to match it was the word *online* contradicting an offline build —
+*Local Version* does not. And **the landing page's `og:title`**
+(*Symbulator — solve circuits with the letters still in them*) is what a
+shared link preview shows, not a tab; it stays as the sentence it is.
+
+The Numerical Solver's tab is untouched at *Numerical Solver ·
+Symbulator*, which already names its property.
+
+Docs half — `web/index.php` and `tools/static_preview.py` — is #342 in
+`Documentation/NEXT_DOCS.md`.
+
 ## #341 — the app's footer is one line — **done 9 Sep 2026, cache v170; the server needs a pull, no `pip`**
 
 Roberto: *"Can we make the bottom of the app text look shorter? ... The

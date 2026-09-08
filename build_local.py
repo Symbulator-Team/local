@@ -926,8 +926,17 @@ def _branding() -> tuple[str, str]:
             ns.get("BRAND_TM_COLOR", ""), ns.get("BRAND_BETA", ""))
 
 
-def resolve_banner(s: str, *, where: str) -> str:
-    """Replace the banner's Jinja with what this tree's branding says."""
+def resolve_banner(s: str, *, where: str, marks: int = 1) -> str:
+    """Replace the banner's Jinja with what this tree's branding says.
+
+    `marks` is how many `{{ brand_tm }}` the page is expected to hold --
+    one in the banner, and since #342 a second in `index.html`'s
+    `<title>`, so a fork's browser tab says *Symbulator X Online App*
+    rather than naming version 9. The count is stated rather than
+    replaced blind: `sub()`'s whole job here is to fail the build if the
+    template moved a mark, instead of shipping a literal `{{ brand_tm }}`
+    to a reader.
+    """
     mark, subtitle, colour, beta = _branding()
     # The mark's optional colour, inline so that banner.css stays the one
     # shared source of the lockup. Version 9 sets none and the attribute
@@ -942,7 +951,8 @@ def resolve_banner(s: str, *, where: str) -> str:
             '{% endif %}',
             f'<span class="beta">{beta}</span>' if beta else "",
             label=f"the beta mark in {where}")
-    s = sub(s, "{{ brand_tm }}", mark, label=f"the wordmark mark in {where}")
+    s = sub(s, "{{ brand_tm }}", mark, count=marks,
+            label=f"the wordmark mark in {where}")
     start = s.find("{% if brand_sub %}")
     end = s.find("{% endif %}", start)
     if start < 0 or end < 0:
@@ -1068,7 +1078,8 @@ def build() -> str:
     # dashes, and Windows would otherwise decode it as cp1252 and crash.
     s = TEMPLATE.read_text(encoding="utf-8")
     check_banner(s)
-    s = resolve_banner(s, where="index.html")
+    # Two marks: the banner's, and #342's in the <title>.
+    s = resolve_banner(s, where="index.html", marks=2)
 
     # EqSheet's page is not part of this build -- it is server-hosted --
     # but its banner copy has no other guard, and this is the one check
@@ -1110,15 +1121,22 @@ def build() -> str:
     )
 
     # --- title/description: the server version's say "online", which is
-    #     wrong for this offline build -- match the wording already used
-    #     in manifest.webmanifest's own "name" field instead, so an
-    #     installed window's title bar (which some browsers/OSes
-    #     concatenate manifest name + document title for) doesn't show
-    #     two different, contradictory descriptions of the same app. ----
+    #     wrong for this offline build. #342 (Roberto, 9 Sep 2026) makes
+    #     each property's browser tab name the property -- the server app
+    #     says "Online App", so this one says "Local Version" -- and the
+    #     mark comes from branding.py, already resolved by
+    #     resolve_banner() above, so a fork's tab reads "Symbulator X
+    #     Local Version" and not version 9's name.
+    #
+    #     manifest.webmanifest's "name" is deliberately left as it was:
+    #     it is what an installed launcher entry is called, not a tab,
+    #     and "symbolic circuit simulation" does not contradict this the
+    #     way the word "online" did. -------------------------------------
+    mark = _branding()[0]
     s = sub(
         s,
-        "<title>Symbulator — symbolic circuit analysis online</title>",
-        "<title>Symbulator — symbolic circuit simulation</title>",
+        f"<title>Symbulator {mark} Online App</title>",
+        f"<title>Symbulator {mark} Local Version</title>",
         label="local title",
     )
     s = sub(
