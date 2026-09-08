@@ -5,6 +5,50 @@ file version 9 never has, so a `git merge v9/main` can never conflict on
 it. `NEXT.md` beside this file is version 9's running list and arrives
 by merge; read it as upstream history, not as a record of X.
 
+## X21 — version 9's #340 and #341 merged: one beta statement for the whole app, and a one-line footer; label `0.6.2+x20` unchanged — **done 9 Sep 2026, pushed; the site wants a pull of the web clone**
+
+Two of version 9's items, both wording:
+
+* **#340** the per-feature beta marks are gone — the By-Hand card's
+  heading and paragraph, the schematic button's *(beta)* and the SPICE
+  card's beta label. Roberto's reasoning: the wordmark's β already says
+  the whole application is new, so marking three features beta implied
+  the unmarked ones were not. The SPICE card keeps its *action*
+  (check the translated circuit — it runs in another tool), which was
+  never really about beta. This reverts version 9's #336, which X had
+  taken as part of X20;
+* **#341** the footer is the #285 line alone, the second line having
+  repeated the licence, the domain and Python+SymPy, all of which the
+  cards above already say.
+
+**X keeps two occurrences of the words where version 9 keeps one, and
+both are correct.** The `beta` in the syntax reference is an example
+*variable name* (`Q`, `S` and `beta` mean what you intend), and X's
+subtitle is *an experimental fork of Symbulator 9* — the fork's own
+identity from `branding.py`, not a claim about a feature. Do not let a
+future sweep for beta marks take either.
+
+One conflict in each of `server` and `local`, and for once not merely
+the build stamp: X still had the two-line footer, version 9 had the
+trimmed one. Version 9's side on both, since the footer is deliberately
+identical in the two trees. Then `build_local.py` — X's page hashes
+`4d327abc…` against version 9's `51e92dcd…`, with the gold X and the
+fork's subtitle intact.
+
+**The label does not move.** The solver merge brought one thing, a
+docstring in `test_spice_groundtruth.py` saying what ahkab is and is
+not, so `0.6.2+x20` still describes the code. That means the solver
+clone needs no pull this round and no `pip install -e .`; the web clone
+is the one that changed. It also means `/healthz` will read
+`0.6.2+x20` before and after, so the build stamp is what confirms the
+pull landed, not the version.
+
+X's suite: **484 passed and 1 skipped** — the skip is
+`test_spice_groundtruth.py`, whose ahkab is not installed in
+`ApplicationX\.venv`, exactly as it should be. `i18n check`,
+`palettes check`, the hidden-guard check and the export-field check all
+clean.
+
 ## X20 — version 9's #335–#339 merged: the by-hand line, two op-amp drawings and two centred buttons; label `0.6.2+x20` — **done 8 Sep 2026, pushed; the site wants a pull of both clones**
 
 Five of version 9's items in one merge, all of them from Roberto's
