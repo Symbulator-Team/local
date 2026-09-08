@@ -1,5 +1,48 @@
 # Next build — accepted but not yet done
 
+## #340 — one beta statement for the whole app, not three per feature — **done 9 Sep 2026, cache v169; the server needs a pull, no `pip`**
+
+Roberto asked for a beta note on the By-Hand card, and I put
+*(experimental)* on its heading (#336). He corrected the placement —
+the mark belongs in the sentence that explains the card, not appended
+to its title — and then asked the better question:
+
+> *"Given that the whole v9 is beta, do we need to say that the
+> schematic generator is beta, and the spice translator is beta, and
+> the by-hand equations is beta?"*
+
+Measured: three per-feature marks, plus the **β** in the wordmark.
+He is right that they subtracted information. The β says the whole
+application is new; marking three features beta implied the unmarked
+ones were not, which is false. **"Drop all three. Let's have a single
+beta warning for the whole thing."**
+
+So #336 is reverted entirely and two older marks go with it:
+
+* the By-Hand card's heading is plain again and its paragraph carries
+  no note;
+* the schematic button reads *Draw the circuit above as a diagram*;
+* the SPICE card loses *"This translator is in beta"*.
+
+**The SPICE card keeps its action, though**, reworded to stand on its
+own: *"Check the translated circuit before relying on it: it runs in
+another tool, where a silent difference would surface a long way from
+here."* That caution was never really about beta — it is about output
+leaving Symbulator — and it would have been wrong to delete a true
+warning along with an expiring label.
+
+Measured after: the rendered page contains **zero** occurrences of
+*beta* or *experimental*, bar one false positive that must stay — the
+syntax reference's *"`Q`, `S` and `beta` mean what you intend"*, where
+`beta` is an example variable name. The wordmark's β is untouched, and
+#137 remains the one item that removes it when version 9 leaves beta.
+
+Three i18n keys moved, and only one needed new prose: the heading's
+twelve translations came back verbatim out of commit `e43d251` (the
+English is character-for-character what #336 retired), the button's were
+the old ones with the parenthetical cut per script, and the SPICE
+sentence's new clause was written for all twelve. `i18n check: ok`.
+
 ## #339 — the Mini-Tools and Numerical Solver buttons centred — **done 8 Sep 2026; unbuilt and undeployed**
 
 Roberto: *"To uniform the look, please center the 'Run' button in the
