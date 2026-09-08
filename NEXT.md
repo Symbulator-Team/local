@@ -1,5 +1,118 @@
 # Next build — accepted but not yet done
 
+## #332 — the augmented method: transformers, two-ports and coupled coils get a by-hand system too, so no circuit is left without one — **done 8 Sep 2026, solver 0.6.1, cache v166; the server needs a pull *and* a `pip install --upgrade symbulator`**
+
+Roberto, 8 Sep 2026: *"Is there a hand-by like method that can be used
+for the problems currently not covered? Maybe by mixing nodal and mesh,
+plus special equations for the special elements?"* — and then: *"Let's do
+them all."*
+
+Yes, and it is what a textbook does. The rule is uniform and the code
+does not know a transformer from a two-port:
+
+> **A current that cannot be written in the method's own unknowns is
+> carried as an extra unknown, and its element's own relation stands as
+> an extra equation.**
+
+One extra equation for one extra unknown, so the system stays square.
+That is the augmented method, and it is exactly Roberto's "special
+equations for the special elements".
+
+### What each element needed, and which method suits it
+
+**Coupled coils → mesh, and it was already there.** The engine writes a
+coupled inductor as `v1 - v2 = jw(L*i_self + M*i_other)`. Mesh needs the
+drop *as a function of currents*, which is that form exactly; only nodal
+needs it inverted, and a coupled pair cannot be inverted one coil at a
+time. That asymmetry is precisely why every textbook teaches coupled
+coils in the mesh chapter -- and why this needed no new algebra at all,
+only the removal of a refusal. The induced voltage lands in the loop
+equation on its own:
+
+    5*I1 + 4*I*I1 - 2*I*I2 + 10 = 0
+
+with `-2j*I2` the mutual term at w = 2, M = 1. Nodal now refuses coupled
+coils and says to use mesh.
+
+**Transformers and two-port blocks → nodal.** Their terminal currents
+are carried as unknowns and their defining relations as extra rows --
+`v_2 = v_3/2` and `i_t13 = -i_t12/2` for a transformer, the parameter
+equations for a block. Mesh refuses them and says to use nodal: a
+winding is not a branch a single mesh current flows round, so a mesh
+system would need the winding voltages as further unknowns. That is a
+real limitation rather than a missing feature, and the message says
+which method to reach for instead.
+
+**Op-amps in mesh stay refused**, and should: the output current is
+supplied by the op-amp rather than circulating in a loop. Textbooks
+always use nodal there.
+
+### An engine bug this turned up
+
+`stamp_all`'s reference closure excluded `t` but not the other port
+kinds, so a four-terminal two-port -- `z,[1,0],[2,3],[...]` -- had
+`self.v(e.n1)` called on `pr(1,0)`, which is not a node but the
+bracketed pair. That **registered `pr(1,0)` and `pr(2,3)` as nodes**,
+each with an unconstrained `v_` unknown and a `0 = 0` KCL. Harmless to
+the classic solve, which is why it went unnoticed since #314; fatal to a
+by-hand system, which counts its equations. Now every multi-terminal
+kind is excluded, for the reason `t` always was.
+
+A two-port's bracketed parameters also reach the solve as *conditions*
+(`z111 = 1`), not through `Circuit(params=...)`, so `branches.stamped`
+applies those bindings itself -- without them the by-hand system carried
+free `z111` symbols while the classic solve carried 1, 2, 3, 4, and the
+two disagreed for a reason that had nothing to do with the method.
+
+### The result
+
+| | before | after |
+|---|---|---|
+| nodal systems agreeing | 194 | **204** |
+| mesh systems agreeing | 143 | **149** |
+| differing | 0 | **0** |
+| **circuits with no method at all** | **16** | **0** |
+
+Of the 210 eligible circuits: 143 take both methods, 61 nodal only, and
+-- for the first time -- **6 mesh only**, the coupled-coil ones.
+
+### Is the by-hand system actually smaller? (Roberto asked)
+
+*"Compare the number of equations with the classic set, to see if there
+is any economy. Maybe the classic set is better."* Measured over all 210:
+the by-hand system is smaller in **every single one**, including all 16
+of the newly covered. But the margin varies, and the ranking is the
+interesting part:
+
+| | classic | by hand | |
+|---|---|---|---|
+| ordinary circuits (194) | 8.2 | **2.6** | the usual case |
+| coupled coils (6, mesh) | 8.7 | **2.0** | the best in the book |
+| two-port z (3, nodal) | 7.7 | 5.0 | |
+| y block (1, nodal) | 8.0 | 5.0 | |
+| transformers (5, nodal) | 9.2 | 6.0 | the weakest saving |
+| h block (1, nodal) | 11.0 | 7.0 | |
+
+So coupled coils in mesh are the most economical circuits in the whole
+book -- the coupling costs nothing, it just adds a term -- while a
+transformer's two extra equations and two extra unknowns make it the
+thinnest margin. The classic set is never the smaller one.
+
+### Verified
+
+Solver **0.6.1** on PyPI, wheel sha256 `cb940e07…`, hash-verified against
+what PyPI serves and the bundled copy. Suite **485 passed**. Because
+`engine.py` changed, `verify_lesson.py` was run over **all eighteen
+books**: every one clean but Lesson 4's *Bo2's Example 3.11 (Tricky, as
+it comes)*, the failure the chapter teaches as a failure. Three new
+codes (737, 739, 740) in thirteen languages, `i18n check: ok`. 738 was
+reserved and withdrawn before publication -- nothing emitted it -- and
+the gap stays, as gaps do.
+
+Live on the offline pair at cache **v166** (ZIP 31,925,059 b), both
+hash-verified. **`symbulator.pythonanywhere.com` needs its pull *and* a
+`pip install --upgrade symbulator`**: the solver moved.
+
 ## #331 — the By-Hand card computes both methods and the picker chooses which is *shown* — **done 8 Sep 2026, cache v165, live on the offline pair; the server needs a pull (no `pip`)**
 
 Roberto, 8 Sep 2026: *"If the drop down menu to select nodal or mesh is
