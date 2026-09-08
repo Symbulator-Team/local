@@ -356,7 +356,8 @@ def byhand(payload_json: str) -> str:
         str(p.get("domain", "dc")).strip().lower(),
         str(p.get("omega", "")).strip(),
         str(p.get("method", "nodal")).strip().lower(),
-        _digits(p), bool(p.get("si")), bool(p.get("units"))))
+        _digits(p), bool(p.get("si")), bool(p.get("units")),
+        bool(p.get("approx"))))
 
 
 def mini_tool(payload_json: str) -> str:

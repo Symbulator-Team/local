@@ -1,5 +1,207 @@
 # Next build — accepted but not yet done
 
+## #332 — the augmented method: transformers, two-ports and coupled coils get a by-hand system too, so no circuit is left without one — **done 8 Sep 2026, solver 0.6.1, cache v166; the server needs a pull *and* a `pip install --upgrade symbulator`**
+
+Roberto, 8 Sep 2026: *"Is there a hand-by like method that can be used
+for the problems currently not covered? Maybe by mixing nodal and mesh,
+plus special equations for the special elements?"* — and then: *"Let's do
+them all."*
+
+Yes, and it is what a textbook does. The rule is uniform and the code
+does not know a transformer from a two-port:
+
+> **A current that cannot be written in the method's own unknowns is
+> carried as an extra unknown, and its element's own relation stands as
+> an extra equation.**
+
+One extra equation for one extra unknown, so the system stays square.
+That is the augmented method, and it is exactly Roberto's "special
+equations for the special elements".
+
+### What each element needed, and which method suits it
+
+**Coupled coils → mesh, and it was already there.** The engine writes a
+coupled inductor as `v1 - v2 = jw(L*i_self + M*i_other)`. Mesh needs the
+drop *as a function of currents*, which is that form exactly; only nodal
+needs it inverted, and a coupled pair cannot be inverted one coil at a
+time. That asymmetry is precisely why every textbook teaches coupled
+coils in the mesh chapter -- and why this needed no new algebra at all,
+only the removal of a refusal. The induced voltage lands in the loop
+equation on its own:
+
+    5*I1 + 4*I*I1 - 2*I*I2 + 10 = 0
+
+with `-2j*I2` the mutual term at w = 2, M = 1. Nodal now refuses coupled
+coils and says to use mesh.
+
+**Transformers and two-port blocks → nodal.** Their terminal currents
+are carried as unknowns and their defining relations as extra rows --
+`v_2 = v_3/2` and `i_t13 = -i_t12/2` for a transformer, the parameter
+equations for a block. Mesh refuses them and says to use nodal: a
+winding is not a branch a single mesh current flows round, so a mesh
+system would need the winding voltages as further unknowns. That is a
+real limitation rather than a missing feature, and the message says
+which method to reach for instead.
+
+**Op-amps in mesh stay refused**, and should: the output current is
+supplied by the op-amp rather than circulating in a loop. Textbooks
+always use nodal there.
+
+### An engine bug this turned up
+
+`stamp_all`'s reference closure excluded `t` but not the other port
+kinds, so a four-terminal two-port -- `z,[1,0],[2,3],[...]` -- had
+`self.v(e.n1)` called on `pr(1,0)`, which is not a node but the
+bracketed pair. That **registered `pr(1,0)` and `pr(2,3)` as nodes**,
+each with an unconstrained `v_` unknown and a `0 = 0` KCL. Harmless to
+the classic solve, which is why it went unnoticed since #314; fatal to a
+by-hand system, which counts its equations. Now every multi-terminal
+kind is excluded, for the reason `t` always was.
+
+A two-port's bracketed parameters also reach the solve as *conditions*
+(`z111 = 1`), not through `Circuit(params=...)`, so `branches.stamped`
+applies those bindings itself -- without them the by-hand system carried
+free `z111` symbols while the classic solve carried 1, 2, 3, 4, and the
+two disagreed for a reason that had nothing to do with the method.
+
+### The result
+
+| | before | after |
+|---|---|---|
+| nodal systems agreeing | 194 | **204** |
+| mesh systems agreeing | 143 | **149** |
+| differing | 0 | **0** |
+| **circuits with no method at all** | **16** | **0** |
+
+Of the 210 eligible circuits: 143 take both methods, 61 nodal only, and
+-- for the first time -- **6 mesh only**, the coupled-coil ones.
+
+### Is the by-hand system actually smaller? (Roberto asked)
+
+*"Compare the number of equations with the classic set, to see if there
+is any economy. Maybe the classic set is better."* Measured over all 210:
+the by-hand system is smaller in **every single one**, including all 16
+of the newly covered. But the margin varies, and the ranking is the
+interesting part:
+
+| | classic | by hand | |
+|---|---|---|---|
+| ordinary circuits (194) | 8.2 | **2.6** | the usual case |
+| coupled coils (6, mesh) | 8.7 | **2.0** | the best in the book |
+| two-port z (3, nodal) | 7.7 | 5.0 | |
+| y block (1, nodal) | 8.0 | 5.0 | |
+| transformers (5, nodal) | 9.2 | 6.0 | the weakest saving |
+| h block (1, nodal) | 11.0 | 7.0 | |
+
+So coupled coils in mesh are the most economical circuits in the whole
+book -- the coupling costs nothing, it just adds a term -- while a
+transformer's two extra equations and two extra unknowns make it the
+thinnest margin. The classic set is never the smaller one.
+
+### Verified
+
+Solver **0.6.1** on PyPI, wheel sha256 `cb940e07…`, hash-verified against
+what PyPI serves and the bundled copy. Suite **485 passed**. Because
+`engine.py` changed, `verify_lesson.py` was run over **all eighteen
+books**: every one clean but Lesson 4's *Bo2's Example 3.11 (Tricky, as
+it comes)*, the failure the chapter teaches as a failure. Three new
+codes (737, 739, 740) in thirteen languages, `i18n check: ok`. 738 was
+reserved and withdrawn before publication -- nothing emitted it -- and
+the gap stays, as gaps do.
+
+Live on the offline pair at cache **v166** (ZIP 31,925,059 b), both
+hash-verified. **`symbulator.pythonanywhere.com` needs its pull *and* a
+`pip install --upgrade symbulator`**: the solver moved.
+
+## #331 — the By-Hand card computes both methods and the picker chooses which is *shown* — **done 8 Sep 2026, cache v165, live on the offline pair; the server needs a pull (no `pip`)**
+
+Roberto, 8 Sep 2026: *"If the drop down menu to select nodal or mesh is
+not determining which one is calculated, but which one is being
+displayed, I think it should be hidden before the button is pressed and
+during calculation, and shown only after the solution is found and only
+if both methods are possible, showing by default the method that was more
+economical — and if both are the same, then the mesh one."*
+
+The premise was not true yet: until now the picker chose what was
+*computed*, and the other method was only built (never solved) to produce
+#329's shorter-route line. His design is better, so the code moved to
+meet it.
+
+**One press solves both.** Measured first, because it doubles the
+expensive half: over the 210 eligible built-in circuits, both methods
+together take a **median of 0.30 s and a mean of 0.67 s**, with the worst
+at **11.3 s** (AS7's Problem 10.77, symbolic) against a 25 s timeout. So
+it is affordable, and the reader never has to choose a method before
+knowing whether it applies.
+
+The picker now:
+
+* is **hidden** before the button is pressed, and hidden again while a
+  run is in flight — what it would offer is not known until the answer
+  is back;
+* **appears only when both methods apply.** With one method there is no
+  choice to offer, and the line under the verdict says why the other is
+  missing;
+* **defaults to the shorter route, and to mesh on a tie.** A tie means
+  the meshes are as few as the nodes, and the mesh picture is the one
+  with the arrows on it;
+* **switches without a request.** Both results are in hand, so changing
+  it repaints from `lastByHand`.
+
+The payload changed shape to carry both: `methods.nodal` and
+`methods.mesh` each hold that method's whole result, `default` says which
+to paint first and `both` whether to show the picker. `method` is still
+accepted on the way in and ignored — an older page (a cached offline
+build, a browser mid-deploy) gets an answer rather than a rejection.
+
+**#249's guard earned its keep again.** The picker's row carries
+`hidden`, and `.row` sets `display: flex`, which beats the browser's
+`[hidden] { display: none }` — so it would have rendered anyway.
+`tools/check_hidden_guards.py` said so before anybody looked, and named
+the fix: `.row[hidden] { display: none; }`. That is the fourth time this
+exact shape has bitten and the second time the checker has caught it
+first.
+
+Verified in the browser through all five states: hidden before a run,
+hidden during it, shown with mesh selected when both apply and mesh is
+shorter, hidden with the reason line when only nodal applies, hidden with
+the refusal when neither does — and a switch repaints instantly, still
+translated (checked in German).
+
+## #330 — the Rounding setting reaches the By-Hand card's equations, not only its answers — **done 8 Sep 2026, cache v165**
+
+Roberto: *"Can you make sure that the settings for rounding apply to the
+equations and results shown in the new By-Hand Equations card?"* The
+answers already did; the equations did not. On an AC circuit that read
+
+    -v_1/5 + v_2/5 - 0.026525198938992*I*v_2 + ... = 0     the equation
+    v_2 = 10.0 - 0.01912*I                                 the answer
+
+— the same number written two ways on one screen.
+
+Now the Rounding setting reaches both, by the same two rules the answers
+follow: a digit count rounds in decimal through `_round_expr` (#318),
+"approximate" with no count evaluates, exact changes nothing.
+
+**Only the floats are rounded, not the whole expression.** Rounding an
+equation wholesale is wrong in a way that is obvious the moment you see
+it: `6*I1 - 4*I2 + 20 = 0` becomes `6.0*I1 - 4.0*I2 + 20.0 = 0`, putting
+a `.0` on every coefficient of every DC equation in the book to shorten
+nothing. Integers and rationals are already as short as they get; what
+needed shortening was `0.026525198938992`. So the rounding walks the
+expression's `Float` atoms and leaves the rest alone — which is the
+difference between an answer (one number) and an equation (a sum of
+coefficients).
+
+**Display only.** The rounding happens at the point of render and nowhere
+else, so the system that is solved and the comparison that judges it both
+run on the exact one. Rounding can change what a line looks like and
+never what it means — confirmed by the verdict staying *agrees* in all
+four rounding modes on the same circuit.
+
+`approx` now travels to the card as well, through `/api/byhand` and the
+offline bridge, which it did not before.
+
 ## #329 — By-Hand Equations: nodal and mesh systems written the way they are taught, always checked against the classic solve — **done 8 Sep 2026, solver 0.6.0, live on the offline pair at cache v164; `symbulator.pythonanywhere.com` needs a pull *and* a `pip install --upgrade symbulator`**
 
 Roberto, 8 Sep 2026, after the sweep came back clean: *"If they do match,
