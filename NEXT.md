@@ -1,5 +1,94 @@
 # Next build — accepted but not yet done
 
+## #331 — the By-Hand card computes both methods and the picker chooses which is *shown* — **done 8 Sep 2026, cache v165, live on the offline pair; the server needs a pull (no `pip`)**
+
+Roberto, 8 Sep 2026: *"If the drop down menu to select nodal or mesh is
+not determining which one is calculated, but which one is being
+displayed, I think it should be hidden before the button is pressed and
+during calculation, and shown only after the solution is found and only
+if both methods are possible, showing by default the method that was more
+economical — and if both are the same, then the mesh one."*
+
+The premise was not true yet: until now the picker chose what was
+*computed*, and the other method was only built (never solved) to produce
+#329's shorter-route line. His design is better, so the code moved to
+meet it.
+
+**One press solves both.** Measured first, because it doubles the
+expensive half: over the 210 eligible built-in circuits, both methods
+together take a **median of 0.30 s and a mean of 0.67 s**, with the worst
+at **11.3 s** (AS7's Problem 10.77, symbolic) against a 25 s timeout. So
+it is affordable, and the reader never has to choose a method before
+knowing whether it applies.
+
+The picker now:
+
+* is **hidden** before the button is pressed, and hidden again while a
+  run is in flight — what it would offer is not known until the answer
+  is back;
+* **appears only when both methods apply.** With one method there is no
+  choice to offer, and the line under the verdict says why the other is
+  missing;
+* **defaults to the shorter route, and to mesh on a tie.** A tie means
+  the meshes are as few as the nodes, and the mesh picture is the one
+  with the arrows on it;
+* **switches without a request.** Both results are in hand, so changing
+  it repaints from `lastByHand`.
+
+The payload changed shape to carry both: `methods.nodal` and
+`methods.mesh` each hold that method's whole result, `default` says which
+to paint first and `both` whether to show the picker. `method` is still
+accepted on the way in and ignored — an older page (a cached offline
+build, a browser mid-deploy) gets an answer rather than a rejection.
+
+**#249's guard earned its keep again.** The picker's row carries
+`hidden`, and `.row` sets `display: flex`, which beats the browser's
+`[hidden] { display: none }` — so it would have rendered anyway.
+`tools/check_hidden_guards.py` said so before anybody looked, and named
+the fix: `.row[hidden] { display: none; }`. That is the fourth time this
+exact shape has bitten and the second time the checker has caught it
+first.
+
+Verified in the browser through all five states: hidden before a run,
+hidden during it, shown with mesh selected when both apply and mesh is
+shorter, hidden with the reason line when only nodal applies, hidden with
+the refusal when neither does — and a switch repaints instantly, still
+translated (checked in German).
+
+## #330 — the Rounding setting reaches the By-Hand card's equations, not only its answers — **done 8 Sep 2026, cache v165**
+
+Roberto: *"Can you make sure that the settings for rounding apply to the
+equations and results shown in the new By-Hand Equations card?"* The
+answers already did; the equations did not. On an AC circuit that read
+
+    -v_1/5 + v_2/5 - 0.026525198938992*I*v_2 + ... = 0     the equation
+    v_2 = 10.0 - 0.01912*I                                 the answer
+
+— the same number written two ways on one screen.
+
+Now the Rounding setting reaches both, by the same two rules the answers
+follow: a digit count rounds in decimal through `_round_expr` (#318),
+"approximate" with no count evaluates, exact changes nothing.
+
+**Only the floats are rounded, not the whole expression.** Rounding an
+equation wholesale is wrong in a way that is obvious the moment you see
+it: `6*I1 - 4*I2 + 20 = 0` becomes `6.0*I1 - 4.0*I2 + 20.0 = 0`, putting
+a `.0` on every coefficient of every DC equation in the book to shorten
+nothing. Integers and rationals are already as short as they get; what
+needed shortening was `0.026525198938992`. So the rounding walks the
+expression's `Float` atoms and leaves the rest alone — which is the
+difference between an answer (one number) and an equation (a sum of
+coefficients).
+
+**Display only.** The rounding happens at the point of render and nowhere
+else, so the system that is solved and the comparison that judges it both
+run on the exact one. Rounding can change what a line looks like and
+never what it means — confirmed by the verdict staying *agrees* in all
+four rounding modes on the same circuit.
+
+`approx` now travels to the card as well, through `/api/byhand` and the
+offline bridge, which it did not before.
+
 ## #329 — By-Hand Equations: nodal and mesh systems written the way they are taught, always checked against the classic solve — **done 8 Sep 2026, solver 0.6.0, live on the offline pair at cache v164; `symbulator.pythonanywhere.com` needs a pull *and* a `pip install --upgrade symbulator`**
 
 Roberto, 8 Sep 2026, after the sweep came back clean: *"If they do match,

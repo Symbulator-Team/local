@@ -1367,7 +1367,6 @@ def build() -> str:
       body: JSON.stringify({ desc: last.desc_used,
                              domain: last.domain || 'dc',
                              omega: $('omega').value,
-                             method: $('byhandMethod').value,
                              ...roundingState(),
                              si: $('siUnits').checked,
                              units: $('showUnits').checked })
@@ -1375,7 +1374,7 @@ def build() -> str:
     const data = await r.json();""",
         """    const data = await py('byhand', {
       desc: last.desc_used, domain: last.domain || 'dc',
-      omega: $('omega').value, method: $('byhandMethod').value,
+      omega: $('omega').value,
       ...roundingState(), si: $('siUnits').checked,
       units: $('showUnits').checked });""",
         label="by-hand fetch",
