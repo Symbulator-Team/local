@@ -1,5 +1,163 @@
 # Next build — accepted but not yet done
 
+## #339 — the Mini-Tools and Numerical Solver buttons centred — **done 8 Sep 2026; unbuilt and undeployed**
+
+Roberto: *"To uniform the look, please center the 'Run' button in the
+'Mini-Tools' card, and also center the 'Numerical Solver' button in the
+'Numerical Solver' card."*
+
+Both sat in left-aligned flex rows — `.actions`, which exists for a row
+of secondary actions, and `.dl-row`, which exists for a row of downloads
+and their tick-boxes. Each row holds one button, so each is now the
+`.run-row` every other card's button uses. Measured in the page: equal
+gaps either side, matching the Plot card's *Run* and the By-Hand card's
+*Write the equations*.
+
+## #335 — the by-hand line names the method that *worked*, counts the supernodes, and the picker's parentheticals tell the truth — **done 8 Sep 2026, solver 0.6.2; unbuilt and undeployed**
+
+Roberto, 8 Sep 2026, in three notes on one card:
+
+> *"When only one method works, you are mentioning the one that
+> doesn't."* — *"if supermesh or supernode are used, mention that in the
+> line as well."* — *"Can I ask you to remove the reference '(with
+> supermeshes)' or '(with supernodes)' if it was not used in that
+> instance?"* (of the drop-down selector).
+
+### The line, in up to three sentences
+
+1. **which method wrote them** (741, 742), per *shown* method, so it
+   follows the picker and is absent when this one was refused;
+2. **how the two compare** (718–722), which is per circuit, not per
+   method;
+3. **which technique the system needed** (743–746), and absent when it
+   needed none.
+
+So the mesh-only circuit that used to open with a refusal now reads:
+
+> The equations below were generated using mesh analysis. Nodal
+> analysis is not offered for this circuit.
+
+which is Roberto's sentence, word for word. **67 of the 210 eligible
+circuits show only one method**, and every one of them had been leading
+with the method the reader was *not* looking at.
+
+### "1 equations", in 53 circuits
+
+718–720 are reworded on the way past. *"Mesh analysis writes %{mesh}
+equations for this circuit"* reads **"writes 1 equations"** whenever the
+shorter method needs a single equation, which is **53 of the 210** —
+Lesson 1's very first example among them. No plural rule spanning
+thirteen languages was going to be the fix; the new wording carries no
+noun for the number to agree with:
+
+> Mesh is the shorter route here: mesh needs 1, nodal 3.
+
+### The drop-down
+
+Both options carried their parenthetical on every circuit, so it
+described the *method* and said nothing about the circuit in hand.
+`byhandLabelMethods` now writes both labels from the run, keying on the
+engine's own `technique` sentence being non-null. The plain forms are
+what a page shows before any run.
+
+Twelve of the book's circuits use a supernode and one uses two; 22 use
+one supermesh, ten use two and one uses three — hence the singular and
+plural pair rather than a count in every sentence.
+
+### Also
+
+The mesh bridge caption drops *"Symbulator reports"* (Roberto: the
+mesh currents above it are not something Symbulator reports). It was the
+only literal instance in the card; the sentences that still name
+Symbulator are the comparison ones he excepted.
+
+Fourteen keys in thirteen languages, four of them recovered from the
+labels they replace rather than written again. `i18n check: ok`, 485
+solver tests, and the whole-book harness unchanged at **204 nodal and
+149 mesh systems agreeing, 0 differing**.
+
+## #336 — the Experimental mark moves to the card's heading — **done 8 Sep 2026; unbuilt and undeployed**
+
+Roberto: *"Move the 'Experimental' to the collapsible subheading."* It
+had been the last two words of a paragraph *inside* the card, which a
+reader sees only after opening it. The heading now reads **By-Hand
+Equations (experimental)**, in the app's own parenthetical form — the
+schematic button has said *(beta)* since #160.
+
+## #337 — an op-amp's non-inverting input goes under the body, not over the whole drawing — **done 8 Sep 2026, solver 0.6.2; unbuilt and undeployed**
+
+Roberto, on Lesson 5a's *Bo2's Drill Exercise 3.2*:
+
+> *"There is no need to have the line that comes from the positive node
+> go up and then right. You can go down and right, and thus you can
+> avoid cutting through two lines. If you make the circuit taller, you
+> can connect the line to the right hand line without having to bend
+> it."*
+
+The old route left the pin going left, climbed to 16px under the node
+row and ran the **whole width** back to the right — straight across the
+riser it had just left and across whatever the node row carried in
+between. It now drops into a band of its own below the body and runs
+right there. **9 of the book's 20 op-amps** take that route (the other
+11 have their lower input to the *left*, or grounded, or driven by the
+stage's own source, and are untouched).
+
+`OP_UNDER_H = 52` is the "make the circuit taller" — an extra band under
+the row, present only in a drawing that needs it, with the run down the
+middle of it. The flagged drawing goes from **one hop to none** and is
+exactly as wide as before.
+
+### Where it rises is the whole correctness question
+
+Roberto again, and he was right to ask:
+
+> *"Make sure that you are connecting the line at the right place, e.g.
+> in node 3 not node 0."*
+
+The first pass had it wrong. Node 3's column carries **r30** down to the
+rail, so a tee 26px above the rail is on the *far* side of that
+resistor — node 0. It would have drawn a picture of a different circuit
+from the one the engine solved, and nothing in the drawing would have
+looked odd.
+
+The riser therefore reaches the **node row**: on the node's own column
+when nothing hangs there, and beside it (30px left, up to the
+established 16px-under-the-row height, then a tee) when something does.
+Measured over all nine: the shortest lead a hanging body leaves is
+**78px**, so the tee clears it by **62px** in every case — the check is
+`tee_check.py`'s, not the comment's word.
+
+A second wrong turn on the way, worth recording: rising on the *far*
+side of the column instead cost a hop over the very wire whose lower
+half is the wrong node, and 66px of width, to save one bend.
+
+## #338 — the op-amp's name against its own edge, and the wedge stops claiming a box — **done 8 Sep 2026, solver 0.6.2; unbuilt and undeployed**
+
+Roberto: *"Can you put the op-amp name closer to the op-amp symbol?"*
+
+Above a **triangle** the nearest ink is not the top vertex but the
+hypotenuse, which at the body's horizontal centre has already fallen a
+quarter of the symbol's height. A name cleared by GAP from the top
+vertex therefore floats about 22px from anything, and looks it. It is
+now cleared from the sloping edge, measured at the label's own left
+corner — 10px closer on the flagged drawing.
+
+**It could not move at all until the symbol's ink model was fixed**, and
+that is the part worth keeping. `_draw_opamp` recorded
+`cv.ink(bounding box)`, and `review_schematics.py` reads exactly those
+rectangles — so a label sitting in the empty notch above the hypotenuse
+counted as sitting *on* the symbol. **58 findings** appeared the moment
+the name moved, every one of them the model's fault rather than the
+placement's. The wedge is now recorded as a staircase of 24 bands, each
+as wide as the triangle is at the widest point it covers, so the model
+still over-covers the shape and never under-covers it. The keep-out for
+*wires* stays the full box — nothing was asking that question wrongly.
+
+Proved red on purpose, per the standing rule: pushing the name 14px into
+the wedge brings all 58 findings back. Clean afterwards —
+`review_schematics.py` `failed=0 with_issues=0` over 353 drawings, and
+`pixel_clearance.py --all` over every example.
+
 ## #334 — the theme menu back into chromatic order — **done 8 Sep 2026, cache v167, live on the offline pair; the server needs a pull (no `pip`)**
 
 Roberto, 8 Sep 2026: *"I've just realised that the Ara macao theme is now
