@@ -5,7 +5,7 @@ file version 9 never has, so a `git merge v9/main` can never conflict on
 it. `NEXT.md` beside this file is version 9's running list and arrives
 by merge; read it as upstream history, not as a record of X.
 
-## X13 — version 9's #327 merged: the two macaws, *Ara macao* and *Ara ararauna*, and the `--accent-text` token; label stays `0.5.33+x10` — **done 8 Sep 2026, pushed; awaits Roberto's pull**
+## X13 — version 9's #327 merged: the two macaws, *Ara macao* and *Ara ararauna*, and the `--accent-text` token; label stays `0.5.33+x10` — **done and live 8 Sep 2026 after Roberto's pull: `/healthz` reports build `2026-09-08 01:57 UTC` running *and* on disk with solver `0.5.33+x10`, and the served page carries both binomials, both band colours and all thirteen `--accent-text` sites — and still the gold X and the fork's subtitle**
 
 Roberto's ask, 8 Sep 2026: *"Yes, do X this time around."* One app item,
 no solver change, so X's local label is untouched.
