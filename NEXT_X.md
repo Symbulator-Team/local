@@ -5,6 +5,39 @@ file version 9 never has, so a `git merge v9/main` can never conflict on
 it. `NEXT.md` beside this file is version 9's running list and arrives
 by merge; read it as upstream history, not as a record of X.
 
+## X18 — version 9's #330–#332 merged: rounding in the equations, both methods on one press, and the augmented method; label `0.6.1+x18` — **done 8 Sep 2026, pushed; the site wants a pull of both clones**
+
+Three of version 9's items in one merge, all of them descended from work
+that started here:
+
+* **#330** the Rounding setting reaches the card's equations, not only
+  its answers -- and only the *floats*, so a DC equation keeps
+  `6*I1 - 4*I2 + 20 = 0` rather than gaining a `.0` on every coefficient;
+* **#331** both methods are solved on one press and the picker chooses
+  which is *shown*, hidden until there is a choice to make, defaulting to
+  the shorter route and to mesh on a tie;
+* **#332** the augmented method: transformers and two-ports go to nodal,
+  coupled coils to mesh, carrying the element's own relation as an extra
+  equation and its own current as an extra unknown. **No circuit in the
+  book is left without a by-hand method** -- 16 before, 0 now. Solver
+  **0.6.1**, which also carries an `engine.py` fix: a four-terminal
+  two-port had been registering the bracketed pair `pr(1,0)` as a node.
+
+Three conflicts, all of them expected and none of them interesting: the
+solver's version label, the server template's build stamp and the
+generated `local/index.html`. Version 9's side everywhere, then the label
+set to `0.6.1+x18` and `build_local.py` re-run -- checked by hashing, X
+`6ff9e89c...` against version 9's `8ece0552...`, with the gold X and the
+fork's subtitle in place. `branding.py` did not conflict, as it never
+does.
+
+X's suite **484 passed, 1 skipped**; the sweep **204 nodal and 149 mesh,
+all agreeing** -- the same numbers version 9 reports. `i18n check: ok`.
+
+**Open:** a pull of both clones and a reload. **No `pip`** -- the solver
+is an editable checkout there, so `git pull` in `/home/symbulatorx/solver`
+is what moves it to `0.6.1+x18`.
+
 ## X17 — version 9's #329 merged: the by-hand feature comes home, coded and translated; label `0.6.0+x17` — **done 8 Sep 2026, pushed; the site wants a pull of both clones**
 
 The round trip closed. X14–X16 built the by-hand systems here; version 9
