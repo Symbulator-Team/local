@@ -1,6 +1,6 @@
 # Next build — accepted but not yet done
 
-## #327 — the two macaws: *Ara macao* redrawn to the photographs, *Ara ararauna* added, and an accent that can differ as text — **done 8 Sep 2026: the offline pair live at cache v163 (ZIP 31,850,554 b), hash-verified on install.symbulator.com and symbulator.com/9/local.zip, build `2026-09-08 01:50 UTC`; `symbulator.pythonanywhere.com` awaits Roberto's pull and reload -- no `pip`, the solver did not move; X unmerged since X12**
+## #327 — the two macaws: *Ara macao* redrawn to the photographs, *Ara ararauna* added, and an accent that can differ as text — **done 8 Sep 2026: the offline pair live at cache v163 (ZIP 31,850,554 b), hash-verified on install.symbulator.com and symbulator.com/9/local.zip, build `2026-09-08 01:50 UTC`; `symbulator.pythonanywhere.com` awaits Roberto's pull and reload -- no `pip`, the solver did not move; X merged the same night as **X13**, pushed to `Symbulator-Team`, its pages rebuilt so they keep the gold X -- both PythonAnywhere accounts await Roberto's pull**
 
 Roberto, 8 Sep 2026: *"Can you add some red highlights to the Macaw theme,
 so it's not just dominated by blue and yellow?"*, then a photograph of a
