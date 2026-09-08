@@ -1,5 +1,89 @@
 # Next build — accepted but not yet done
 
+## #327 — the two macaws: *Ara macao* redrawn to the photographs, *Ara ararauna* added, and an accent that can differ as text — **done 8 Sep 2026**
+
+Roberto, 8 Sep 2026: *"Can you add some red highlights to the Macaw theme,
+so it's not just dominated by blue and yellow?"*, then a photograph of a
+scarlet macaw -- *"This is our target"* -- then two more, one for the blue,
+one for a second bird. Then the names: *"Ara macao"* for the scarlet one and
+*"Ara ararauna"* for the blue and yellow. Two themes, not three: *"We will
+not do a blue macaw only these two."*
+
+**#326's Macaw had the gold and the blue and almost none of the red**, which
+is backwards -- a scarlet macaw is a scarlet *bird*, and red is the largest
+area on it. Redrawn from the photographs: scarlet bands `#bb1f14`/`#cb2419`,
+the gold numeral and keyline kept as the wing band, and the results panel
+moved to the ultramarine of the flight feathers `#0f2585` -- the saturated
+blue of his second photograph, not the muted cobalt it had. The Solve button
+is that ultramarine on white, so the one control you click is the one thing
+on the page that is not red, and the page is the warm near-white of the face
+patch.
+
+**`Ara ararauna`** is the blue-and-yellow macaw, from the two later
+photographs: deep teal bands `#0a536f`/`#0d6486` from the back and wing, a
+gold numeral `#ffb31a` from the breast, a gold Solve button with dark
+lettering, a warm cream page, and a deep blue panel with a gold readout.
+Roberto asked for one thing specifically -- *"Look the subtle baby blue on
+the wings"* -- so the baby blue `#a9dcef`/`#cfeaf6` is the subtitle and the
+ribbon links, the two quietest things in the banner. Subtle is the point.
+
+### `--accent-text`, and why it had to exist
+
+`--accent` was doing two jobs: the Solve button's ground and the colour of
+links, section headings, the `[ I N P U T S ]` brackets and a plot line. One
+value served both for twelve themes. It cannot serve both for either macaw:
+Roberto chose a gold button for the old Macaw (#326) and gold measures
+**1.97:1** as text on a warm page -- handsome as a button, illegible as a
+link. Ara ararauna's gold button has exactly the same problem.
+
+So there is a `--accent-text` token now. Nine text uses in `index.html` and
+one in `eqsheet.html` read `var(--accent-text, var(--accent))`; the fallback
+means **the other thirteen themes are unaffected, and their generated blocks
+do not even gain a line** -- `ACCENT_TEXT` in `tools/palettes.py` lists only
+the two that override it. `--accent-open` derives from the text accent
+rather than the accent for those two, or an *open* section heading would
+have gone gold while a closed one stayed scarlet.
+
+Measured on the running app rather than eyeballed:
+
+| | Ara macao | Ara ararauna |
+|---|---|---|
+| white wordmark on the band | 6.33 | 8.47 |
+| gold numeral on the band | 4.02 | 4.72 |
+| subtitle / ribbon links | -- | 4.45 / 5.26 |
+| button, ink on ground | 7.62 | 7.42 |
+| links and headings, light | 5.26 | 6.85 |
+| links and headings, dark | 7.33 | 10.53 |
+| panel readout | 9.32 | 8.57 |
+
+Pastels has the same faintness (2.03:1) and can take the same treatment in
+one line whenever Roberto wants it.
+
+### Two decisions worth knowing
+
+**The palette keys stay `macaw` and `ararauna`, not `aramacao`.** A key is
+the attribute the stylesheet reads and the preference stored in
+`localStorage`; `macaw` went live on 7 Sep, so renaming it would silently
+reset the theme for anyone who had chosen it. Same ruling as `navy` for
+*Default* (#295) and `turquoise` for *Aqua* (#325). The label and the key
+therefore differ for that one, deliberately.
+
+**A Linnaean binomial is invariant, so neither name is translated.** All
+twelve dictionaries carry *Ara macao* and *Ara ararauna* verbatim. This
+undid the *Scarlet Macaw* translations written an hour earlier, which is
+the cheaper direction to be wrong in.
+
+**The two sit adjacent in the menu** -- Default, Bayerische, Ara macao, Ara
+ararauna, Violet ... -- which breaks the strict chromatic order, since Ara
+macao is scarlet-banded and sits among the blues. The pair reading as a pair
+was judged worth more than the ordering; moving it down among the reds is
+one line if he disagrees.
+
+Fifteen themes now. The rendered sheets Roberto chose from are
+`Notes/themes_2026-09-08/macaw_redrawn.html` and `the_two_macaws.html`,
+built by the generators beside them.
+
+
 ## #326 — two more themes: Bayerische and Macaw — **done and live everywhere, 7 Sep 2026: the offline pair at cache v162 (ZIP 31,849,538 b), hash-verified on install.symbulator.com and symbulator.com/9/local.zip; `symbulator.pythonanywhere.com` on build `2026-09-07 10:40 UTC` running *and* on disk after Roberto's pull, and `symbulatorx.pythonanywhere.com` on `2026-09-07 10:48 UTC` as X12 -- both verified by `/healthz` and by fetching the served pages (both carry the two theme blocks, `'Aqua'` and *Clear all inputs*; X's alone carries the gold X and the fork's subtitle). No solver release, so no `pip` anywhere**
 
 Roberto, 7 Sep 2026: *"Can you mock up a theme in the colour palette of
