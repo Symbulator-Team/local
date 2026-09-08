@@ -1,6 +1,6 @@
 # Next build — accepted but not yet done
 
-## #327 — the two macaws: *Ara macao* redrawn to the photographs, *Ara ararauna* added, and an accent that can differ as text — **done 8 Sep 2026: the offline pair live at cache v163 (ZIP 31,850,554 b), hash-verified on install.symbulator.com and symbulator.com/9/local.zip, build `2026-09-08 01:50 UTC`; `symbulator.pythonanywhere.com` awaits Roberto's pull and reload -- no `pip`, the solver did not move; X merged the same night as **X13**, pushed to `Symbulator-Team`, its pages rebuilt so they keep the gold X -- both PythonAnywhere accounts await Roberto's pull**
+## #327 — the two macaws: *Ara macao* redrawn to the photographs, *Ara ararauna* added, and an accent that can differ as text — **done 8 Sep 2026: the offline pair live at cache v163 (ZIP 31,850,554 b), hash-verified on install.symbulator.com and symbulator.com/9/local.zip, build `2026-09-08 01:50 UTC`; live everywhere the same night after Roberto's pulls: `symbulator.pythonanywhere.com` on build `2026-09-08 01:50 UTC` running *and* on disk, `symbulatorx.pythonanywhere.com` on `2026-09-08 01:57 UTC` as **X13** -- both verified by `/healthz` and by fetching the served pages (both binomials, both band colours and all thirteen `--accent-text` sites; X's alone carries the gold X and the fork's subtitle). No `pip` anywhere, the solver did not move**
 
 Roberto, 8 Sep 2026: *"Can you add some red highlights to the Macaw theme,
 so it's not just dominated by blue and yellow?"*, then a photograph of a
