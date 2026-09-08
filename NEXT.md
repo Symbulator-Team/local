@@ -1,5 +1,129 @@
 # Next build — accepted but not yet done
 
+## #329 — By-Hand Equations: nodal and mesh systems written the way they are taught, always checked against the classic solve — **done 8 Sep 2026, solver 0.6.0, live on the offline pair at cache v164; `symbulator.pythonanywhere.com` needs a pull *and* a `pip install --upgrade symbulator`**
+
+Roberto, 8 Sep 2026, after the sweep came back clean: *"If they do match,
+we can promote this feature to v9."* They matched. Tried first in version
+X as **X14–X16**; this is that work, made version 9's.
+
+The classic solve is the authority and this is subordinate to it in every
+direction: the by-hand system reaches no results card, no export, no plot
+and no Numerical Solver payload; it cannot change an answer; a failure
+inside it is a sentence in its own card, never an exception into the
+page. When the two disagree the card says the by-hand side is the one at
+fault, in those words.
+
+### What it does
+
+A card above the Numerical Solver, run only when asked, on the same
+circuit description the classic solve used (`last.desc_used`, so it can
+never compare two different circuits; any edit clears it, the way #299
+disabled the load-equivalent button).
+
+**Nodal**, with supernodes: one KCL per node in the node voltages alone,
+a supernode wherever a voltage source sits between two non-reference
+nodes, an op-amp's output node getting no KCL. **Mesh**, with
+supermeshes: one KVL per mesh in `I1`, `I2`, `I3`…, the meshes taken from
+a minimum-weight cycle basis (for a planar circuit that basis *is* the
+set of bounded faces). Both then write the **bridge** — `i_r3 = I1 - I2`
+— which is the last step of the method and the route the comparison runs
+through.
+
+Every run draws its own working on the circuit: the nodes whose KCL is
+written are ringed, supernodes and supermeshes get a dashed enclosure
+with a caption, and the mesh currents get their circulating arrows — all
+in `var(--accent, currentColor)`, so the overlay follows whichever of the
+fifteen themes is on.
+
+The verdict has three states, never two: **agrees / differs / unsure**. A
+symbolic circuit can leave `simplify` unable to close a difference, and
+rendering that as a disagreement would accuse a correct system of being
+wrong. A numeric spot-check is the tie-breaker before *differs* is ever
+shown.
+
+### Which method to reach for
+
+Roberto asked how a reader is meant to know. Until now they found out by
+running one and reading the refusal. Now every run also **builds** the
+other method — building is cheap, it is the solve that costs — and says
+which writes fewer equations: *"Mesh analysis writes 2 equations for this
+circuit and nodal writes 3. Mesh is the shorter route here."* That is
+what a first course actually teaches. Where the other method is not
+offered at all, it says that instead, which is when it helps most.
+
+### The proof
+
+`repos/server/tools/check_byhand.py` runs both methods over every
+built-in entry:
+
+| | nodal | mesh |
+|---|---|---|
+| **default** — each entry in its own domain | 194 built, **194 agree** | 143 built, **143 agree** |
+| **`--cover`** — every circuit, TR run in FD, tool entries as plain solves | 319 built, **319 agree** | 247 built, **247 agree** |
+| differ / unsure / unsolved | **0** | **0** |
+
+Six entries are skipped under `--cover`, every one because **the classic
+solve itself refuses them**: Lesson 4's *Bo2's Example 3.11*, which the
+tutorial teaches as a failure, and five of Lesson 13's *AS7's Problem
+19.x*, which mean something only through the `port` tool. So every
+circuit in the book that the classic solve can solve at all has been
+compared, both ways where both apply, and every one agrees.
+
+Proved red, as this tree requires: flip one traversal sign in
+`byhand._walk` and mesh goes from 143 agreeing to 129 differing, exit
+code 1.
+
+### The package speaks in codes; the app speaks thirteen languages
+
+Every sentence a by-hand run produces is written by the *solver* — a
+label beside each line, the verdict, each refusal. Under #199 that means
+codes, so `messages.py` gained a **7xx range**: 701–712 the sentence
+beside one line, 713–722 the verdict and the shorter route, 723–730 why a
+method is not offered, 731–736 why a system could not be built at all.
+Severity as a field earns its keep here — almost none of these are
+errors.
+
+**67 new keys, translated into all twelve other languages**, and
+`py tools/i18n.py check` is **ok**. Verified live in Spanish, German,
+Japanese and Ukrainian: the card title, the method picker, the engine's
+own labels (*LVK alrededor de la malla I1*, *Maschenregel um die Masche
+I1*, *メッシュ I1 まわりの KVL*, *Закон напруг навколо контуру I1*) and the
+shorter-route line all come through.
+
+Three things the i18n checker caught that would otherwise have shipped
+English: a `t()` whose key was a variable never reaches `en.json` at all;
+two table headers behind it; and one sentence that genuinely cannot carry
+a code, because it is the guard for `import symbulator` failing and the
+catalogue is exactly what is unavailable — that one names 729 outright
+(permanent, so safe to write out) and is listed in `NOT_A_MESSAGE` with
+its reason.
+
+### The release
+
+**Solver 0.6.0 on PyPI** — Roberto's call: *"let's upgrade it to
+0.6.something. There's enough new in it to justify the jump."* Wheel
+sha256 `2a4946c4…`, hash-verified against what PyPI serves and against
+the bundled copy. Two new modules: `byhand.py` and `branches.py`, the
+latter reading every branch as `v(n1) - v(n2) = Z*i + E` **out of the
+engine's own stamp** rather than restating a component rule, so a domain
+rule added to `engine.py` appears there for free. `engine.py` itself is
+unchanged.
+
+Live: `install.symbulator.com` and `symbulator.com/9/local.zip` at cache
+**v164** (ZIP 31,918,365 b), both hash-verified. `learn.symbulator.com`
+carries the credits addition below.
+
+**Open: `symbulator.pythonanywhere.com` needs its pull *and* a `pip
+install --upgrade symbulator`** — the solver moved, so this is one of the
+pulls where pip matters.
+
+### Also in this batch
+
+The credits chapter gained Roberto's paragraph about Antony García — how
+they met in 2013 at UTP Azuero, and that the version 9 features came from
+Antony's recommendations. Live on `learn.symbulator.com/9/credits`;
+web only, so the PDFs carry it at their next build.
+
 ## #328 — an entry's keys are not the file's keys, written down in `tools/README.md` — **done 8 Sep 2026, nothing to deploy**
 
 `circuitbook.parse_book` renames `analysis:` to `domain` as it reads an

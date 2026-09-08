@@ -345,6 +345,20 @@ def evaluate(payload_json: str) -> str:
                                      conditions, bool(p.get("dual"))))
 
 
+def byhand(payload_json: str) -> str:
+    """JS-callable counterpart of app.py's /api/byhand (X14): the by-hand
+    nodal or mesh system for the same circuit, checked against the
+    classic solve. No round trip, and no server needed -- the whole of
+    it is in the bundled wheel."""
+    p = json.loads(payload_json)
+    return json.dumps(ui.byhand_ui(
+        str(p.get("desc", "")).strip(),
+        str(p.get("domain", "dc")).strip().lower(),
+        str(p.get("omega", "")).strip(),
+        str(p.get("method", "nodal")).strip().lower(),
+        _digits(p), bool(p.get("si")), bool(p.get("units"))))
+
+
 def mini_tool(payload_json: str) -> str:
     """JS-callable counterpart of app.py's /api/minitool: run one of the
     small version 7 helpers against the solved answers. Kept deliberately

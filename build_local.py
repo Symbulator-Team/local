@@ -87,7 +87,7 @@ I18N_OUT = HERE / "i18n"
 SW_I18N_BEGIN = "  // ==== BEGIN i18n ==== written by build_local.py; do not edit"
 SW_I18N_END = "  // ==== END i18n ===="
 
-WHEEL = "symbulator-0.5.33-py3-none-any.whl"
+WHEEL = "symbulator-0.6.0-py3-none-any.whl"
 
 # The Numerical Solver's one expensive dependency (#208). eqsheet.py
 # calls scipy.optimize.root for a square system and least_squares for a
@@ -1354,6 +1354,33 @@ def build() -> str:
         label="evaluate fetch",
     )
 
+    # X14: the by-hand card. Everything it needs is in the bundled
+    # wheel, so the offline build runs it in Pyodide like every other
+    # endpoint rather than shipping the card dead.
+    s = sub(
+        s,
+        """    const r = await fetch('/api/byhand', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      // `last.desc_used`, not the textarea: this must be the circuit the
+      // answers above came from, or the comparison compares two circuits.
+      body: JSON.stringify({ desc: last.desc_used,
+                             domain: last.domain || 'dc',
+                             omega: $('omega').value,
+                             method: $('byhandMethod').value,
+                             ...roundingState(),
+                             si: $('siUnits').checked,
+                             units: $('showUnits').checked })
+    });
+    const data = await r.json();""",
+        """    const data = await py('byhand', {
+      desc: last.desc_used, domain: last.domain || 'dc',
+      omega: $('omega').value, method: $('byhandMethod').value,
+      ...roundingState(), si: $('siUnits').checked,
+      units: $('showUnits').checked });""",
+        label="by-hand fetch",
+    )
+
     s = sub(
         s,
         """    const r = await fetch('/api/solveq', {
@@ -1433,7 +1460,11 @@ def build() -> str:
         s,
         "t('js.noServer', 'Could not reach the server.')",
         "t('js.local.engineFailed', 'The maths engine failed.')",
-        count=2,
+        # Three since #329: the by-hand card is a fourth caller of the
+        # solver and reads the same key. In the offline build there is
+        # no server to be out of reach -- Pyodide is doing the work --
+        # so its failure is the engine's, like the other two.
+        count=3,
         label="the offline wording for a failed engine",
     )
 
