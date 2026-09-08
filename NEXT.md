@@ -1,5 +1,52 @@
 # Next build — accepted but not yet done
 
+## #334 — the theme menu back into chromatic order — **done 8 Sep 2026, cache v167, live on the offline pair; the server needs a pull (no `pip`)**
+
+Roberto, 8 Sep 2026: *"I've just realised that the Ara macao theme is now
+out of sequence chromatically."* He was right, and it was not the only
+one.
+
+The rule already existed, written at the head of `palettes.py`:
+chromatic, Navy first as the default. Sorting the fifteen by the hue of
+each theme's banner band, walking forward round the wheel from Navy's
+blue, reproduces the list from position five onward **exactly** — so that
+was the rule, and it was still holding for the older themes. What had
+broken it were the three newest: Bayerische and Ara macao (#326) and Ara
+ararauna (#327), each dropped in near the top rather than at its hue. Ara
+macao is the one that shows, a scarlet at 4° sitting third between two
+blues at 219° and 207°.
+
+The order now, and it is monotonic in hue:
+
+| | | hue |
+|---|---|---|
+| 1 | Default | 219 (first as the default) |
+| 2–5 | Violet, Pastels, Warm Pink, Burgundy | 237 → 344 |
+| 6–8 | **Ara macao**, Brick, Earth | 4 → 30 |
+| 9–10 | Forest, Firefly | 145 |
+| 11–13 | Aqua, **Ara ararauna**, **Bayerische** | 192 → 207 |
+| 14 | **Gray & Gold** | neutral (sat 0.10) |
+| 15 | Contrast | achromatic |
+
+The two near-achromatic themes come out of the walk and sit at the end —
+Gray & Gold next to last at Roberto's word the same day, Contrast last as
+it always was. A hue means nothing at that saturation, so sorting them by
+one would be a coincidence rather than a rule.
+
+**Why it drifted, and what stops it next time.** The menu's order is the
+`PALETTES` array, which lives in *both* templates and is **hand-kept** —
+`palettes.py` generates only the CSS block, so nothing checked that the
+array agreed with `TABLE`, and appending was the path of least
+resistance. The docstring now says so outright: a new theme goes at its
+hue, not at the end and not at the top, and `PALETTES` in both templates
+must match `TABLE`. All three lists were reordered together and verified
+to agree, key for key.
+
+Checked in the browser: fifteen entries in the new order, and each of
+Ara macao, Ara ararauna, Gray & Gold and Contrast still applies its own
+accent — a reorder that silently broke a theme would be worse than one
+out of sequence. `palettes.py check: ok`.
+
 ## #332 — the augmented method: transformers, two-ports and coupled coils get a by-hand system too, so no circuit is left without one — **done 8 Sep 2026, solver 0.6.1, cache v166; the server needs a pull *and* a `pip install --upgrade symbulator`**
 
 Roberto, 8 Sep 2026: *"Is there a hand-by like method that can be used
