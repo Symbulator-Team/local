@@ -23,7 +23,12 @@ plain solve's, and a `tr` entry's *system* lives in the s-domain
 
 Found while building version X's **X14** (by-hand nodal and mesh
 equations, checked against the classic solve; see
-`Application/vX/repos/local/NEXT_X.md`). The other four bugs that item
+`Application/vX/repos/local/NEXT_X.md`). **A pull request from that
+work is open for review** — `symbulator/branches.py`, which reads every
+branch as `v(n1) - v(n2) = Z*i + E` out of the engine's own stamp
+rather than restating a component rule. Purely additive, no existing
+file touched, 442 passed on version 9's tree:
+https://github.com/Symbulator/solver/compare/main...Symbulator-Team:solver:proposal/branch-relations The other four bugs that item
 turned up were all in X's own new code and have no counterpart here —
 checked: nothing outside `engine.py` reads `Circuit.node_sum` in either
 tree, and nothing else in the solver derives a branch relation by
