@@ -5,6 +5,70 @@ file version 9 never has, so a `git merge v9/main` can never conflict on
 it. `NEXT.md` beside this file is version 9's running list and arrives
 by merge; read it as upstream history, not as a record of X.
 
+## X17 — version 9's #329 merged: the by-hand feature comes home, coded and translated; label `0.6.0+x17` — **done 8 Sep 2026, pushed; the site wants a pull of both clones**
+
+The round trip closed. X14–X16 built the by-hand systems here; version 9
+took them on 8 Sep 2026 as **#329** after the sweep came back with no
+disagreements, and #329 is what comes back — better than what left.
+
+Two things version 9 added that X did not need and now has anyway:
+
+* **The package speaks in codes.** Every sentence a by-hand run produces
+  is the *solver's*, so under #199 all of it moved into `messages.py`'s
+  new **7xx range** rather than being English in `byhand.py`. X had plain
+  strings; it has codes now.
+* **Thirteen languages.** 67 new keys. X's standing rule is that nobody
+  does language work *for* X — and this is exactly the case that rule
+  anticipates: the dictionaries live in files the two trees share, so the
+  merge carried them across on its own. Let it. `tools/i18n.py check` is
+  **ok** here too.
+
+Also arriving: `branches.py` as its own module (X15's extraction, which
+version 9 took as part of #329 rather than as the standalone pull request
+— that branch, `proposal/branch-relations`, is superseded and can be
+closed), the *shorter route* line answering which method to reach for,
+and solver **0.6.0**.
+
+### The merge
+
+`git fetch v9 && git merge v9/main` in all three repos. Ten conflicts,
+every one of them X's older English version against version 9's coded
+one — and since 9's descends from X's, **v9's side won everywhere**:
+
+    solver   __init__.py, branches.py, byhand.py, tests/test_byhand.py
+    server   app.py, symbulator_ui.py, templates/index.html,
+             tools/check_byhand.py
+    local    index.html, symbulator_ui.py
+
+`branding.py` did not conflict at all — version 9 never touches it — and
+was verified afterwards rather than assumed: `BRAND_TM = 'X'`,
+`BRAND_TM_COLOR = '#d9a521'`, the fork's subtitle intact.
+
+Then the step the rules insist on: **`build_local.py`, so X's pages stop
+being byte-identical to version 9's.** Taking v9's side on the generated
+`index.html` is correct *and* is exactly the shape that got this account
+disabled in September, for one commit until the rebuild undoes it.
+Checked by hashing rather than by looking — X `8331a2ea…`, version 9
+`5dcedf8e…`, and X's page carries the gold `X` and the fork's subtitle.
+
+The one thing that is only X's is the version label: version 9 is
+**0.6.0**, so this checkout is **`0.6.0+x17`**, and a label bump needs
+`pip install -e repos/solver --no-deps` in `Application\vX\.venv` before
+the packaging test agrees.
+
+### Verified after the merge
+
+X's suite **480 passed, 1 skipped**. The whole-book sweep: **194 nodal
+and 143 mesh systems, all agreeing, none differing** — the same numbers
+version 9 reports, which is what a clean merge should look like.
+`tools/i18n.py check` ok. Branding verified by reading `branding.py` and
+by hashing the built page against version 9's.
+
+**Open:** the site needs Roberto's pull of both clones —
+`/home/symbulatorx/solver` and `/home/symbulatorx/symbulator_web` — and a
+reload. **No `pip`**: X's solver is an editable checkout there, so `git
+pull` in the solver clone is what moves it to `0.6.0+x17`.
+
 ## X16 — every by-hand run draws its own working on the circuit; and a branch that lies on no mesh carries no current — **done 8 Sep 2026, label `0.5.33+x16`; needs a pull of both clones**
 
 Roberto, 8 Sep 2026: *"I would like a schematic in each run of the
