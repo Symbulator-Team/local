@@ -5,6 +5,37 @@ file version 9 never has, so a `git merge v9/main` can never conflict on
 it. `NEXT.md` beside this file is version 9's running list and arrives
 by merge; read it as upstream history, not as a record of X.
 
+## X13 — version 9's #327 merged: the two macaws, *Ara macao* and *Ara ararauna*, and the `--accent-text` token; label stays `0.5.33+x10` — **done 8 Sep 2026, pushed; awaits Roberto's pull**
+
+Roberto's ask, 8 Sep 2026: *"Yes, do X this time around."* One app item,
+no solver change, so X's local label is untouched.
+
+* **Ara macao** is #326's Macaw redrawn from his photographs of the bird:
+  scarlet bands, the gold numeral kept as the wing band, an ultramarine
+  results panel and Solve button, and a warm near-white page.
+* **Ara ararauna** is new -- deep teal bands, gold numeral and button, and
+  the subtle baby blue of the wing coverts kept for the subtitle and the
+  ribbon links.
+* **`--accent-text`** lets a theme's button colour and its link colour
+  differ, which both macaws need: gold measures 1.97:1 as text. Nine text
+  uses in `index.html` and one in `eqsheet.html` read it with `--accent`
+  as the fallback, so the other thirteen themes are untouched.
+
+Fifteen themes in X as in 9.
+
+**The merge.** One conflict in each of `server` and `local`, both the build
+stamp, both taken from v9 -- and asserted to *be* the stamp before
+resolving, rather than resolved on faith. `branding.py` auto-merged with X's
+four values intact, and `build_local.py` was re-run afterwards. Verified:
+X's `index.html` hashes differently from version 9's, carries the gold
+`#d9a521` X and the fork's subtitle, has **no** beta mark, and carries both
+macaws, both band colours and all thirteen `--accent-text` sites.
+
+**The theme names are Linnaean binomials and are not translated** -- all
+twelve dictionaries carry them verbatim. That arrives here by merge like any
+shared file, and is right for X too: a species name does not change with the
+reader's language, so X's English-only rule has nothing to say about it.
+
 ## X12 — version 9's #324, #325 and #326 merged: *Clear all inputs*, Aqua, and the Bayerische and Macaw themes; label stays `0.5.33+x10` — **done and live 7 Sep 2026 after Roberto's pull: `/healthz` reports build `2026-09-07 10:48 UTC` running *and* on disk with solver `0.5.33+x10`, and the served page carries both theme blocks, `'Aqua'`, *Clear all inputs* — and still the gold X and the fork's subtitle**
 
 Roberto's ask, 7 Sep 2026: *"Please publish the new themes to X as
