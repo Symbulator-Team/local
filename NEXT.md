@@ -1,5 +1,34 @@
 # Next build — accepted but not yet done
 
+## #328 — an entry's keys are not the file's keys, written down in `tools/README.md` — **done 8 Sep 2026, nothing to deploy**
+
+`circuitbook.parse_book` renames `analysis:` to `domain` as it reads an
+entry, through the alias table in `circuitbook.py`. Every existing tool
+reads it correctly (`verify_lesson.py` line 91, `circuitbook.py`'s own AC
+branch), and nothing in either tree is wrong — this is documentation, and
+there is no code change and nothing to deploy.
+
+It is written down because of *how* it goes wrong. `entry.get("analysis")`
+returns `None`, `(entry.get("analysis") or "dc")` returns `"dc"`, and a
+checker built on that runs the entire book as DC. Most entries are DC, so
+it passes, and the pass looks like a sweep of everything. That happened on
+8 Sep 2026 in version X's new by-hand checker: a clean report over 310
+systems, a third of what it claimed to cover, caught only by reading a
+second field off the same entry and finding it empty too.
+
+The section also names the two neighbouring facts a new tool wants: an
+entry with a `tool:` key is `er`/`th`/`port`/`ex` and its answers are not a
+plain solve's, and a `tr` entry's *system* lives in the s-domain
+(`_sources_to_s(desc)`, #176).
+
+Found while building version X's **X14** (by-hand nodal and mesh
+equations, checked against the classic solve; see
+`Application/vX/repos/local/NEXT_X.md`). The other four bugs that item
+turned up were all in X's own new code and have no counterpart here —
+checked: nothing outside `engine.py` reads `Circuit.node_sum` in either
+tree, and nothing else in the solver derives a branch relation by
+differentiation.
+
 ## #327 — the two macaws: *Ara macao* redrawn to the photographs, *Ara ararauna* added, and an accent that can differ as text — **done 8 Sep 2026: the offline pair live at cache v163 (ZIP 31,850,554 b), hash-verified on install.symbulator.com and symbulator.com/9/local.zip, build `2026-09-08 01:50 UTC`; live everywhere the same night after Roberto's pulls: `symbulator.pythonanywhere.com` on build `2026-09-08 01:50 UTC` running *and* on disk, `symbulatorx.pythonanywhere.com` on `2026-09-08 01:57 UTC` as **X13** -- both verified by `/healthz` and by fetching the served pages (both binomials, both band colours and all thirteen `--accent-text` sites; X's alone carries the gold X and the fork's subtitle). No `pip` anywhere, the solver did not move**
 
 Roberto, 8 Sep 2026: *"Can you add some red highlights to the Macaw theme,
