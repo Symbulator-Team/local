@@ -5,6 +5,29 @@ file version 9 never has, so a `git merge v9/main` can never conflict on
 it. `NEXT.md` beside this file is version 9's running list and arrives
 by merge; read it as upstream history, not as a record of X.
 
+## X19 — version 9's #333 and #334 merged: the Lesson 1 passage and the theme menu back in chromatic order; label `0.6.1+x18` unchanged — **done 8 Sep 2026, pushed; the site wants a pull of both clones**
+
+Two of version 9's items, neither touching the solver, so the label
+stays `0.6.1+x18` and **X's site needs no `pip`**:
+
+* **#333** the documentation passage introducing By-Hand Equations —
+  version 9's book alone, so nothing of it reaches X but the item number;
+* **#334** the theme menu re-sorted chromatically, with *Gray & Gold*
+  next to last and *Contrast* last (Roberto, 8 Sep 2026). Fifteen themes,
+  the same fifteen, in a different order: `tools/palettes.py`'s `TABLE`
+  and the hand-kept `PALETTES` array in both templates.
+
+Two conflicts, both the build stamp — the server template's and the
+generated `local/index.html` — version 9's side on each, then
+`build_local.py` re-run. That rebuild is the whole point of the
+resolution rule: taking v9's side on the generated page leaves X
+**byte-identical to version 9** for exactly as long as it takes to
+rebuild, which is the shape that got X's host disabled. Verified by
+hashing rather than by reading the diff — X `227af401…` against version
+9's `7f24dd52…`, the gold `#d9a521` present, the fork's subtitle in
+place. `palettes.py check` and `i18n check` both clean on the merged
+tree.
+
 ## X18 — version 9's #330–#332 merged: rounding in the equations, both methods on one press, and the augmented method; label `0.6.1+x18` — **done 8 Sep 2026, pushed; the site wants a pull of both clones**
 
 Three of version 9's items in one merge, all of them descended from work
