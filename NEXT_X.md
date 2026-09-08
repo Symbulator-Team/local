@@ -5,6 +5,201 @@ file version 9 never has, so a `git merge v9/main` can never conflict on
 it. `NEXT.md` beside this file is version 9's running list and arrives
 by merge; read it as upstream history, not as a record of X.
 
+## X14 — by-hand equations: a second system, written the way it is taught, and always checked against the classic solve — **built 8 Sep 2026, label `0.5.33+x14`; not yet on `symbulatorx.pythonanywhere.com`, which needs a pull of both clones**
+
+Roberto's brief, 8 Sep 2026, in his words: *"the classic Symbulator solve
+is always done. It has 27 years of history and it is as close to tried and
+tested as it gets. The by-hand equations and solve is optional, done
+afterwards, and always compared to the classic Symbulator solution."* And:
+*"Offer it in a card above the Numerical Explorer. It would run only when
+asked, on the same circuit description, and whenever it is run, the answers
+are checked against the classic."*
+
+So the classic solve is the authority and this is subordinate to it in
+every direction. The by-hand system reaches no results card, no export, no
+plot and no Numerical Solver payload; it cannot change an answer; and a
+failure inside it is a sentence in its own card, never an exception into
+the page. When the two disagree the card says the by-hand side is the one
+at fault, in those words.
+
+### What it writes
+
+**Nodal**, with supernodes. One KCL per node in the node voltages alone,
+every branch current replaced by its own v-i relation solved for the
+current. A voltage source between two non-reference nodes has no such
+relation, so its two nodes are enclosed in a supernode — one KCL for the
+enclosure, and the source's own equation as the constraint that replaces
+the one given up. A source to a reference node needs no KCL at all. An
+op-amp's output node carries whatever the op-amp supplies, so that node
+gets no KCL and the input equality takes its place.
+
+**Mesh**, with supermeshes. One KVL per mesh in `I1`, `I2`, `I3`…, with
+every branch current written as the signed sum of the meshes running
+through it. A current source's drop is unknown, and getting rid of it is
+the method: shared between two loops, the two are added and the drop
+cancels — the supermesh; on one loop only, that loop's KVL is dropped
+whole and the source's own constraint fixes the mesh current.
+
+The meshes themselves come from a **minimum-weight cycle basis** (Horton's
+construction, over GF(2)). For a planar graph that basis *is* the set of
+bounded faces, which is what makes it the right one to hand a student
+rather than the fundamental cycles of a spanning tree — those are correct
+and need not look like anything anyone would draw.
+
+Both methods then write the **bridge** — `i_r3 = I1 - I2`, or `i_r1 =
+(v_1 - v_2)/r1` — which is the last step of the method, the thing that
+lets a reader see their own working turn into Symbulator's answers, and
+the route the comparison itself runs through.
+
+### It does not restate a single circuit rule
+
+The obvious implementation writes out "a resistor's drop is `R*i`, a
+capacitor's is `i/(jwC)`, an inductor in FD is `s*L*i - L*i0`…" a second
+time. That is the engine's knowledge, it is domain-dependent, and a second
+copy drifts from the first the moment either moves — the failure this
+tree already knows from the header lockup.
+
+So `repos/solver/symbulator/byhand.py` states no component rule at all. It
+runs the real `Circuit.stamp_all()` and reads each branch's v-i relation
+back **out** of the equations the engine produced, by differentiation:
+
+    f(u, i) = lhs - rhs = 0        linear in the drop u and the current i
+    Z = -(df/di) / (df/du)         E = -(f at u=0, i=0) / (df/du)
+
+giving `v(n1) - v(n2) = Z*i + E` for whatever the domain happens to be. A
+capacitor and a current source have no equation of their own — the engine
+records their current in `Circuit.known` — so those are read the same way
+from the admittance side. Add a domain rule to the engine and it appears
+here for free.
+
+Which element produced which equation is recorded by wrapping the
+`_stamp_<kind>` methods as *instance* attributes before `stamp_all()`
+runs: `stamp_all` dispatches through `getattr(self, "_stamp_" + kind)`, so
+the instance attribute shadows the class method and the engine never
+learns this module exists. **Zero lines of `engine.py` changed.**
+
+### Three states, never two
+
+A symbolic circuit can leave `simplify` unable to show a difference is
+zero. Rendering that as *differs* would accuse a correct by-hand system of
+being wrong, which would poison the card. So the verdict is **agrees /
+differs / unsure**, and a numeric spot-check at random values is the
+tie-breaker before *differs* is ever shown.
+
+### Checked over the whole example book
+
+`repos/server/tools/check_byhand.py` runs both methods over every built-in
+entry and compares each with the classic solve:
+
+| | nodal | mesh |
+|---|---|---|
+| systems built | **194** | **143** |
+| agree | **194** | **143** |
+| differ | 0 | 0 |
+| unsure / unsolved | 0 | 0 |
+| not offered | 16 | 67 |
+
+The refusals are honest ones: transformers, two-port blocks and mutual
+inductance for both methods (a first course does not teach either method
+on them, and their coupled multi-terminal constraints are not a branch
+relation at all), plus op-amps for mesh, whose output current is supplied
+by the op-amp rather than flowing round a loop — the card says so and
+points at nodal. TR is out of scope: a transient is solved in the s-domain
+and inverted, so its by-hand system would be the s-domain one and could
+not be compared without an inverse transform on every line. The card says
+that too, and points at FD.
+
+**Proved red**, as this tree requires. Flip one traversal sign in `_walk`
+and the mesh run goes from 143 agreeing to **129 differing**, exit code 1;
+the clean run exits 0.
+
+### Five bugs the harness and the tests caught, worth keeping
+
+1. **The harness was green against the wrong reading.** `analysis:` in a
+   `.cir` file is stored under the key `domain` (circuitbook's alias
+   table), so `entry.get("analysis")` was always `None` and **every entry
+   ran as DC**. The first clean sweep tested a third of what it claimed.
+   Reading a field by the name the file spells it is not the same as
+   reading the field.
+2. **`Circuit.node_sum` is not closed; `Circuit.equations` is.**
+   `stamp_all` substitutes the quantities a dependent source names — a
+   capacitor's current, another element's drop — into the *equations*
+   only. Summing `node_sum` gave KCLs still carrying `i_co` and `v_rx`,
+   which are not node voltages. The KCLs are taken from the equations now
+   (they are the last one-per-node, in `node_sum` order).
+3. **A VCCS reading one terminal's voltage looks exactly like an
+   impedance.** `j2,1,2,.2*vrx` has a current depending on `v_1` and not
+   on `v_2`, so the admittance test saw a coefficient and made it a 5 ohm
+   resistor. A two-terminal component depends on its terminals **as their
+   difference**; the check is `y1 + y2 == 0`, and only where neither
+   terminal is a reference (a reference's voltage is the literal 0 and
+   carries no coefficient).
+4. **Eliminating one unknown must cost one equation.** A current source
+   shared by three loops was eliminated pairwise, which spent two — the
+   system stayed solvable and returned every answer in terms of `I3`. One
+   pivot row, subtracted from each of the others, then dropped.
+5. **A supernode's current cancels — unless something names it.** Asking
+   whether `i_e1` appears in some *other* node's KCL sounds equivalent to
+   asking whether it cancels, and is not: a source reading it can sit on
+   one of that source's own two nodes. Now the sum is formed and looked
+   at. No built-in example has that shape, so only a written test caught
+   it (`test_a_source_whose_current_is_named_keeps_both_kcls`).
+
+### The mesh currents are drawn
+
+`schematic.py` gained an **opt-in** pass: `to_svg(desc, loops=...)` draws a
+labelled circulating arrow in each mesh, taking the loops from
+`byhand.mesh(...).loops`. The layout already kept an oriented segment per
+element with the n1 end first, so the walk lays straight over the picture.
+Which way an arrow turns is a property of the *drawing*, not of the
+equations, so it is read off the drawing — the shoelace sum over the
+loop's midpoints in traversal order, positive being clockwise because
+SVG's y axis points down.
+
+A mesh's centroid lands on a symbol when the loop is thin, so a label that
+clashes walks a widening ring until it is clear of every ink box: measured
+over the book, **24 of 251 labels clashed before, 0 after**.
+`to_svg(desc)` with no `loops` is byte-identical to what it always
+produced, and `review_schematics.py` reports `failed=0 with_issues=0`.
+
+### Where it lives
+
+| | |
+|---|---|
+| `repos/solver/symbulator/byhand.py` | new — both methods, the comparison, the three-state verdict |
+| `repos/solver/symbulator/tests/test_byhand.py` | new — 33 tests |
+| `repos/solver/symbulator/schematic.py` | the opt-in `loops` pass; `runs()` gains an optional class |
+| `repos/server/tools/check_byhand.py` | new — the whole-book harness |
+| `repos/server/symbulator_ui.py` | `byhand_ui`, appended |
+| `repos/server/app.py` | `/api/byhand`, in its own killable child process |
+| `repos/server/templates/index.html` | the card, above the Numerical Solver |
+| `repos/local/bridge.py` | `byhand`, so the offline build runs it in Pyodide |
+| `repos/local/build_local.py` | the fetch rewritten to `py('byhand', ...)` |
+
+The card runs on **`last.desc_used`** — the description the classic solve
+actually used, Define expanded and any ambiguous suffix resolved — not on
+the textarea, so it cannot compare two different circuits. `last` gained
+that field. Editing anything clears the card and disables its button, the
+way #299 disabled the load-equivalent button.
+
+The card is **not** wrapped in the offline-strip markers. It was, briefly:
+`build_local.py` refuses to let `/api/` reach a local build, and stripping
+the markup left the script behind with the URL in it. Everything the card
+needs is in the bundled wheel, so it goes through the Pyodide bridge like
+every other endpoint instead of shipping dead.
+
+X's suite is **458 passed, 1 skipped**. Solver label `0.5.33+x14` — and a
+label bump needs `pip install -e . --no-deps` in `Application\vX\.venv`
+before the packaging test agrees, since it compares the module's
+`__version__` against the installed distribution's metadata. X's pages were
+rebuilt, so `repos/local/index.html` carries the card and still the gold X.
+`sw.js`'s `CACHE_VERSION` is **not** bumped: X has no offline site to serve
+a stale copy from.
+
+**Open:** the site needs Roberto's pull of both clones —
+`/home/symbulatorx/solver` and `/home/symbulatorx/symbulator_web` — and a
+reload. No `pip`: the solver is an editable checkout there since X1.
+
 ## X13 — version 9's #327 merged: the two macaws, *Ara macao* and *Ara ararauna*, and the `--accent-text` token; label stays `0.5.33+x10` — **done and live 8 Sep 2026 after Roberto's pull: `/healthz` reports build `2026-09-08 01:57 UTC` running *and* on disk with solver `0.5.33+x10`, and the served page carries both binomials, both band colours and all thirteen `--accent-text` sites — and still the gold X and the fork's subtitle**
 
 Roberto's ask, 8 Sep 2026: *"Yes, do X this time around."* One app item,

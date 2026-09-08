@@ -1354,6 +1354,33 @@ def build() -> str:
         label="evaluate fetch",
     )
 
+    # X14: the by-hand card. Everything it needs is in the bundled
+    # wheel, so the offline build runs it in Pyodide like every other
+    # endpoint rather than shipping the card dead.
+    s = sub(
+        s,
+        """    const r = await fetch('/api/byhand', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      // `last.desc_used`, not the textarea: this must be the circuit the
+      // answers above came from, or the comparison compares two circuits.
+      body: JSON.stringify({ desc: last.desc_used,
+                             domain: last.domain || 'dc',
+                             omega: $('omega').value,
+                             method: $('byhandMethod').value,
+                             ...roundingState(),
+                             si: $('siUnits').checked,
+                             units: $('showUnits').checked })
+    });
+    const data = await r.json();""",
+        """    const data = await py('byhand', {
+      desc: last.desc_used, domain: last.domain || 'dc',
+      omega: $('omega').value, method: $('byhandMethod').value,
+      ...roundingState(), si: $('siUnits').checked,
+      units: $('showUnits').checked });""",
+        label="by-hand fetch",
+    )
+
     s = sub(
         s,
         """    const r = await fetch('/api/solveq', {
