@@ -1,5 +1,33 @@
 # Next build — accepted but not yet done
 
+## #341 — the app's footer is one line — **done 9 Sep 2026, cache v170; the server needs a pull, no `pip`**
+
+Roberto: *"Can we make the bottom of the app text look shorter? ... The
+rest is already in the card above. Don't you think?"* He was right on
+all three counts, and each was checked rather than taken on trust:
+
+| what the second line said | where it already is |
+|---|---|
+| Free and open-source under the MIT licence | the *Symbulator is free* card, in fuller form — the CC BY-NC-SA history, the MIT terms, the PyPI and GitHub links |
+| symbulator.com | the banner's logo links there, in the offline build as well as the server one |
+| Runs on Python+SymPy | the About card: *"This port of Symbulator to Python and SymPy is version 9 in that lineage."* |
+
+So the footer is now the #285 line alone:
+
+> Symbulator by Roberto Perez-Franco (1999–2026) · Release &lt;stamp&gt;
+
+Two things that would have broken and did not. The **install deploy's
+content marker** is `Symbulator by Roberto Perez-Franco`, the half that
+stays — had it keyed on the licence text, every future install deploy
+would have failed its own verification. And the **Release stamp** has
+three readers (`build_local.py`, `app.py`'s `/healthz`,
+`Deploy/deploy_targets.ini`) that each expect the word once in the file;
+it is untouched. `eqsheet.html` never carried this footer, so there was
+only one copy to change.
+
+One i18n key retired (`free-and-open-source.d231`) and dropped from all
+thirteen dictionaries. `i18n check: ok`.
+
 ## #340 — one beta statement for the whole app, not three per feature — **done 9 Sep 2026, cache v169; the server needs a pull, no `pip`**
 
 Roberto asked for a beta note on the By-Hand card, and I put
