@@ -5,6 +5,53 @@ file version 9 never has, so a `git merge v9/main` can never conflict on
 it. `NEXT.md` beside this file is version 9's running list and arrives
 by merge; read it as upstream history, not as a record of X.
 
+## X20 — version 9's #335–#339 merged: the by-hand line, two op-amp drawings and two centred buttons; label `0.6.2+x20` — **done 8 Sep 2026, pushed; the site wants a pull of both clones**
+
+Five of version 9's items in one merge, all of them from Roberto's
+morning of notes on the by-hand card and the op-amp drawing:
+
+* **#335** the line above the equations leads with the method that
+  *wrote* them, so a refusal reads as its second sentence; a third
+  sentence counts the supernodes or supermeshes, and is absent when
+  there are none; the drop-down's *(with supernodes)* and *(with
+  supermeshes)* appear only on a run that used one. 718–720 reworded,
+  which retires "writes 1 equations" in 53 of the book's circuits;
+* **#336** the Experimental mark on the card's own heading;
+* **#337** an op-amp's non-inverting input routed *under* the body when
+  its node lies to the right — `OP_UNDER_H`, an extra band added only
+  to a drawing that needs it, and a riser that reaches the node row
+  rather than teeing on the ground side of whatever hangs there;
+* **#338** the op-amp's name set against its own hypotenuse, which took
+  fixing the symbol's ink model first — a wedge, not the box round it;
+* **#339** the Mini-Tools and Numerical Solver buttons centred.
+
+Three conflicts, all of them expected and none of them interesting: the
+solver's version label, the server template's build stamp and the
+generated `local/index.html`. Version 9's side on the two stamps, the
+label set to **`0.6.2+x20`**, then `build_local.py` re-run — X's page
+hashes `abb6a9fc…` against version 9's `acb5d60f…`, with the gold X and
+the fork's subtitle in place.
+
+**One extra step this time, and it is worth knowing about.** X's suite
+went red on the merged tree: `test_version_matches_the_installed_
+distribution_when_there_is_one` failed with `'0.6.1+x18' == '0.6.2+x20'`.
+That is the test doing its job rather than a merge problem — an editable
+install records the version in its *metadata* at install time, and a
+`git pull` moves the source without moving the metadata. Re-running
+`pip install -e .` in X's venv settles it, and the suite is **484
+passed and 1 skipped**. `i18n check`, `palettes check`, the hidden-guard
+check and all 75 example plots are clean.
+
+The same staleness is latent on the site: `/healthz` reads
+`symbulator.__version__` from the module, so a pull alone will report
+`0.6.2+x20` correctly, but the installed distribution's metadata will
+still say `0.6.1+x18` until an editable reinstall. Nothing on
+PythonAnywhere re-resolves dependencies on a reload, so the site runs
+either way — but the server's `requirements.txt` now pins
+`symbulator>=0.6.2`, which that stale metadata does not satisfy, so
+anything that ever *does* re-resolve would refuse. Worth a `pip install
+-e .` in the solver clone the next time the console is open.
+
 ## X19 — version 9's #333 and #334 merged: the Lesson 1 passage and the theme menu back in chromatic order; label `0.6.1+x18` unchanged — **done 8 Sep 2026, pushed; the site wants a pull of both clones**
 
 Two of version 9's items, neither touching the solver, so the label
