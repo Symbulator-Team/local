@@ -5,6 +5,51 @@ file version 9 never has, so a `git merge v9/main` can never conflict on
 it. `NEXT.md` beside this file is version 9's running list and arrives
 by merge; read it as upstream history, not as a record of X.
 
+## X15 — the branch reader extracted into `symbulator/branches.py`, and proposed to version 9 on its own — **done 8 Sep 2026; the pull request is open and Roberto's to review**
+
+X14's front half answers a question that has nothing to do with by-hand
+equations: *for each two-terminal branch of this circuit, what is its
+impedance in this domain, and what source term rides in series with it?*
+That is the form a hand-written nodal or mesh system needs, and also what
+a better netlist export or a "show me what the engine thinks this element
+is" panel would want. So it is now its own module rather than a private
+half of `byhand.py`.
+
+A **pure move**: `byhand.py` imports what it used to define, every
+behaviour is unchanged, and the whole-book harness still reports 194
+nodal and 143 mesh systems, all agreeing. X's suite is **475 passed, 1
+skipped** — 17 of those are the new `tests/test_branches.py`.
+
+Public names: `branches_of(elements, domain, ...)` for the one call most
+callers want, with `stamped()` and `read_branches()` underneath for a
+caller that needs the `Circuit` too, and `BranchError` for a circuit that
+cannot be read in this form. `byhand.ByHandError` is now an alias of
+`BranchError`, so every `raise`/`except` in that file still reads as it
+did.
+
+### Proposed to version 9
+
+Branch **`proposal/branch-relations`** on `Symbulator-Team/solver`, cut
+straight off `v9/main` so its diff is exactly the two new files and no
+existing file is touched. Open the pull request here:
+
+https://github.com/Symbulator/solver/compare/main...Symbulator-Team:solver:proposal/branch-relations
+
+Verified on that branch — which is version 9's tree plus the module, with
+none of X14 — as **442 passed, 1 skipped, nothing failing**, after
+matching the editable install to the branch (the packaging test compares
+`__version__` against the installed distribution's metadata, so a stale
+`+x14` install fails it and that failure means nothing).
+
+This is the shape the fork was made for: an idea is tried in X, and the
+generally useful part of it crosses to 9 on its own, as a pull request
+Roberto reviews — not the whole experiment.
+
+**Proved red**: scaling `Z` by two in `branches.py` fails five of the
+seventeen tests, including the one that asserts the derived relation and
+the engine's own equation are the same equation up to a factor free of
+the branch's own unknowns.
+
 ## X14 — by-hand equations: a second system, written the way it is taught, and always checked against the classic solve — **built 8 Sep 2026, label `0.5.33+x14`; not yet on `symbulatorx.pythonanywhere.com`, which needs a pull of both clones**
 
 Roberto's brief, 8 Sep 2026, in his words: *"the classic Symbulator solve
