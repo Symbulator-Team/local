@@ -1,5 +1,43 @@
 # Next build — accepted but not yet done
 
+## #353 — two words in the app's *What is Symbulator* paragraph — **done 9 Sep 2026, cache v175; live on the offline pair; `symbulator.pythonanywhere.com` needs its pull, no `pip`**
+
+Noticed while answering #350, the documentation's version of the same claim.
+The app's own sentence already said *ever made for a handheld device*, which
+is idiomatic; the two nits are its neighbours.
+
+* *Over a quarter of a century, Symbulator has been…* → **For** over a
+  quarter of a century. With a present perfect the duration wants *For*;
+  without it the phrase reads for a moment as a point in time.
+* *free of cost* → *free of charge*, the standard collocation.
+
+English only: `repos/server/i18n/en.json` and
+`repos/server/templates/index.html`. The twelve other dictionaries translate
+the sense and carry neither phrase.
+
+**Shipped the same evening**, cache **v175**, build `2026-09-09 11:02 UTC`.
+`install.symbulator.com` and `symbulator.com/9/local.zip` are live and
+hash-verified, the ZIP at **31,931,475 b**; the staged site and the ZIP were
+proved the same build first — all 62 staged files hashed against the ZIP's
+own copies, none differing. Verified in the built page by reading the bytes
+rather than by grep: the sentence wraps mid-phrase, so a naive
+`grep 'For over a quarter of a century'` finds nothing in a page that has it.
+
+**Settled the same day.** *free of cost* was also Roberto's own wording in
+`Documentation/src/00-introduction.md:72` and, in his first-person voice, in
+the credits at `99-credits.md:20`. Both were left alone at first rather than
+edit his voice unasked; he then said *"Align the docs to 'free of charge'
+too"*, and both now read *free of charge*. The app and the documentation
+agree, with nothing left undecided.
+
+Neither docs occurrence sits inside a version wrapper, so **all three books**
+take the change — the credits chapter especially, which is shared. That puts
+it on the same footing as #352: a `--web` deploy leaves v7 and v8 printing the
+old phrase too, not just v9.
+
+X takes both words on its next `git fetch v9 && git merge v9/main`; there is
+nothing to do in the fork.
+
 ## #348 — the Equations card arrives open — **done 9 Sep 2026, cache v174; live on the offline pair; `symbulator.pythonanywhere.com` needs its pull, no `pip`**
 
 Roberto, 9 Sep 2026, answering the open question left by #345: *"Yes, open

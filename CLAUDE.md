@@ -552,6 +552,19 @@ whether the row wrapped **or the nav had to clip**, and falls back to ISO
 codes if either. A `<select>` sized `width: auto` is as wide as its widest
 option, not the selected one, so all nine option texts change together.
 
+**A remembered setting never fires a change event.** #348 hung "open the
+Equations card when the reader ticks *Show equations*" off the checkbox's
+`change` handler. It passed every test anyone would think to run -- tick the
+box, the card opens -- and was wrong for the majority of readers, because the
+tick is persisted: a returning visitor loads the page with the box already
+ticked, presses Solve, and never fires a change event at all. It is keyed on
+the card *appearing* now (`if (card.hidden) ...` inside `renderEquations`),
+which covers every route in and still leaves a reader who collapsed the card
+by hand collapsed. **Any behaviour hung on a control whose state is restored
+from `localStorage` wants the same question asked of it**, and the way to
+catch it is to test with the setting already on from a previous session
+rather than by toggling it.
+
 **`CACHE_VERSION` in `sw.js`.** The service worker is cache-first. If you
 change app files without bumping it, returning visitors keep the old build
 forever — including the old manifest. Any fix you cannot see on a device you
