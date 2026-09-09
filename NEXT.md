@@ -1,5 +1,84 @@
 # Next build — accepted but not yet done
 
+## #348 — the Equations card arrives open — **done 9 Sep 2026, cache v174; live on the offline pair; `symbulator.pythonanywhere.com` needs its pull, no `pip`**
+
+Roberto, 9 Sep 2026, answering the open question left by #345: *"Yes, open
+card."* Asking to see the equations should not then cost a second click.
+
+**The first attempt was wrong, and only the browser showed it.** Hanging it
+off the checkbox's `change` handler passes every test you would think to
+run — tick the box, the card opens. But **the setting is remembered across
+sessions**, so a returning reader never fires a change event: they load the
+page with the box already ticked, press Solve, and get a shut card. That is
+the majority case, and it was found only because a previous session's tick
+was still in `localStorage` and the measurement came back `eqHidden: false,
+eqOpen: false`.
+
+So it is keyed on the card *appearing*, in `renderEquations`:
+
+    if (card.hidden) $('equationsBox').open = true;
+
+One place instead of two, the same shape as the existing
+`$('resultsBox').open = true;  // pressing Solve means you want to see them`.
+
+**Four routes, each measured on the dev server:**
+
+| route | result |
+|---|---|
+| setting restored from an earlier session, then Solve | visible, **open** — the case the first attempt failed |
+| untick | hidden |
+| re-tick after a solve | visible, **open** |
+| collapse by hand, then Solve again | visible, **stays closed** |
+
+That last row is deliberate: once the card is on screen the branch does not
+run, so a reader who collapsed it on purpose keeps it collapsed.
+
+The fix was confirmed present in the running page by matching the exact text
+written, not a loose substring — a loose test lied here once before (#183).
+Two method notes for next time: the preview pane's ref→pixel mapping drifted
+after a viewport resize and clicks landed below the button, so the last steps
+were driven through the elements' own `click()` — real handlers, but not hit
+testing, so it would not catch a button covered by something. And the docs
+sentence for #346 had to be corrected a second time: it had just been changed
+to *"open it, and it lists…"* for the old behaviour, and now reads *"open and
+listing…"*.
+
+## #345 — the Equations card moves above Results — **done 9 Sep 2026, cache v173; live on the offline pair; `symbulator.pythonanywhere.com` needs its pull, no `pip`**
+
+Roberto, 9 Sep 2026: *"Can you please make the Equations card appear above
+the Results instead of below it?"*
+
+The system is what produced the answers, so it now comes before them. One
+block moved in `repos/server/templates/index.html`, no logic touched.
+
+**It moved above the *Showing* picker as well**, not just above Results.
+That picker chooses which solution's *answers* are displayed, and the system
+is identical for every solution — leaving it on top would have implied it
+governed the Equations card too. The order is now **Equations → Showing →
+Results**.
+
+**No i18n work.** Nothing in the thirteen dictionaries or in the Settings
+hint (*"adds an Equations card listing the system the solver assembled"*)
+asserts a position, so no string moved; `py tools/i18n.py check` clean.
+
+**Verified in a browser, not from the diff** — a template change is not
+verified until Flask has rendered it (the `{#` incident of 30 Aug, which
+returned 500 on every page while both offline builds were provably fine).
+On the dev server, with a real solve of Lesson 1's circuit: DOM order
+`analysisCard → equationsCard → solutionPick → resultsCard`, measured
+positions **Equations y=1719, Results y=1826**, the card populated with the
+seven equations and the unknowns list, no console errors. The served
+`install.symbulator.com` was then checked the same way by document position.
+
+**One thing the browser showed that reading could not.** The card renders
+**collapsed** — the reader gets a card headed *Equations* with a ▸ and has
+to click it. That is pre-existing, not something the move introduced, but it
+made a sentence written for #346 an hour earlier wrong (*"appears… listing
+every equation"*); that sentence now says *"open it, and it lists…"*.
+**Open question for Roberto:** should ticking **Show equations** open the
+card as well as reveal it? Asking to see the equations currently costs two
+clicks. Not changed.
+
 ## #344 — a derived answer could name an island's reference node instead of zero — **done 9 Sep 2026, solver 0.6.3, cache v172; live on the offline pair; `symbulator.pythonanywhere.com` needs its pull *and* a `pip install --upgrade symbulator`**
 
 Found while re-verifying #319's four-terminal claims by running them
