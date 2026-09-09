@@ -1,5 +1,206 @@
 # Next build — accepted but not yet done
 
+## #344 — a derived answer could name an island's reference node instead of zero — **done 9 Sep 2026, solver 0.6.3, cache v172; live on the offline pair; `symbulator.pythonanywhere.com` needs its pull *and* a `pip install --upgrade symbulator`**
+
+Found while re-verifying #319's four-terminal claims by running them
+rather than reading them. The test circuit was a floating-primary
+transformer, `e1,1,0,10:r1,1,2,4:t,[2,0],[3,4],[1,2]:r2,3,4,8`, and the
+same block of output said
+
+    v_4  = 0
+    v_r2 = 20/3 - v_4
+    p_r2 = 50/9 - 5*v_4/6
+
+— a node declared zero and the same symbol left standing in two
+neighbouring answers. Nothing in `_stamp_t` would have shown it; the
+bug is three hundred lines away in another module.
+
+### What it was
+
+`analysis._run` computed the third level (`_derived`: `v_<name>`,
+`p_<name>`, `s_<name>`, `r_<name>`, `z_<name>`) **before** filling in
+the island references that #322 introduced. `_derived` reads node
+voltages out of the solution dict via `_node_v`, which special-cases
+only `"0"`; an island's reference is never an unknown — `Circuit.v()`
+hands back the literal 0 — so it is not in that dict until the
+reference loop puts it there. `_node_v` fell through to its
+last-resort branch and invented a free symbol.
+
+**This is a #322/#323 regression, not an old bug.** Before #322 every
+island was refused outright, so `references` was always exactly
+`{"0"}` and `_node_v`'s ground-only case was complete. Narrowing that
+check — deliberately, so a transformer's floating secondary and a
+coupled coil's far side became legal — is what made the gap possible.
+
+The answers were **right as expressions and unreduced as answers**:
+`p_r2 = 50/9 - 5*v_4/6` is 50/9 once v_4 = 0. But nothing told the
+reader that, and every neighbouring answer was a plain number.
+
+### The fix
+
+Four lines moved in `repos/solver/symbulator/analysis.py`: the
+`local_references` call and its `setdefault(f"v_{ref}", 0)` loop now
+run **before** the `_derived` block. No new logic.
+
+Deliberately *not* done by passing `refs` into `_derived`, which also
+works: that would make a third place that knows what a reference is
+(`Circuit.v`, `_node_v`, `_derived`). The root cause is ordering, and
+the reorder deletes the divergence rather than documenting it.
+`_node_v`'s fallback goes back to meaning what its docstring says: a
+node that was never stamped at all.
+
+### Blast radius, measured
+
+* **dc and ac only.** FD and TR compute no third level, so there is no
+  `v_<name>` to leak.
+* **`th()`, `er()` and `port()` are clean** — including #320's
+  floating ladder, which returns z = 5, 4, 4, 9 either way. They read
+  node voltages and test-source currents, not derived answers.
+* Over the example books: **202 dc/ac entries, 2 with an island, both
+  leaking, 4 answers.** After: **0.** Both were Lesson 10's NR11
+  coupled-coil entries, serving `v_l2 = -v_4` and `v_r10 = -v_4` to
+  readers on the live site.
+* 2 of 2 — deterministic, not intermittent. Any branch with a terminal
+  on an island's reference leaked.
+
+### Why the tests missed it, and the guard that closes it
+
+`test_ports_islands.py` asserted node voltages (`res["v_m"] == 0`),
+voltage *differences* and currents — never a derived answer on a
+branch touching the reference. Two tests added there:
+`test_a_derived_answer_never_names_the_islands_reference` and
+`test_no_answer_names_a_reference_behind_a_coupling`, plus a
+`_names_a_reference(res)` helper that sweeps *every* answer for a
+reference symbol rather than checking named ones.
+
+Both use a branch carrying **real current** on purpose. The earlier
+island tests all happened to sit on zero-current branches, where
+`p = Δv · i` multiplied the leak away — which is part of why it hid.
+
+**Proved red**: with the old ordering restored, both fail, and on the
+symptom itself (`assert -v_4 == 0`), not incidentally.
+
+### Checked
+
+| | |
+|---|---|
+| solver suite | **487 passed** (485 before, plus the two new) |
+| leak sweep over the books | 0, from 2 entries / 4 answers |
+| `check_byhand.py` | nodal 204, mesh 149, **0 differing** — identical to before the fix |
+| `check_example_plots.py` | 75 plots in 354 entries, 0 failures |
+
+### Shipped
+
+**Solver 0.6.3 on PyPI**, wheel sha256 `b1cb4c81…` (250,403 b), sdist
+`77d5250f…` — hash-verified three ways: what PyPI serves, the artefact
+uploaded, and the copy in `repos/local/vendor/`. Cache **v172**, ZIP
+**31,931,160 b (30.5 MB)**. The offline pair is live and was proved to
+be the same build *before* either went up: all 62 staged files hashed
+against the ZIP's own copies, none differing — the check that the two
+no-op deploys of 3 Sep 2026 lacked.
+
+The gates, all run before the upload, because a version number can
+never be reused:
+
+| | |
+|---|---|
+| suite, against the **installed** wheel | 487 passed |
+| `twine check` | passed, wheel and sdist |
+| wheel + sdist unzipped and read | reorder present, `__version__` right, `byhand` docstring fixed |
+| `verify_lesson.py`, all 20 books | 19 at zero; the one finding is Lesson 4's Bo2 Example 3.11, the deliberate failure the chapter teaches *as* a failure |
+| `verify_bridge.py` | 364 cases, **0 disagreements**, 499 benign notices |
+| `check_byhand.py` | 204 / 149, 0 differing — unchanged by the fix |
+| `check_example_plots.py` | 75 plots in 354 entries, 0 failures |
+| leak sweep | 0, from 2 entries / 4 answers |
+
+**Left for Roberto**: the PythonAnywhere pass — this is one of the
+releases where `pip` matters, `symbulator_ui.py` being untouched but
+the package having moved — and the typed prune of the superseded
+0.6.2 wheel from the install host.
+
+Also in this change, and shipping with it: **`byhand.py`'s module
+docstring**, which still opened *"Symbulator X only, experimental"*
+and still said transformers, two-ports and mutual inductance were
+refused by both methods — undone by #332. It now records the #329
+promotion and the coupled-coils→mesh / transformers→nodal split, and
+**quotes no sweep counts at all**: the figures in #329's table (194 /
+143, 319 / 247) had already drifted to 204 / 149, 333 / 262 within a
+day, so it names `check_byhand.py` and says the number that matters is
+the zero beside *differs*. Same correction made in the monograph.
+
+## #342 — every browser tab says which property it is — **done 9 Sep 2026, cache v171; live on the offline pair, learn and the landing page; `symbulator.pythonanywhere.com` needs its pull, no `pip`**
+
+Roberto: the tab text. The documentation read *Symbulator 9*, the server
+app *Symbulator — symbolic circuit analysis online*, the offline build
+*Symbulator — symbolic circuit simulation*, the landing page *Symbulator
+— a symbolic simulator of linear electric circuits*. Four properties,
+and nothing in a tab strip to tell the first two apart. Now:
+
+| property | tab |
+|---|---|
+| `learn.symbulator.com` | **Symbulator 9 Documentation** (and *Direct current analysis — Symbulator 9 Documentation* on a chapter; 7 and 8 say their own numbers) |
+| `symbulator.pythonanywhere.com` | **Symbulator 9 Online App** |
+| `install.symbulator.com` and the ZIP | **Symbulator 9 Local Version** |
+| `symbulator.com` | **Symbulator 9 Welcome!** |
+
+**The app's two titles carry `{{ brand_tm }}`, not a literal 9.** A
+hard-coded *Symbulator 9 Online App* in `templates/index.html` is exactly
+the shape #228 exists to prevent: the template is shared, the merge rule
+is *take v9's side everywhere but `branding.py`*, and X's tab would
+therefore announce itself as version 9 — under a hostname one letter
+from the canonical, which is the thing that got X's account disabled.
+With the mark, X reads *Symbulator X Online App* and *Symbulator X Local
+Version* with no fork-side edit at all, and no fifth branding value: the
+four in `branding.py` are still the whole list.
+
+That cost one line in `build_local.py`. `resolve_banner()` resolved
+`{{ brand_tm }}` through `sub()`, whose whole job is to fail when a
+replacement does not happen *exactly once* — a second mark in the
+`<title>` made it two, and the build stopped. It now takes a `marks=`
+count, stated at the call site (`marks=2` for `index.html`, still 1 for
+`eqsheet.html`), so the guard keeps its teeth rather than being widened
+to "however many you find". The local title substitution reads the mark
+from `branding.py` too and rewrites *Online App* to *Local Version*.
+
+Verified by rendering, not by reading: `build()` emits
+`<title>Symbulator 9 Local Version</title>` with zero surviving `{{ `,
+and Flask's test client returns `<title>Symbulator 9 Online App</title>`
+from `/`.
+
+Two things deliberately left alone. **`manifest.webmanifest`'s `name`**
+still reads *Symbulator — symbolic circuit simulation*: it names an
+installed launcher entry, not a tab, and the reason the title used to
+have to match it was the word *online* contradicting an offline build —
+*Local Version* does not. And **the landing page's `og:title`**
+(*Symbulator — solve circuits with the letters still in them*) is what a
+shared link preview shows, not a tab; it stays as the sentence it is.
+
+The Numerical Solver's tab is untouched at *Numerical Solver ·
+Symbulator*, which already names its property.
+
+**Live, verified by fetching rather than by a clean upload log** (9 Sep
+2026): `symbulator.com` says *Symbulator 9 Welcome!*,
+`install.symbulator.com` *Symbulator 9 Local Version*,
+`learn.symbulator.com/9/` *Symbulator 9 Documentation* — and
+`/9/lesson-dc` *Direct current analysis — Symbulator 9 Documentation*,
+`?v=7` *Symbulator 7 Documentation*, so the suffix rides `$toc['name']`
+as intended. The install host and the ZIP are the same build deployed
+twice: `index.html` and `sw.js` were hashed in `install_site` against
+`repos/local` before either went up (`372bb948…`, `f359437d…`, both
+matching), and the ZIP is **31,929,145 b**.
+
+`symbulator.pythonanywhere.com` took Roberto's pull the same day, the
+one deploy of this item that was his: `/healthz` reports build
+`2026-09-08 22:47 UTC` running *and* on disk, `needs_reload: false`,
+solver 0.6.2, and the served tab reads *Symbulator 9 Online App*. That
+pull carried #340, #341 and #342 together; none of them moved the
+solver, so there was no `pip`. **All five sites are current**, and the
+install host is pruned — the superseded 0.6.0 and 0.6.1 wheels return
+404, 0.6.2 is still served at 248,369 b.
+
+Docs half — `web/index.php` and `tools/static_preview.py` — is #342 in
+`Documentation/NEXT_DOCS.md`.
+
 ## #341 — the app's footer is one line — **done 9 Sep 2026, cache v170; the server needs a pull, no `pip`**
 
 Roberto: *"Can we make the bottom of the app text look shorter? ... The
