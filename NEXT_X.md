@@ -5,6 +5,69 @@ file version 9 never has, so a `git merge v9/main` can never conflict on
 it. `NEXT.md` beside this file is version 9's running list and arrives
 by merge; read it as upstream history, not as a record of X.
 
+## X22 — version 9's #344 merged: an island's reference is zero in the derived answers too; label **`0.6.3+x22`** — **done 9 Sep 2026, pushed; the site wants a pull of *both* clones and a reload**
+
+Version 9's #344, in `analysis.py`. The third level — the round that
+builds `v_<name>`, `p_<name>`, `s_<name>`, `r_<name>`, `z_<name>` after
+the solve — ran *before* the island references of #322/#323 were put
+into the solution dict. Those are never unknowns (`Circuit.v()` hands
+back the literal 0 for a reference), so a branch with a terminal on one
+found nothing to look up and fell through to a free symbol:
+
+    v_4  = 0
+    v_r2 = 20/3 - v_4
+    p_r2 = 50/9 - 5*v_4/6
+
+all three in the same block of answers. Right as expressions, unreduced
+as answers. Four lines moved — the `local_references` call and its
+`setdefault` loop now run first — plus two regression tests and a
+corrected `byhand.py` module docstring. Confined to dc and ac; fd and
+tr compute no third level, and `th`, `er` and `port` were unaffected.
+
+**Three clean merges, one conflict each, all three the expected kind:**
+
+| repo | conflict | resolved |
+|---|---|---|
+| `solver` | the version label | X's own, `0.6.3+x22` |
+| `server` | the build stamp | v9's, then rewritten by the rebuild |
+| `local` | the generated `index.html` | v9's, then **rebuilt** |
+
+`branding.py` was not touched by the merge at all — X keeps the gold
+`X`, the empty beta mark and the fork's own subtitle. Verified after
+the rebuild rather than assumed: X's `index.html` carries `#d9a521`
+and *an experimental fork of Symbulator 9*, and hashes **different**
+from version 9's. That check is the point of the rebuild step; taking
+v9's side on the generated page and stopping there would leave X
+byte-identical to version 9 for a commit, which is the shape that got
+the account disabled on 2 Sep 2026.
+
+`requirements.txt` moved to `symbulator>=0.6.3`, which `0.6.3+x22`
+satisfies — the local label sorting above the pin is exactly what X1
+set it up for.
+
+**One thing to remember about X's venv.** The suite failed once on
+`test_version_matches_the_installed_distribution_when_there_is_one`:
+the editable install in `Application\vX\.venv` still registered
+`0.6.2+x20` while the tree said `0.6.3+x22`. That is not a merge
+problem and not a code problem — it is metadata, and every label bump
+will do it. `pip install -e . --no-deps` in
+`Application\vX\repos\solver` with X's own interpreter fixes it, and
+it is worth doing rather than skipping the test, because the same
+metadata is what `/healthz` reports.
+
+**Checked:** X's suite **486 passed, 1 skipped** (version 9's 487 minus
+the ahkab ground-truth test, which skips wherever ahkab is absent — X's
+venv has never had it). The two circuits that showed the bug both give
+`0` now, and message 221 and the reference map are still emitted, so
+#322's reader-facing behaviour is untouched.
+
+**Left for Roberto:** `symbulatorx.pythonanywhere.com` needs a pull of
+**both** clones — `/home/symbulatorx/solver` for the fix itself and
+`/home/symbulatorx/symbulator_web` for the app — then a Reload. **No
+`pip install --upgrade`**: X's solver is an editable checkout, so `git
+pull` in the solver clone *is* the upgrade. `/healthz` should then
+report `0.6.3+x22`.
+
 ## X21 — version 9's #340 and #341 merged: one beta statement for the whole app, and a one-line footer; label `0.6.2+x20` unchanged — **done 9 Sep 2026, pushed; the site wants a pull of the web clone**
 
 Two of version 9's items, both wording:
