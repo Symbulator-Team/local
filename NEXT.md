@@ -1,5 +1,48 @@
 # Next build — accepted but not yet done
 
+## #348 — the Equations card arrives open — **done 9 Sep 2026, cache v174; live on the offline pair; `symbulator.pythonanywhere.com` needs its pull, no `pip`**
+
+Roberto, 9 Sep 2026, answering the open question left by #345: *"Yes, open
+card."* Asking to see the equations should not then cost a second click.
+
+**The first attempt was wrong, and only the browser showed it.** Hanging it
+off the checkbox's `change` handler passes every test you would think to
+run — tick the box, the card opens. But **the setting is remembered across
+sessions**, so a returning reader never fires a change event: they load the
+page with the box already ticked, press Solve, and get a shut card. That is
+the majority case, and it was found only because a previous session's tick
+was still in `localStorage` and the measurement came back `eqHidden: false,
+eqOpen: false`.
+
+So it is keyed on the card *appearing*, in `renderEquations`:
+
+    if (card.hidden) $('equationsBox').open = true;
+
+One place instead of two, the same shape as the existing
+`$('resultsBox').open = true;  // pressing Solve means you want to see them`.
+
+**Four routes, each measured on the dev server:**
+
+| route | result |
+|---|---|
+| setting restored from an earlier session, then Solve | visible, **open** — the case the first attempt failed |
+| untick | hidden |
+| re-tick after a solve | visible, **open** |
+| collapse by hand, then Solve again | visible, **stays closed** |
+
+That last row is deliberate: once the card is on screen the branch does not
+run, so a reader who collapsed it on purpose keeps it collapsed.
+
+The fix was confirmed present in the running page by matching the exact text
+written, not a loose substring — a loose test lied here once before (#183).
+Two method notes for next time: the preview pane's ref→pixel mapping drifted
+after a viewport resize and clicks landed below the button, so the last steps
+were driven through the elements' own `click()` — real handlers, but not hit
+testing, so it would not catch a button covered by something. And the docs
+sentence for #346 had to be corrected a second time: it had just been changed
+to *"open it, and it lists…"* for the old behaviour, and now reads *"open and
+listing…"*.
+
 ## #345 — the Equations card moves above Results — **done 9 Sep 2026, cache v173; live on the offline pair; `symbulator.pythonanywhere.com` needs its pull, no `pip`**
 
 Roberto, 9 Sep 2026: *"Can you please make the Equations card appear above
