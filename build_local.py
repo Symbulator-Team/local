@@ -740,6 +740,30 @@ def check_export_fields() -> None:
               "round trip (see above).")
 
 
+def check_byhand_rounding() -> None:
+    """Stop the build if the By-Hand card ignores the Rounding setting.
+
+    #359: the card sends each answer twice, a plain `value` and the
+    `latex` the page actually renders, and only the first was being
+    rounded. A reader on 4 digits saw fifteen of them in the one box
+    they read. The checker drives `byhand_ui` the way `/api/byhand`
+    does, on the monograph's "One of each" showcase because its mesh
+    answers are long floats -- a tidy circuit would pass while broken.
+    Hard failure: it needs nothing outside the two repositories."""
+    checker = SERVER / "tools" / "check_byhand_rounding.py"
+    if not checker.is_file():
+        raise SystemExit("build_local.py: tools/check_byhand_rounding.py "
+                         "is missing; the By-Hand rounding check cannot "
+                         "run.")
+    result = subprocess.run([sys.executable, str(checker)],
+                            capture_output=True, text=True)
+    if result.returncode != 0:
+        raise SystemExit(
+            (result.stdout or "") + (result.stderr or "")
+            + "build_local.py: the By-Hand card's typeset answers do not "
+              "obey the Rounding setting (see above).")
+
+
 def check_palettes() -> None:
     """Stop the build if a theme block in either template is stale.
 
@@ -1107,6 +1131,7 @@ def build() -> str:
     # hand-kept field lists had drifted apart; there is one now, and this
     # proves it against the parser, the writer and the front end.
     check_export_fields()
+    check_byhand_rounding()
 
     # #278: the theme blocks in both templates come from one table.
     check_palettes()
