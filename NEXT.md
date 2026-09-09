@@ -1,6 +1,6 @@
 # Next build — accepted but not yet done
 
-## #342 — every browser tab says which property it is — **built 9 Sep 2026, cache v171; unbuilt and undeployed, awaiting Roberto's go**
+## #342 — every browser tab says which property it is — **done 9 Sep 2026, cache v171; live on the offline pair, learn and the landing page; `symbulator.pythonanywhere.com` needs its pull, no `pip`**
 
 Roberto: the tab text. The documentation read *Symbulator 9*, the server
 app *Symbulator — symbolic circuit analysis online*, the offline build
@@ -49,6 +49,22 @@ shared link preview shows, not a tab; it stays as the sentence it is.
 
 The Numerical Solver's tab is untouched at *Numerical Solver ·
 Symbulator*, which already names its property.
+
+**Live, verified by fetching rather than by a clean upload log** (9 Sep
+2026): `symbulator.com` says *Symbulator 9 Welcome!*,
+`install.symbulator.com` *Symbulator 9 Local Version*,
+`learn.symbulator.com/9/` *Symbulator 9 Documentation* — and
+`/9/lesson-dc` *Direct current analysis — Symbulator 9 Documentation*,
+`?v=7` *Symbulator 7 Documentation*, so the suffix rides `$toc['name']`
+as intended. The install host and the ZIP are the same build deployed
+twice: `index.html` and `sw.js` were hashed in `install_site` against
+`repos/local` before either went up (`372bb948…`, `f359437d…`, both
+matching), and the ZIP is **31,929,145 b**.
+
+`symbulator.pythonanywhere.com` still serves the old title until its
+pull — the one deploy of this item that is Roberto's. That pull now
+carries #340, #341 and #342 together, and none of them moved the solver,
+so no `pip`.
 
 Docs half — `web/index.php` and `tools/static_preview.py` — is #342 in
 `Documentation/NEXT_DOCS.md`.
