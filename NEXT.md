@@ -61,10 +61,14 @@ twice: `index.html` and `sw.js` were hashed in `install_site` against
 `repos/local` before either went up (`372bb948…`, `f359437d…`, both
 matching), and the ZIP is **31,929,145 b**.
 
-`symbulator.pythonanywhere.com` still serves the old title until its
-pull — the one deploy of this item that is Roberto's. That pull now
-carries #340, #341 and #342 together, and none of them moved the solver,
-so no `pip`.
+`symbulator.pythonanywhere.com` took Roberto's pull the same day, the
+one deploy of this item that was his: `/healthz` reports build
+`2026-09-08 22:47 UTC` running *and* on disk, `needs_reload: false`,
+solver 0.6.2, and the served tab reads *Symbulator 9 Online App*. That
+pull carried #340, #341 and #342 together; none of them moved the
+solver, so there was no `pip`. **All five sites are current**, and the
+install host is pruned — the superseded 0.6.0 and 0.6.1 wheels return
+404, 0.6.2 is still served at 248,369 b.
 
 Docs half — `web/index.php` and `tools/static_preview.py` — is #342 in
 `Documentation/NEXT_DOCS.md`.
