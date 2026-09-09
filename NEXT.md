@@ -1,5 +1,41 @@
 # Next build — accepted but not yet done
 
+## #345 — the Equations card moves above Results — **done 9 Sep 2026, cache v173; live on the offline pair; `symbulator.pythonanywhere.com` needs its pull, no `pip`**
+
+Roberto, 9 Sep 2026: *"Can you please make the Equations card appear above
+the Results instead of below it?"*
+
+The system is what produced the answers, so it now comes before them. One
+block moved in `repos/server/templates/index.html`, no logic touched.
+
+**It moved above the *Showing* picker as well**, not just above Results.
+That picker chooses which solution's *answers* are displayed, and the system
+is identical for every solution — leaving it on top would have implied it
+governed the Equations card too. The order is now **Equations → Showing →
+Results**.
+
+**No i18n work.** Nothing in the thirteen dictionaries or in the Settings
+hint (*"adds an Equations card listing the system the solver assembled"*)
+asserts a position, so no string moved; `py tools/i18n.py check` clean.
+
+**Verified in a browser, not from the diff** — a template change is not
+verified until Flask has rendered it (the `{#` incident of 30 Aug, which
+returned 500 on every page while both offline builds were provably fine).
+On the dev server, with a real solve of Lesson 1's circuit: DOM order
+`analysisCard → equationsCard → solutionPick → resultsCard`, measured
+positions **Equations y=1719, Results y=1826**, the card populated with the
+seven equations and the unknowns list, no console errors. The served
+`install.symbulator.com` was then checked the same way by document position.
+
+**One thing the browser showed that reading could not.** The card renders
+**collapsed** — the reader gets a card headed *Equations* with a ▸ and has
+to click it. That is pre-existing, not something the move introduced, but it
+made a sentence written for #346 an hour earlier wrong (*"appears… listing
+every equation"*); that sentence now says *"open it, and it lists…"*.
+**Open question for Roberto:** should ticking **Show equations** open the
+card as well as reveal it? Asking to see the equations currently costs two
+clicks. Not changed.
+
 ## #344 — a derived answer could name an island's reference node instead of zero — **done 9 Sep 2026, solver 0.6.3, cache v172; live on the offline pair; `symbulator.pythonanywhere.com` needs its pull *and* a `pip install --upgrade symbulator`**
 
 Found while re-verifying #319's four-terminal claims by running them
