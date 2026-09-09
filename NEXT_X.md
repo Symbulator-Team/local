@@ -5,7 +5,7 @@ file version 9 never has, so a `git merge v9/main` can never conflict on
 it. `NEXT.md` beside this file is version 9's running list and arrives
 by merge; read it as upstream history, not as a record of X.
 
-## X25 — version 9's #359 and #360 merged, and the Showing-off entry; label `0.6.3+x22` unchanged — **done 10 Sep 2026, pushed; the site wants a pull of the web clone alone**
+## X25 — version 9's #359 and #360 merged, and the Showing-off entry; label `0.6.3+x22` unchanged — **done 9 Sep 2026, pushed; the site wants a pull of the web clone alone**
 
 Three things from version 9, all in the app:
 
