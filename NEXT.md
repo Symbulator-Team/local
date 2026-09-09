@@ -1,5 +1,91 @@
 # Next build — accepted but not yet done
 
+## #363 — Lesson 5's Practice Problem 5.7 gets its app entry — **built, not deployed**
+
+Found by auditing the published pages: `AS2's Practice Problem 5.7
+(Difference or Differential)` was the only problem in `/9/lesson-opamps`
+with no **Open in app** / **Open in split view** row. Its neighbours all
+carry one.
+
+**The cause was a real absence, and the build already said so.** `py
+Documentation\tools\app_links.py` had been printing it by name among its
+loose ends -- *lesson-opamps: PROBLEM AS2's Practice Problem 5.7
+(Difference or Differential) -- no entry* -- because `Lesson_05b.cir` had
+no entry for it. Nothing in the chapter source was wrong: the links row is
+generated from the title match at `build.py`'s problem head, so a problem
+with no entry gets no row and there is nothing to write in the `.md`. This
+item is a `.cir` change alone.
+
+**Why it had no entry.** Practice Problem 5.7 is a design problem with no
+circuit of its own -- it reuses Example 5.7's circuit and only moves the
+target gain from 3/-5 to 4, so its version 9 prose says *"Exactly as in
+the previous problem"* and the work happens in the {{card:Solve}} card. It
+is the only problem in the lesson with no `field 9 Circuit Description`.
+
+**One entry, not three.** Example 5.7 has three -- the v1 factor, the v2
+factor, checking the design. Practice Problem 5.7's two factor runs would
+be byte-identical to Example 5.7's (same circuit, same conditions; only
+the target differs, and the chapter says as much), so they would be two
+entries a reader cannot tell apart from the ones above. What is genuinely
+its own is the design *check*, the circuit carrying the book's values:
+
+    [AS2's Practice Problem 5.7 (checking the design)]
+    r1 = r3 = 10k, r2 = r4 = 40k     ->  vo = 4*v2 - 4*v1
+
+It takes Figure 5.24's scan, the same picture Example 5.7's two factor
+entries point at, the circuit being four elements deep inside that drawing.
+
+**Entry numbers are positional** -- `Entry(lesson, i // 2 + 1, ...)` in
+`app_links.py`, a plain 1-based file-order index -- so it went in at
+position 12, in the book's reading order, and the eleven entries after it
+moved up by one (Practice Problem 5.8 is now 13). What that does *not*
+touch was checked rather than assumed:
+
+* `tools/Lesson_05b.expected.json` is keyed by **title**, not index.
+* no entry number is hardcoded anywhere: the chapter's six `::: applink`
+  directives name entries by title, and `grep -rn "lesson=5b"` over every
+  `.md`, `.php`, `.py`, `.html` and `.js` outside `build/` finds nothing.
+* **the PDFs print no app links at all** (`build.py`: `if k == "applink":
+  return ""`), so a renumber cannot make a printed book wrong.
+* the docs' links regenerate on every build, so they self-heal.
+
+The only exposure is a URL someone had already bookmarked at 5b entries
+12--22, and the order entries appear in the app's Built-in Examples picker
+-- which is the reason for position 12 rather than the end of the file.
+
+**Verified by running it, at both ends.** `py tools\verify_lesson.py
+Lesson_05b` posts every entry through the real app: 23 entries, **0 with a
+problem**, and entry 12 answers `vo = -4*v1 + 4*v2` against the expected
+`vo = 4*v2 - 4*v1`. Then the dev server driven in a browser at
+`?lesson=5b&entry=12` -- the description box carries the 10k/40k circuit,
+the note renders, the Figure 5.24 scan actually loads (`naturalWidth`
+1100, so it was fetched and not merely referenced), and a real solve puts
+**node o voltage = -4v1 + 4v2** in the Results card.
+
+On the docs side, `app_links.py` went from *332 of 335 entries linked, 17
+loose ends* to *333 of 336, 16*, with the lesson-opamps line gone; and the
+rebuilt page's links row is character-for-character its neighbour's apart
+from the number and the anchor id. Measured in the browser, Practice
+Problem 5.7's two links and Practice Problem 5.8's are both 79x19 px.
+**The first measurement of that was wrong and worth recording:** the pane
+was hidden, `innerWidth` came back 0 and every width read 30px -- the trap
+this file's parent `CLAUDE.md` warns about. Front the tab, or emulate a
+viewport, before believing a pixel.
+
+**What is stale until the next build.** `build_local.py` regenerates
+`repos/local/examples/Lesson_05b.cir`, so the offline pair
+(`Application/v9/local/examples/`, `install_site/examples/`) still has the
+22-entry book; the online app gets it on
+`cd /home/Symbulator/symbulator_web && git pull` plus a **Reload**, and
+needs no `pip` -- the solver did not move. **Until that pull, the live
+app's entry 12 is still Practice Problem 5.8**, so the newly built docs
+page must not be deployed ahead of the app pull, or the link lands on the
+wrong problem for as long as the two disagree.
+
+**Version X has its own `Lesson_05b.cir`** and will take this on its next
+`git fetch v9 && git merge v9/main`; nothing fork-specific is involved.
+
+
 ## #353 — two words in the app's *What is Symbulator* paragraph — **done 9 Sep 2026, cache v175; live on the offline pair; `symbulator.pythonanywhere.com` needs its pull, no `pip`**
 
 Noticed while answering #350, the documentation's version of the same claim.
