@@ -1,6 +1,6 @@
 # Next build — accepted but not yet done
 
-## #344 — a derived answer could name an island's reference node instead of zero — **fixed and verified 9 Sep 2026; unreleased, the solver is still 0.6.2 on PyPI**
+## #344 — a derived answer could name an island's reference node instead of zero — **done 9 Sep 2026, solver 0.6.3, cache v172; live on the offline pair; `symbulator.pythonanywhere.com` needs its pull *and* a `pip install --upgrade symbulator`**
 
 Found while re-verifying #319's four-terminal claims by running them
 rather than reading them. The test circuit was a floating-primary
@@ -89,14 +89,34 @@ symptom itself (`assert -v_4 == 0`), not incidentally.
 | `check_byhand.py` | nodal 204, mesh 149, **0 differing** — identical to before the fix |
 | `check_example_plots.py` | 75 plots in 354 entries, 0 failures |
 
-### To ship
+### Shipped
 
-Unreleased. It is `analysis.py`, so it rides a solver release —
-**0.6.3**, then the full train: PyPI, the wheel copied into
-`repos/local/vendor/`, the three pins, a `CACHE_VERSION` bump, both
-offline deploys, and the server pull **plus** `pip install --upgrade
-symbulator`. `byhand.py`'s docstring correction (below) is in the same
-package and can only reach anywhere on that same release.
+**Solver 0.6.3 on PyPI**, wheel sha256 `b1cb4c81…` (250,403 b), sdist
+`77d5250f…` — hash-verified three ways: what PyPI serves, the artefact
+uploaded, and the copy in `repos/local/vendor/`. Cache **v172**, ZIP
+**31,931,160 b (30.5 MB)**. The offline pair is live and was proved to
+be the same build *before* either went up: all 62 staged files hashed
+against the ZIP's own copies, none differing — the check that the two
+no-op deploys of 3 Sep 2026 lacked.
+
+The gates, all run before the upload, because a version number can
+never be reused:
+
+| | |
+|---|---|
+| suite, against the **installed** wheel | 487 passed |
+| `twine check` | passed, wheel and sdist |
+| wheel + sdist unzipped and read | reorder present, `__version__` right, `byhand` docstring fixed |
+| `verify_lesson.py`, all 20 books | 19 at zero; the one finding is Lesson 4's Bo2 Example 3.11, the deliberate failure the chapter teaches *as* a failure |
+| `verify_bridge.py` | 364 cases, **0 disagreements**, 499 benign notices |
+| `check_byhand.py` | 204 / 149, 0 differing — unchanged by the fix |
+| `check_example_plots.py` | 75 plots in 354 entries, 0 failures |
+| leak sweep | 0, from 2 entries / 4 answers |
+
+**Left for Roberto**: the PythonAnywhere pass — this is one of the
+releases where `pip` matters, `symbulator_ui.py` being untouched but
+the package having moved — and the typed prune of the superseded
+0.6.2 wheel from the install host.
 
 Also in this change, and shipping with it: **`byhand.py`'s module
 docstring**, which still opened *"Symbulator X only, experimental"*
