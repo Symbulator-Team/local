@@ -40,7 +40,7 @@ nothing to do in the fork.
 
 ## #360 — the theme swatch returns on a phone wherever it costs nothing — **built, not deployed**
 
-Roberto, 10 Sep 2026: *"Can you make it so that, if and when the language
+Roberto, 9 Sep 2026: *"Can you make it so that, if and when the language
 allows for it, the theme button is shown in mobile? I know Ukrainian will
 not fit, but in English for sure it does."*
 
