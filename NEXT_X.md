@@ -5,6 +5,39 @@ file version 9 never has, so a `git merge v9/main` can never conflict on
 it. `NEXT.md` beside this file is version 9's running list and arrives
 by merge; read it as upstream history, not as a record of X.
 
+## X23 — version 9's #345 and #348 merged: the Equations card above Results, and open on arrival; label `0.6.3+x22` unchanged — **done 9 Sep 2026, pushed; the site wants a pull of the web clone alone**
+
+Two of version 9's items, both in the app:
+
+* **#345** the **Equations** card moves above **Results**, and above the
+  *Showing* picker as well — the system is what produced the answers, and it
+  is the same system for every solution the picker offers.
+* **#348** it **arrives open**. Keyed on the card *appearing* rather than on
+  the setting changing, because the tick is remembered across sessions and a
+  returning reader never fires a change event; a handler on that alone left
+  them with a shut card. A reader who collapses it by hand keeps it collapsed
+  through the next solve.
+
+**The solver did not move** — `git fetch v9 && git merge v9/main` in
+`repos/solver` came back *Already up to date*, version 9 having released
+nothing since 0.6.3. So the label stays **`0.6.3+x22`**, and X's site needs a
+pull of **`/home/symbulatorx/symbulator_web` only** this time, not both
+clones. Nothing to `pip` either way.
+
+**Two conflicts, both the build stamp**, in `server/templates/index.html` and
+in the generated `local/index.html`; both taken from v9, then `build_local.py`
+re-run. `branding.py` was not touched by the merge.
+
+**Verified after the rebuild rather than assumed:** X's page carries
+`#d9a521` and *an experimental fork of Symbulator 9*, hashes **different**
+from version 9's generated page, and holds both items —
+`equationsCard` before `solutionPick` before `resultsCard`, and the
+`if (card.hidden) $('equationsBox').open = true` line. Cache **v174**.
+`i18n check: ok`. X's suite **486 passed, 1 skipped**.
+
+**Nothing of version 9's #346, #347 and #349 applies here** — all three are
+documentation, and the docs stay version 9's. X has no docs site.
+
 ## X22 — version 9's #344 merged: an island's reference is zero in the derived answers too; label **`0.6.3+x22`** — **done 9 Sep 2026, pushed; the site wants a pull of *both* clones and a reload**
 
 Version 9's #344, in `analysis.py`. The third level — the round that
