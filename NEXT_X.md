@@ -5,6 +5,34 @@ file version 9 never has, so a `git merge v9/main` can never conflict on
 it. `NEXT.md` beside this file is version 9's running list and arrives
 by merge; read it as upstream history, not as a record of X.
 
+## X25 — version 9's #359 and #360 merged, and the Showing-off entry; label `0.6.3+x22` unchanged — **done 10 Sep 2026, pushed; the site wants a pull of the web clone alone**
+
+Three things from version 9, all in the app:
+
+* **#359** the By-Hand card's *Solving them* box obeyed the Rounding
+  setting in its plain text and not in the LaTeX the page renders, so a
+  reader on 4 digits was shown fifteen. One line in `byhand_ui`, plus
+  `tools/check_byhand_rounding.py`, which X's `build_local.py` now runs
+  like every other guard.
+* **#360** the theme swatch returns on a phone wherever showing it does
+  not cost a nav link, measured rather than assumed.
+* **the examples** — The Showing-off Problem moved to Lesson 3 and gained
+  an entry of its own, and both it and the monograph's *One of each* now
+  spell the source values `vs` and `is`, as the figure labels them.
+
+**The solver did not move** — `repos/solver` came back *Already up to
+date* — so the label stays **`0.6.3+x22`**, there is no `pip` step, and
+X's site needs a pull of `/home/symbulatorx/symbulator_web` **alone**.
+
+Two conflicts, one per repo, both the build stamp, both taken from v9 and
+then rebuilt with X's own interpreter. `branding.py` untouched by the
+merge: sha256 `0d5c661c…` before and after. After the rebuild X's
+`index.html` hashes `d08cd2a1…` against version 9's `c791b708…`, carries
+`#d9a521` and the fork's subtitle where version 9 carries neither, and
+X's suite is **486 passed, 1 skipped**.
+
+Cache **v176**, arriving from version 9 with the merge.
+
 ## X24 — version 9's #353 merged: two words in the *What is Symbulator* paragraph; label `0.6.3+x22` unchanged — **done 9 Sep 2026, pushed; the site wants a pull of the web clone alone**
 
 One item, and it is text: version 9's **#353** — *For* over a quarter of a
