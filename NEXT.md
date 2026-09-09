@@ -38,6 +38,112 @@ old phrase too, not just v9.
 X takes both words on its next `git fetch v9 && git merge v9/main`; there is
 nothing to do in the fork.
 
+## #360 — the theme swatch returns on a phone wherever it costs nothing — **built, not deployed**
+
+Roberto, 10 Sep 2026: *"Can you make it so that, if and when the language
+allows for it, the theme button is shown in mobile? I know Ukrainian will
+not fit, but in English for sure it does."*
+
+#309 hid the swatch below 480px outright. That was a rule about the worst
+language applied to every language, and it was written because the nav
+then clipped its **Documentation** link — the app's only way out.
+
+`fitPaletteSwatch()` measures instead. The nav is capped at one line-box
+and clips (#143), so a link that did not fit sits below the first row and
+is countable. The function counts the clipped links **with the swatch
+hidden and again with it shown**, and keeps it only if the number did not
+go up.
+
+**The test is not "does everything fit" but "does the swatch cost a
+link".** That distinction earns its keep at both ends of the range: at
+322px the Documentation link is clipped whether the swatch is there or
+not, so withholding it buys the reader nothing and it comes back; at 360px
+it is exactly what pushes the link off, so it stays away.
+
+CSS keeps `display: none` as the default below 480px and the script adds
+`.palette-fits` to undo it — deliberately that way round, so a page whose
+script has not run, or has failed, is never the one that loses a link.
+
+Runs on every `applyLang`, on a debounced resize, and on `document.fonts.
+ready` — the webfonts land after the first layout and every label changes
+width when they do.
+
+**Measured in the browser at four widths, thirteen languages each** (the
+code cannot be read for this answer; nothing in it predicts a text width):
+
+| width | swatch | why |
+|---|---|---|
+| 322px | shown | Documentation is clipped either way, so it is free |
+| 360px | hidden | showing it is what clips Documentation |
+| 375px | shown | fits with both links, in English, German **and Ukrainian** |
+| 430px | shown | comfortable in all thirteen |
+
+**Roberto's premise turned out to be wrong in a useful way.** Ukrainian
+fits at 375px too. #309's Ukrainian problem was with the *long* ribbon
+labels; below 480px `banner.css` has already switched every one to its
+short spelling (*App*, *Docs*, *Collapse*, *Clear*), and at that size the
+thirteen languages differ by a few pixels rather than by a word. What
+decides it is the width, not the language — which is why the rule measures
+rather than consulting a list of languages that would have gone stale the
+first time a label was reworded.
+
+**One number to distrust in this write-up:** the 375px row was taken under
+the browser's phone emulation, mobile user agent and all. The same 375px
+in a desktop browser window withholds the swatch, because the desktop font
+stack lays the same labels out wider (nav 104px against 78px). Both
+answers are correct for the layout they were measured in, and a real phone
+gets the first one.
+
+**Not built and not deployed**, and it rides with #359: both are template
+and `symbulator_ui.py` work, one cache bump covers them, and neither
+touches the solver.
+
+## #359 — the By-Hand card's *Solving them* box ignored the Rounding setting — **built, not deployed**
+
+Roberto, with a screenshot: load the monograph's *One of each* showcase,
+ask for the by-hand equations, look at the solving box. Rounding is on 4
+digits and the box reads
+
+    I_1 = 0.0371701871246538 es + 1.0706575835657 js
+
+while the answers above the card say `0.03717`.
+
+**One line, and it had been there since the card shipped.** `byhand_ui`
+sends every answer twice — `value`, a plain string, and `latex`, the
+typeset copy the page actually renders. #330 put `value` through
+`_rounded`; the LaTeX beside it was built from the exact expression:
+
+    "latex": _tex(sp.Eq(sp.Symbol(name), value, evaluate=False))
+    "latex": _tex(sp.Eq(sp.Symbol(name), _rounded(value), evaluate=False))
+
+So the Rounding setting reached everything on that card except the one box
+a reader reads. The equations themselves were never affected — `_row`
+rounds *before* it typesets, and `_tex` is called at only three other
+places, all of which pass an already-rounded expression.
+
+**Why nobody caught it:** the by-hand equations of a textbook circuit are
+integer-coefficient (`6*I1 - 4*I2 + 20 = 0`), and #330's own examples were
+the AC ones, where the *equations* carried the long floats and were fixed.
+An answer only shows the fault when it stays symbolic — which needs a
+circuit solved in terms of its sources, as this showcase is.
+
+**Guarded, and proved red.** `repos/server/tools/check_byhand_rounding.py`
+drives `byhand_ui` the way `/api/byhand` does and compares the digit counts
+in `latex` against those in `value`, at Rounding 4 *and* 6 so a hard-coded
+4 cannot pass by luck. It runs from `build_local.py` beside the other
+checkers. Reverting the one-line fix makes it exit 1 and name every
+offending answer; the fixture is this same showcase on purpose, because a
+circuit with tidy integer answers would pass the check while broken —
+there would be no digits to drop.
+
+**Not built and not deployed.** `symbulator_ui.py` is bundled by the
+offline builds and pulled by the server, so this wants the usual train and
+a cache bump when Roberto says go. No solver change, so no `pip`.
+
+**Also visible in his screenshot, and fixed by the same line:** the answers
+were overflowing the card to the right. Fifteen significant digits times
+two terms does not fit a phone; four does.
+
 ## #348 — the Equations card arrives open — **done 9 Sep 2026, cache v174; live on the offline pair; `symbulator.pythonanywhere.com` needs its pull, no `pip`**
 
 Roberto, 9 Sep 2026, answering the open question left by #345: *"Yes, open
