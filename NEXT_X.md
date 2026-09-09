@@ -5,6 +5,43 @@ file version 9 never has, so a `git merge v9/main` can never conflict on
 it. `NEXT.md` beside this file is version 9's running list and arrives
 by merge; read it as upstream history, not as a record of X.
 
+## X24 — version 9's #353 merged: two words in the *What is Symbulator* paragraph; label `0.6.3+x22` unchanged — **done 9 Sep 2026, pushed; the site wants a pull of the web clone alone**
+
+One item, and it is text: version 9's **#353** — *For* over a quarter of a
+century (a present perfect wants the preposition) and *free of charge* for
+*free of cost*. English only; the twelve other dictionaries translate the
+sense and carry neither phrase. Version 9's #350–#352 and #354–#358 are all
+documentation, and X has no documentation, so they do not apply.
+
+**The solver did not move** — `git merge v9/main` in `repos/solver` came
+back *Already up to date*. So the label stays **`0.6.3+x22`**, there is no
+`pip` step, and `symbulatorx.pythonanywhere.com` needs a pull of
+`/home/symbulatorx/symbulator_web` **alone**, not both clones.
+
+Two conflicts, one per repo, and both the build stamp — the expected kind.
+Both taken from v9, since `build_local.py` rewrites the stamp a few steps
+later anyway. `branding.py` was **not touched by the merge**: its sha256 is
+`0d5c661c…` before and after, checked rather than assumed.
+
+**Then rebuilt, which is the step that matters.** Taking v9's side on the
+generated `index.html` is correct and leaves X a byte-identical clone of
+version 9 until `build_local.py` runs — the shape that got X's host
+disabled in September. Rebuilt with X's own interpreter
+(`Application\vX\.venv`), then verified by measurement rather than by
+assumption:
+
+* X's `index.html` hashes `91937119…`, version 9's `e2c66db3…` — **not**
+  identical;
+* X's page carries `#d9a521` and *an experimental fork of Symbulator 9*,
+  version 9's carries neither;
+* neither carries a beta mark;
+* both carry the merged wording, *free of charge*.
+
+X's suite: **486 passed, 1 skipped** — the same as X23, and the skip is the
+ahkab ground-truth module, which X's venv does not have.
+
+Cache **v175**, arriving from version 9 with the merge.
+
 ## X23 — version 9's #345 and #348 merged: the Equations card above Results, and open on arrival; label `0.6.3+x22` unchanged — **done 9 Sep 2026, pushed; the site wants a pull of the web clone alone**
 
 Two of version 9's items, both in the app:
