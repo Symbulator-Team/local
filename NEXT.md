@@ -1,5 +1,82 @@
 # Next build — accepted but not yet done
 
+## #367 — the op-amp drawings, redrawn from Roberto's own layout — **in the solver working tree, unreleased**
+
+Found by looking at the 2001 thesis circuits redrawn by version 9 (#363's
+by-product). Thesis Problem 081 put two unrelated nets 16px apart and ran
+one across a resistor's lead; the app's own op-amp drawings had their own
+tangles. Roberto worked the layouts by hand, in PowerPoint, and the fixes
+below are his, not a heuristic:
+
+**1. The orientation, decided with the capture.** `_op_up` answers two
+questions -- which input `_node_order` walks (what makes a cascade come
+out left to right) and which input is drawn on the node row. They are
+separated now: `_op_up` keeps the ordering job and `_Layout.op_up`
+answers for the drawing. The choice is capture-first: if the default
+already puts a lone grounded source on the lower input, keep it; else
+flip if flipping would; else flip if that puts the routed input on the
+right, where `_op_under` has the crossing-free route.
+
+**2. The resistor flip** (Roberto, reading his own redraw of AS2's
+Practice Problem 5.5: *"the trick was flipping the resistor"*). When the
+routed input carries a feedback divider -- one element back to the output
+node, one to ground -- `_node_order` puts the **output before that
+input**, so the feedback element runs left to right in the row instead of
+arcing back over it. Without it the divider node and the output share a
+row wire and the grounded half looks like it hangs off the output.
+
+**3. Raise the triangle, but only where it is earned** (Roberto: *"you
+will avoid the two bends in the lines around the op amp"*). A stage that
+was both flipped and reordered is drawn with its row-wired pin **on** the
+node row, so the input runs straight in and the output straight out.
+Three guards, each measured: only that shape, only when the row above the
+triangle is clear, and only when the orientation was flipped -- raising
+every op-amp took the review harness from 3 findings to **57**.
+
+**4. Not when the other input has a capturable source.** The gate that
+mattered most, and it came from Roberto labelling seven drawings
+*"perfect, why was it flipped?"*. They share one feature: the *other*
+input carries a lone grounded source, so the capture pass already draws
+the textbook stage and reordering moves a drawing that was right. Gating
+on it restored all seven **byte-identical** to their committed SVG.
+
+**Measured, not asserted.** 356 example drawings hashed before and after:
+**345 identical, 11 changed**, and the review harness reports **2**
+findings against a baseline of 0 -- `AS2's Practice Problem 5.9` and
+`AS7's Problem 10.77`, both still open. Roberto's verdict on the 11: two
+much better (`AS2's Example 5.4`, `TR5's Figure 4-32`), two better with a
+refinement wanted (`AS2's PP 5.5` and `TR5's Example 4-13` want the
+op-amp perfectly in line with the resistor), two indifferent, three an
+easy fix, two cascades still wrong. Suite **489 passed**.
+
+**How this was actually arrived at, because the method is the finding.**
+Six rules were proposed from reasoning across the session; two held. Every
+one that stuck came from Roberto labelling a set and the discriminator
+being *measured* over it -- and three of the four that failed were caught
+only because he looked at a picture. Two habits earned their keep and one
+did not:
+
+* **structure beats routing.** Every fix that held decides where an
+  element *goes*; every attempt to fix a picture by choosing how a wire
+  travels failed (the 16px lane lowered to `y_under` looked better and
+  put a riser down the length of a resistor's body).
+* **a count is not a quality measure.** "Flip the leftmost input to the
+  row" took crossing hops across the op-amp drawings from 10 to **0** --
+  by collapsing two op-amps of a cascade onto each other. Hop count fell
+  because the drawing degenerated. Render one and look.
+
+**The next step is Roberto's framing, not another rule**: treat it as an
+optimisation -- every bend costs, every crossing costs a lot, straight
+lines and elements in the row are rewarded -- and let the drawer
+enumerate the few discrete choices per op-amp, score each with the
+instrumentation `review_schematics.py` already has, and keep the
+cheapest. The rules above then become the candidate set rather than the
+decision, and the 11 labelled drawings become the regression set.
+
+The solver is unreleased, so the app shows the old layout until a release
+carries this and #366.
+
+
 ## #366 — an element drawn inside a two-port's body — **fixed in the solver working tree, unreleased**
 
 Roberto, 10 Sep 2026, reading the thesis circuits redrawn by version 9:
