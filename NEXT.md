@@ -1,6 +1,6 @@
 # Next build — accepted but not yet done
 
-## #363 — Lesson 5's Practice Problem 5.7 gets its app entry — **done 10 Sep 2026, cache v177; live on the offline pair and on `learn.symbulator.com`; `symbulator.pythonanywhere.com` needs its pull, no `pip`**
+## #363 — Lesson 5's Practice Problem 5.7 gets its app entry — **done 10 Sep 2026, cache v177; live on all five sites**
 
 Found by auditing the published pages: `AS2's Practice Problem 5.7
 (Difference or Differential)` was the only problem in `/9/lesson-opamps`
@@ -94,11 +94,26 @@ output read**, and check the pull by loading the thing that changed, not
 by `/healthz` -- a `.cir` edit does not move the build stamp, so
 `/healthz` cannot see it at all.
 
-**What is stale.** Only `symbulator.pythonanywhere.com`, which wants
-`cd /home/Symbulator/symbulator_web && git pull` and a **Reload**. Until
-that lands, learn's Practice Problem 5.7 link opens Practice Problem 5.8
-on the live app -- the two disagree by one entry, and the docs side is the
-one that moved first.
+**`symbulator.pythonanywhere.com` took Roberto's pull the same
+morning**, and it was checked by loading the thing that changed rather
+than by `/healthz`: `?lesson=5b&entry=12` now serves the 10k/40k circuit,
+its note and the Figure 5.24 scan, and a real solve on the live host puts
+**node o voltage = -4v1 + 4v2** in the Results card. Nothing is
+outstanding on version 9.
+
+**Version X is one commit behind and nothing in it is broken.** X's
+`server` lags by this commit alone and its `local` by three (the two here
+plus the 9 Sep date correction); its `solver` is level, and its site is in
+step with its own repos (build `2026-09-09 13:03 UTC`, solver
+`0.6.3+x22`). X has no tutorial, so the app link that motivated this item
+does not exist there -- what X lacks is the built-in entry itself, and its
+`Lesson_05b.cir` still holds 22. A merge is X26 when Roberto wants it:
+`git fetch v9 && git merge v9/main` in `server` and `local`, keep
+`branding.py`, take v9's side on the build stamp and the generated
+`index.html` and then **rebuild with X's own interpreter**
+(`Application\vX\.venv`) so the pages keep the gold X -- taking v9's
+generated page and stopping there is the shape that got X's host
+disabled. No `pip`; the solver did not move.
 
 **Version X has its own `Lesson_05b.cir`** and will take this on its next
 `git fetch v9 && git merge v9/main`; nothing fork-specific is involved.
