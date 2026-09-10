@@ -97,6 +97,29 @@ arithmetic.
    symbulator_monograph.tex` twice, `py build.py --web` and a `learn`
    deploy.
 
+**His own case, measured.** Bo2's Drill Exercise 3.2's band goes
+**202px → 157px** (the `ROW_H` part 150 → 105), so the 30px source that
+had about 172px of bare lead wrapped round it now has about 75px. The
+canvas goes 504 × 430 → 460 × 385. Its width barely moves because its
+labels are wide and its op-amp stands above the row — which is the
+**second** of his two size complaints, `OP_ABOVE_GAP`, and that one is
+**not** done. It is still the fitted 60 that swept non-monotonically,
+and it wants the same treatment: a clearance measured from what is
+actually there. It was left alone deliberately rather than stacked on
+top of an unreviewed change.
+
+**The acceptance test is proved load-bearing, not assumed.** Forcing
+`LEAD_MIN` to 2 — an absurdly tight band — and leaving the test in
+place, the harness still reports `with_issues=0`, because the test
+refuses every tightening that would collide. Disable the test at the
+same `LEAD_MIN` and it reports **26**. That is the check going red on
+purpose. (Worth knowing for whoever changes this: with `LEAD_MIN` at its
+proper 34 the test rejects nothing on this book — the drawings it saves
+are the ones nobody has drawn yet, which is the point.)
+
+**One drawing of the 356 does not move at all:** AS2's Figure 5.17
+(Voltage Follower). Nothing in it has room to give.
+
 Suite **503 passed, 2 skipped**; harness `failed=0 with_issues=0`.
 
 **Related: one of #371's two complaints is already gone.** Bo2's Drill
