@@ -5,6 +5,54 @@ file version 9 never has, so a `git merge v9/main` can never conflict on
 it. `NEXT.md` beside this file is version 9's running list and arrives
 by merge; read it as upstream history, not as a record of X.
 
+## X26 — version 9's op-amp drawing round merged; label **`0.6.4+x26`** — **done 10 Sep 2026, pushed; the site wants a pull of *both* clones and a reload**
+
+Version 9's #366, #367 and #372 — solver **0.6.4**, the op-amp drawings.
+The drawer now draws a circuit every way it can and keeps the cheapest
+picture, priced as crossings then bends then wires, and four layout
+rules come with it: a follower claims a column of its own; a lead leaves
+toward its destination; a body stands at the output end of a stretched
+span; a body may stand *above* the node row when its own feedback
+resistor holds the row, and only where that strip is clear. 59 of 63
+op-amp drawings carry no crossing, against 54 before.
+
+**The solver moved, so this is one of the merges where X's site needs
+both clones pulled** — and still no `pip`, X's solver being an editable
+checkout rather than a PyPI install:
+
+    cd /home/symbulatorx/solver && git pull
+
+    cd /home/symbulatorx/symbulator_web && git pull
+
+Then **Reload** on the Web tab. `/healthz` should report `0.6.4+x26`; it
+reads the same metadata `pip` writes, so a label that comes back
+`0.6.3+x22` means the editable install was not re-run on the host.
+
+**Three conflicts, all the expected kind.** The version label in
+`solver`, kept as X's and bumped to `0.6.4+x26`; the build stamp in
+`server`, taken from v9; and the generated `index.html` in `local`, also
+taken from v9 and then rebuilt. `branding.py` was untouched by the
+merge — sha256 `0d5c661c…` before and after.
+
+**The rebuild is not optional.** Taking v9's side on `index.html` is
+right, because it is output, and it leaves X byte for byte identical to
+version 9 until `build_local.py` undoes it. That is the shape that got
+X's host disabled on 2 Sep 2026, so it is verified rather than assumed:
+X's page hashes `59972bce…` against version 9's `ac7adc9f…`, X's carries
+`#d9a521` and *an experimental fork of Symbulator 9* and version 9's
+carries neither.
+
+**Note for the next label bump.** X's editable install in
+`Application\vX\.venv` keeps the *old* label until `pip install -e .
+--no-deps` is re-run, and the packaging test catches it — which it did
+here, on version 9's side, before the merge even started.
+
+X's suite: **502 passed and 3 skipped**, against version 9's 503 and 2.
+The extra skip is ahkab, which X's venv does not have; the package is
+complete either way.
+
+Cache **v178**.
+
 ## X25 — version 9's #359 and #360 merged, and the Showing-off entry; label `0.6.3+x22` unchanged — **done 9 Sep 2026, pushed; the site wants a pull of the web clone alone**
 
 Three things from version 9, all in the app:
