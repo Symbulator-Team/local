@@ -1,5 +1,69 @@
 # Next build — accepted but not yet done
 
+## #366 — an element drawn inside a two-port's body — **fixed in the solver working tree, unreleased**
+
+Roberto, 10 Sep 2026, reading the thesis circuits redrawn by version 9:
+two looked wrong. Problem 040 was the real one -- its 50 ohm `r1` was
+drawn **inside** the two-port block, its label across the block's own
+parameter list.
+
+**The cause is one missing registration.** `_Layout._assign` keeps
+`spans_idx`, the columns an element-with-a-body occupies, and bumps any
+grounded element hanging inside one out to a column of its own. Its
+comment gives the reason -- *"the band between the node row and the rail
+is exactly where the op-amp sits"* -- and that is just as true of a
+four-terminal block. Only op-amps were ever registered. A two-port is
+given clear columns between its nodes by the spacer logic further down,
+but an `extra` column for a *second* grounded element on the same node is
+inserted before that spacer, and lands in the box. In 040 node 1 carries
+both `j1` and `r1`; the first hangs at the node, the second got the
+column the block occupies.
+
+Four lines: register `self.spanning` blocks (`PORT_BLOCK` and `t`) as
+spans too. The bumping machinery already does the right thing with them.
+
+**Blast radius, measured rather than assumed.** Every one of the 356
+example drawings was hashed before and after: **345 identical, 11
+changed**, all in Lesson 10 and Lesson 13, which is where blocks live.
+Two were inspected side by side -- the h-parameter model and the
+ungrounded-primary transformer -- and in both the neighbouring element
+moves out of the block's shadow into a clear column, topology untouched.
+**The monograph's eight exemplars are byte-identical**, so Appendix B is
+not stale and needs no rebuild (checked, because this file's rule is that
+a schematic change usually does make it stale).
+
+**Two guards, both proved red on purpose.**
+`tools/review_schematics.py` gains an *element inside another element's
+body* check -- a different fault from the wire-through-body it already
+proved, and one nothing covered: the box is `fill="none"` and registers
+ink only on its four edges, deliberately, so the block's own parameters
+may sit inside, and therefore nothing saw an element land there. Widening
+`PORT_BOX_W` to 420 takes the run from 0 findings to 6. And
+`test_nothing_hangs_inside_a_four_terminal_block` in the solver's own
+suite fails without the fix (`assert not [(190.0, 58.0)]`) and passes
+with it.
+
+**The first version of that test was worthless and is worth recording.**
+It checked path vertices against the box's rectangle -- and passed with
+the fix removed, because a symbol's path data is in its own local
+coordinates (`M0 0 L60 0`) and can never fall inside the rectangle's
+absolute ones. It now checks each symbol's `translate` origin. *A test
+that passes on the broken code is not a test*, and only removing the fix
+showed it.
+
+**Survey of everything else, since the question was whether this was
+widespread:** 442 circuits checked -- all 356 documentation entries and
+the 86 thesis ones. **The documentation was already clean and stays
+clean**; the fault appeared only in thesis Problem 040, which is not
+shipped. The harness does flag two other thesis circuits on existing
+rules (014, a wire through `r2`'s body; 022, two labels colliding), and
+Problem 081's odd look is a legitimate unity-gain follower routed the
+long way, violating no rule.
+
+Suite **488 passed**. The solver is unreleased, so the app shows the old
+layout until a release carries it.
+
+
 ## #364 — a tool that took `--help` as a path, and the 3.5 MB it committed — **done 10 Sep 2026, nothing to deploy**
 
 `Application/v9/repos/server/--help/` held 42 tracked files, 3.5 MB of
