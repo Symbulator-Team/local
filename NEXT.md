@@ -1,5 +1,591 @@
 # Next build — accepted but not yet done
 
+> **A numbering correction, 10 Sep 2026.** The two items below were
+> first written as #368 and #369. The documentation session had already
+> taken those numbers that day (and #370), and they are live on
+> `learn.symbulator.com`; the app and the docs share one running
+> sequence, which is what the note after the #251 collision of 3 Sep
+> 2026 exists to prevent. The docs keep theirs and these moved up.
+>
+> **Solver 0.6.4's changelog and the commits `5e3b454`, `1a02485` and
+> `f8e7c86` say "#367–#369" and mean #371–#372.** The changelog is
+> published on PyPI and the commits are pushed, so neither is rewritten;
+> follow "#369" from either and you land on the documentation's item.
+> Claim a number in *both* trees before using it.
+
+## #372 — the drawer chooses by cost, and four rules that outlive their drawings — **solver 0.6.4, 10 Sep 2026**
+
+Roberto, 10 Sep 2026: *"the feedback I'm giving you here is meant not
+only to improve these specific images, but for you to derive rules that
+can be taught to the schematic tool"* — and *"My goal is not to have
+pretty circuits here, but to produce a tool that can create pretty
+circuits moving forward as well."* Every item below is written as a
+rule, with the drawing that found it as evidence rather than as the
+subject.
+
+**The chooser.** The drawer's only real choice is where each op-amp
+stands. A hand-written predicate for it took most of a day and still got
+AS2's Practice Problem 5.9 wrong in both directions. `_cost` prices a
+*finished* drawing and `_render` draws every option and keeps the
+cheapest: **crossings, then bends, then wires, compared in that order**,
+which is what "every bend costs money, and every cross costs a lot of
+money" means — no number of saved bends buys one more crossing. Over the
+example book it agrees with every layout Roberto has ruled on.
+
+Two things about it worth keeping:
+
+* **The winner is drawn again at the end.** The review harness and the
+  editable-drawing exporter both read the canvas by hooking
+  `_flush_wires`, and a hook sees the *last* pass, not the returned one.
+  Without this it put four label findings on drawings whose labels sit
+  nowhere near a wire, each naming a wire from the layout that lost.
+* **The tuple order is not currently load-bearing.** Swapping crossings
+  and bends inside `_cost` changes no drawing in the book: on every
+  candidate the cheaper option wins on both. It is written down and
+  enforced; nothing tests it, and that is stated rather than implied.
+
+**The four rules.**
+
+1. **A follower claims a column of its own.** `o1,1,2,2` names one node
+   twice, so it spans no columns and the ordering has nowhere to put its
+   body — the symbol is drawn to the right of that column regardless.
+   Practice Problem 5.9 drew its two triangles 35px into each other.
+   Roberto's balloon: every element claims its real footprint and the
+   canvas grows to hold the sum.
+2. **A lead leaves toward its destination.** The lower input exited 30px
+   left of its input column whatever side its node was on. Where the
+   node lies right that walks past the previous stage and turns back
+   across all of it — 137px the wrong way and 396px back in 5.9, with
+   **both** of that drawing's crossings on the westward leg. Leaving
+   left is kept where it is earned: a grounded input, and a captured
+   source drawn in the drop.
+3. **A body stands at the output end of a stretched span.** Centring is
+   right for a one-column span and wrong for one widened by a spacer: it
+   left 107px of bare output lead and parked the body against its
+   neighbour, leaving 31px for two verticals that ran 3px apart for
+   61px. The output is the signal path and reads as a line; an input
+   lead is a wire arriving and can take the slack.
+4. **A body may stand above the node row** — when its own feedback
+   resistor holds the row, which happens whenever that resistor runs
+   inverting-input-to-output, and **only where the strip above is
+   clear**. From up there all three connections are short drops. The
+   input whose node lies further right takes the upper pin, so the
+   symbol comes out `+` uppermost; that is a consequence of which lead
+   has room, not a rule of its own.
+
+**And one about labels.** A lead routed past a body must clear **what
+the body has written above it**, not the body. Since #338 an op-amp's
+name is set against its own hypotenuse, so a lead 12px over the top
+vertex passed 1.6px over the name — in all fifteen drawings that stood a
+body above the row, not just the one Roberto was looking at. Same
+distinction that cost #212 three rounds.
+
+**The bug this round produced, and the guard that missed it.** Standing
+a body above the node row without asking what was there put `r1` of
+Bo2's Drill Exercise 3.4 straight through o2. The harness passed it:
+it asks whether an element's **midpoint** falls inside a body, and a
+line can cross a body without its middle being in it (midpoint x = 322,
+body x 363..413). It now tests segment-against-body intersection as
+well, with the segment given its own half-thickness first — **a
+horizontal segment has zero height, so an "overlap on both axes" test
+reports nothing**, which is the mistake the scratch check hunting this
+bug also made. Proved red by restoring the drawer bug: it names TR5's
+Example 4-16 and Bo2's Drill Exercise 3.4, those two and nothing else.
+
+**Measured.** 59 of 63 op-amp drawings carry no crossing at all, against
+54 before. The four left are Roberto's rulings, not debt: Bo2's Example
+3.3 (which he calls perfect), Practice Problem 5.10, Example 5.10, and
+the monograph's *Two op-amps, all symbols* — which is Bo2's 3.3 with
+symbolic conductances, the same netlist bar element order. **21 of 356
+drawings move; 335 are byte for byte unchanged, and no monograph
+exemplar moves, so Appendix B is not stale** (measured, not asserted).
+Suite 503 passed, harness `failed=0 with_issues=0`.
+
+**Left open, deliberately.** #371 holds two fine-tuning items Roberto
+asked to be noted and not started. Beyond them, the thing he asked for
+last is a force-directed treatment — repulsion pushing out, springs
+pulling in — with seven stated values to serve. The objective for it is
+prototyped (`_cost` is its first three terms) and the remaining four,
+near-corner joins, unnecessary dots, figure size against element size,
+and wires that run together, are measured but not yet trusted: two of
+them return implausibly large numbers on drawings he calls good, which
+usually means a metric counting something other than its name. **Do not
+let a search optimise an objective that has not been validated against
+his own judgements** — it will happily produce drawings he dislikes.
+
+---
+
+## #371 — two op-amp drawings to fine-tune — **opened 10 Sep 2026, awaiting Roberto's brief**
+
+Roberto, 10 Sep 2026, after looking at all 63 op-amp drawings in the
+example book: *"I want to fine-tune TR5's Example 4-13. There must be a
+more compact way to represent this circuit. Both that one and this one:
+Bo2's Drill Exercise 3.3, could benefit from connecting the lines at the
+corners, instead of near the corners."* He asked for the note and said
+to **wait for further feedback** — so this is a placeholder for his
+design, not a problem to go and solve.
+
+**The two entries, by name and by netlist:**
+
+| Entry | Book | Description |
+|---|---|---|
+| TR5's Example 4-13 (Non-Inverting, in one) | `Lesson_05a.cir` | `e,1,0,vs : r1,1,2,r1 : r2,2,0,r2 : o,2,3,o : r3,o,3,r3 : r4,3,0,r4` |
+| Bo2's Drill Exercise 3.3 (Difference) | `Lesson_05b.cir` | `ea,4,0,va : eb,3,0,vb : r1,4,1,r1 : r2,1,o,r2 : r3,3,2,r1 : r4,2,0,r2 : o,2,1,o` |
+
+Neither is broken by any check we have: both come out of #367 with **no
+crossings at all** — 4-13 at 6 bends over 22 wires on a 629 × 421 canvas,
+3.3 at 7 bends over 24 wires on 638 × 333 — and the review harness passes
+both. This is a fine-tuning item on drawings that are already legal, which
+is the kind the harness cannot open for us.
+
+**Part 1 — 4-13 is bigger than the circuit it draws.** It is one
+non-inverting stage with a divider on each side, and it takes a canvas
+629px wide and 421px tall with a large empty region in the middle-bottom.
+Compare it against the drawings either side of it in the same lesson.
+Whatever "more compact" turns out to mean, it is Roberto's call and not a
+number to tune blind.
+
+**Part 2 — the joins sit near the corner, not on it.** Measured rather
+than described: a wire end that lands within 30px of another wire's end
+without meeting it.
+
+* **4-13** has two. One is **14.5px** — a wire ending at (322, 146) beside
+  one ending at (322, 132). The other is **29.0px**, at x = 363 between
+  y = 132 and y = 160.
+* **3.3** has one, **29.0px**, at x = 231 between y = 118 and y = 148.
+
+Those two numbers are not a coincidence and they say where to look: the
+op-amp's symbol puts its output at the triangle's centre and its two input
+pins **h/4 = 14.5px** either side of it, so **h/2 = 29px** is the pin-to-pin
+span. Every one of these near-misses is an input lead teeing into a node's
+own column *at the pin's height* instead of running to the node and turning
+there. The reader sees a short stub and a tee where the drawing means one
+corner.
+
+**Do not start on either part.** Roberto is looking at the gallery and
+will say what he wants. When he does, the things worth knowing are in
+#367: `_draw_opamp` places the pins, `_cost` prices a drawing (bends and
+crossings, crossings first), and `_render` already draws every layout it
+is offered and keeps the cheapest — so a candidate that joins at the
+corner can be *offered* rather than switched on, and the price list will
+say whether it wins. Anything that moves a drawing must be measured
+against all 356 with `py tools/review_schematics.py`, and against the
+byte-identical count: #367 moved 7 of 356 and left 349 untouched.
+
+**The six remaining crossings, and Roberto's verdict on each**
+(10 Sep 2026, reading the gallery of all 63 op-amp drawings):
+
+| Drawing | Crossings | Verdict |
+|---|---|---|
+| AS2's Practice Problem 5.9 (Cascade) | 2 | **done** -- #367 raised o2 onto the row above r6 as he asked, and that is what took it from 3 to 2. The only drawing in the book where raising *reduces* crossings |
+| Bo2's Example 3.3 (Cascade) | 1 | **settled, leave it.** *"I don't think the cross in Bo2's Example 3.3 can be avoided, to be honest, so this is as good as that one will get."* |
+| AS2's Practice Problem 5.10 (Cascade) | 1 | **settled, leave it.** *"I think the cross in AS2's Practice Problem 5.10 may also be unavoidable."* |
+| AS2's Example 5.10 (Cascade) | 1 | **settled, leave it.** *"Ditto for AS2's Example 5.10. Unavoidable, so this is as good as it gets."* |
+| Two op-amps, all symbols (`The_Monograph.cir`) | 1 | **settled by the row above** -- it is Bobrow's Example 3.3 with symbolic conductances, the same netlist bar the order the elements are listed in, so the same verdict. **It is a monograph exemplar**, drawn into Appendix B of the published PDF, not a synthetic test case |
+| **AS2's Practice Problem 5.8 (Instrumentation)** | 1 | **his fix, below** |
+
+Four of those are closed by his word, not by a measurement, so a later
+session should not go looking: the tag in the gallery says *1 crossing*
+and that is the intended state. Practice Problem 5.8 is the only one
+open.
+
+**Two of those four are one circuit.** *Two op-amps, all symbols* and
+*Bo2's Example 3.3 (Cascade)* have the same netlist -- the monograph's
+copy lists `r23`/`r34` before `r2o`/`r4o`, and that is the whole
+difference -- so they draw the same picture and cost the same, 1
+crossing, 8 bends, 30 wires. They were carried as separate open items
+until Roberto asked what "synthetic, never ruled on" meant and the two
+were put side by side. **When two entries have the same cost triple,
+check whether they are the same circuit before treating them as two
+problems.**
+
+**And the monograph is a consumer of this work.** Appendix B renders the
+eight `The_Monograph.cir` exemplars through the live engine, so any
+schematic change can silently put the published PDF a version behind --
+it has bitten three times. Measured for this round rather than asserted:
+**none of the eight moved**, across #367 or the rule above. The 21
+drawings that changed are all in Lessons 5a, 5b, 6d and 7. Appendix B
+needs no rebuild. Re-measure rather than quoting that sentence.
+
+**Part 3 -- Practice Problem 5.8.** Roberto, 10 Sep 2026: *"The cross in
+AS2's Practice Problem 5.8 can be avoided by moving the o3 above r3 and
+flipping it."*
+
+`e1,1,0,8. : e2,2,0,8.01 : o1,1,3,3 : o2,2,4,4 : r1,3,5,20'k :
+r2,4,6,20'k : r3,5,o,40'k : r4,6,0,40'k : o3,6,5,o : r5,o,0,10'k`
+
+What the crossing is, measured: o3's `+` input is node **6**, which sits
+at x = 718 while the body is at x = 363-413, so the lead takes the
+under-the-body route of #337 -- one wire from x = 292 to x = 688 at
+y = 234 -- and crosses **r4**'s drop at x = 586. That is the whole of it.
+
+**The cheap reading was tried and is wrong.** Putting o3's *other* input
+on the node row (so node 6 needs no under-run) takes the drawing from
+**1 crossing to 6**. "Flipping it" is not a pin swap.
+
+**Why o3 cannot take #367's raise.** The raise puts the body's tip on the
+node row across the op-amp's own columns, and `_raise_ok` demands that
+stretch of row be clear. Here it is not: **r3 runs 5 -> o, which is
+exactly o3's own span** (columns 2 -> 3). In Practice Problem 5.9 the
+feedback resistor sat *beside* the op-amp's span, which is why the same
+move worked there. The difference is topological -- r3 goes
+inverting-input to output -- not a matter of tuning the predicate.
+
+So "above r3" reads literally: **r3 stays on the node row and the body
+goes in a band above it**, which the drawer has never drawn. Every
+placement it has is on the row or below it. That is a new mode with its
+own lead routing and its own canvas growth, not an adjustment.
+
+**If it is built, build it as an option, not a rule.** `_render` already
+draws every layout it is offered and keeps the cheapest, so an
+above-the-row candidate can be *offered* and the price list will take it
+only where it actually removes a crossing. That is what kept #367 honest
+after two hand-written predicates got Practice Problem 5.9 wrong in both
+directions. Awaiting Roberto's confirmation that this is what he means
+before any of it starts.
+
+---
+
+## #367 — the op-amp drawings, redrawn from Roberto's own layout — **released in solver 0.6.4, 10 Sep 2026; see #372, which supersedes its predicate with a cost**
+
+Found by looking at the 2001 thesis circuits redrawn by version 9 (#363's
+by-product). Thesis Problem 081 put two unrelated nets 16px apart and ran
+one across a resistor's lead; the app's own op-amp drawings had their own
+tangles. Roberto worked the layouts by hand, in PowerPoint, and the fixes
+below are his, not a heuristic:
+
+**1. The orientation, decided with the capture.** `_op_up` answers two
+questions -- which input `_node_order` walks (what makes a cascade come
+out left to right) and which input is drawn on the node row. They are
+separated now: `_op_up` keeps the ordering job and `_Layout.op_up`
+answers for the drawing. The choice is capture-first: if the default
+already puts a lone grounded source on the lower input, keep it; else
+flip if flipping would; else flip if that puts the routed input on the
+right, where `_op_under` has the crossing-free route.
+
+**2. The resistor flip** (Roberto, reading his own redraw of AS2's
+Practice Problem 5.5: *"the trick was flipping the resistor"*). When the
+routed input carries a feedback divider -- one element back to the output
+node, one to ground -- `_node_order` puts the **output before that
+input**, so the feedback element runs left to right in the row instead of
+arcing back over it. Without it the divider node and the output share a
+row wire and the grounded half looks like it hangs off the output.
+
+**3. Raise the triangle, but only where it is earned** (Roberto: *"you
+will avoid the two bends in the lines around the op amp"*). A stage that
+was both flipped and reordered is drawn with its row-wired pin **on** the
+node row, so the input runs straight in and the output straight out.
+Three guards, each measured: only that shape, only when the row above the
+triangle is clear, and only when the orientation was flipped -- raising
+every op-amp took the review harness from 3 findings to **57**.
+
+**4. Not when the other input has a capturable source.** The gate that
+mattered most, and it came from Roberto labelling seven drawings
+*"perfect, why was it flipped?"*. They share one feature: the *other*
+input carries a lone grounded source, so the capture pass already draws
+the textbook stage and reordering moves a drawing that was right. Gating
+on it restored all seven **byte-identical** to their committed SVG.
+
+**Measured, not asserted.** 356 example drawings hashed before and after:
+**345 identical, 11 changed**, and the review harness reports **2**
+findings against a baseline of 0 -- `AS2's Practice Problem 5.9` and
+`AS7's Problem 10.77`, both still open. Roberto's verdict on the 11: two
+much better (`AS2's Example 5.4`, `TR5's Figure 4-32`), two better with a
+refinement wanted (`AS2's PP 5.5` and `TR5's Example 4-13` want the
+op-amp perfectly in line with the resistor), two indifferent, three an
+easy fix, two cascades still wrong. Suite **489 passed**.
+
+**How this was actually arrived at, because the method is the finding.**
+Six rules were proposed from reasoning across the session; two held. Every
+one that stuck came from Roberto labelling a set and the discriminator
+being *measured* over it -- and three of the four that failed were caught
+only because he looked at a picture. Two habits earned their keep and one
+did not:
+
+* **structure beats routing.** Every fix that held decides where an
+  element *goes*; every attempt to fix a picture by choosing how a wire
+  travels failed (the 16px lane lowered to `y_under` looked better and
+  put a riser down the length of a resistor's body).
+* **a count is not a quality measure.** "Flip the leftmost input to the
+  row" took crossing hops across the op-amp drawings from 10 to **0** --
+  by collapsing two op-amps of a cascade onto each other. Hop count fell
+  because the drawing degenerated. Render one and look.
+
+**5. The output tip on the node row, and the names out of its way.**
+Roberto wanted the op-amp "perfectly in line with the resistor and the
+joining point behind it". The symbol puts its output at the triangle's
+centre and the inputs 14.5px off it, so only one of the two can sit on
+the row -- the output side is the one that reads as a line, so the tip
+goes there. That lifts the row-wired input *above* the row, which is the
+strip node names are lettered in, and six drawings put a wire through a
+name. So a raised op-amp's input node letters its name to the **left**
+of its dot; every other name keeps its place. Both together: the
+alignment, and the harness still at one finding.
+
+The raise decision moved to `_Layout.raised()` for this: the triangle's
+position and the node names both depend on it, and a rule stated in two
+places drifts -- which is exactly what the duplicated divider predicate
+did earlier the same day.
+
+**6. The divider predicate widened, and gated on a grounded input.** The
+feedback side may be several elements in parallel (AS7's Problem 10.77
+puts a resistor and a capacitor across it, and a strict one-each test
+rejected it). But not when the op-amp's *other* input is ground: that is
+a plain inverting stage whose summing node is the input side and belongs
+first, with its input resistor left of the triangle -- reordering there
+dragged the resistor across to the right, on Bo2's Example 5.5 and Drill
+Exercise 5.5. Both edges are one shared `_is_feedback_divider()`, called
+from `_node_order` and `_Layout`; it had been written out twice.
+
+**Where it stands:** 490 passed, **one** review-harness finding --
+`AS2's Practice Problem 5.9 (Cascade)`, whose `o1,1,2,2` is a follower
+with its output tied to its own inverting input. The lane allocator takes
+an op-amp's span as (row-wired input column, output column), which for a
+follower is a single node, so the span is zero-width, overlaps nothing,
+and both stages land in lane 0 -- triangles at a **-35px gap**. Diagnosed,
+not yet fixed. The other three cascades do not overlap (82px apart) and
+are a question of arrangement rather than a defect.
+
+**The next step is Roberto's framing, not another rule**: treat it as an
+optimisation -- every bend costs, every crossing costs a lot, straight
+lines and elements in the row are rewarded -- and let the drawer
+enumerate the few discrete choices per op-amp, score each with the
+instrumentation `review_schematics.py` already has, and keep the
+cheapest. The rules above then become the candidate set rather than the
+decision, and the 11 labelled drawings become the regression set.
+
+The solver is unreleased, so the app shows the old layout until a release
+carries this and #366.
+
+
+## #366 — an element drawn inside a two-port's body — **released in solver 0.6.4, 10 Sep 2026**
+
+Roberto, 10 Sep 2026, reading the thesis circuits redrawn by version 9:
+two looked wrong. Problem 040 was the real one -- its 50 ohm `r1` was
+drawn **inside** the two-port block, its label across the block's own
+parameter list.
+
+**The cause is one missing registration.** `_Layout._assign` keeps
+`spans_idx`, the columns an element-with-a-body occupies, and bumps any
+grounded element hanging inside one out to a column of its own. Its
+comment gives the reason -- *"the band between the node row and the rail
+is exactly where the op-amp sits"* -- and that is just as true of a
+four-terminal block. Only op-amps were ever registered. A two-port is
+given clear columns between its nodes by the spacer logic further down,
+but an `extra` column for a *second* grounded element on the same node is
+inserted before that spacer, and lands in the box. In 040 node 1 carries
+both `j1` and `r1`; the first hangs at the node, the second got the
+column the block occupies.
+
+Four lines: register `self.spanning` blocks (`PORT_BLOCK` and `t`) as
+spans too. The bumping machinery already does the right thing with them.
+
+**Blast radius, measured rather than assumed.** Every one of the 356
+example drawings was hashed before and after: **345 identical, 11
+changed**, all in Lesson 10 and Lesson 13, which is where blocks live.
+Two were inspected side by side -- the h-parameter model and the
+ungrounded-primary transformer -- and in both the neighbouring element
+moves out of the block's shadow into a clear column, topology untouched.
+**The monograph's eight exemplars are byte-identical**, so Appendix B is
+not stale and needs no rebuild (checked, because this file's rule is that
+a schematic change usually does make it stale).
+
+**Two guards, both proved red on purpose.**
+`tools/review_schematics.py` gains an *element inside another element's
+body* check -- a different fault from the wire-through-body it already
+proved, and one nothing covered: the box is `fill="none"` and registers
+ink only on its four edges, deliberately, so the block's own parameters
+may sit inside, and therefore nothing saw an element land there. Widening
+`PORT_BOX_W` to 420 takes the run from 0 findings to 6. And
+`test_nothing_hangs_inside_a_four_terminal_block` in the solver's own
+suite fails without the fix (`assert not [(190.0, 58.0)]`) and passes
+with it.
+
+**The first version of that test was worthless and is worth recording.**
+It checked path vertices against the box's rectangle -- and passed with
+the fix removed, because a symbol's path data is in its own local
+coordinates (`M0 0 L60 0`) and can never fall inside the rectangle's
+absolute ones. It now checks each symbol's `translate` origin. *A test
+that passes on the broken code is not a test*, and only removing the fix
+showed it.
+
+**Survey of everything else, since the question was whether this was
+widespread:** 442 circuits checked -- all 356 documentation entries and
+the 86 thesis ones. **The documentation was already clean and stays
+clean**; the fault appeared only in thesis Problem 040, which is not
+shipped. The harness does flag two other thesis circuits on existing
+rules (014, a wire through `r2`'s body; 022, two labels colliding), and
+Problem 081's odd look is a legitimate unity-gain follower routed the
+long way, violating no rule.
+
+Suite **488 passed**. The solver is unreleased, so the app shows the old
+layout until a release carries it.
+
+
+## #364 — a tool that took `--help` as a path, and the 3.5 MB it committed — **done 10 Sep 2026, nothing to deploy**
+
+`Application/v9/repos/server/--help/` held 42 tracked files, 3.5 MB of
+rendered schematic gallery. It was written on 8 Sep 2026 at 20:21 and
+swept into commit `c4e4f72` seventeen minutes later by a bulk `git add`
+during #339's write-up, and nothing has touched it since.
+
+**How a directory comes to be called `--help`.**
+`tools/review_schematics.py` read its output directory straight off
+`sys.argv[1]` with no flag handling, so running it with `--help` to see
+the usage created a folder of that name and filled it with the gallery.
+`tools/verify_lesson.py` has the same shape and fails obscurely on
+`examples/--help.cir`. Both now print usage and exit when the positional
+starts with `-`.
+
+**The first diagnosis of this was wrong and is worth recording.** It was
+attributed to `verify_lesson.py`, because that is the script that had
+just been run with `--help` in front of someone and had errored. But
+`verify_lesson.py` prints to stdout and writes no files at all -- it
+could not have produced a single one of those 42. The writer was
+identified by looking for what actually emits `grid_*.html`, which is
+`review_schematics.py` and nothing else. **A plausible culprit that was
+in the room is not the culprit; find the code that can produce the
+artefact.**
+
+Proved both ways: `--help` on each tool now prints usage and creates
+nothing (checked by looking for the directory afterwards), and each still
+does its job -- `verify_lesson.py Lesson_05b --only 12` reports its entry,
+and `review_schematics.py <dir>` renders into the directory named, ending
+**total=356 failed=0 with_issues=0**. A guard must not cost the feature it
+guards.
+
+Worth knowing from the deleted report: it recorded `total=353 ... 58` and
+was eleven days stale. The gallery is regenerable in one command and the
+files stay in git history, so nothing was lost.
+
+
+## #363 — Lesson 5's Practice Problem 5.7 gets its app entry — **done 10 Sep 2026, cache v177; live on all five sites**
+
+Found by auditing the published pages: `AS2's Practice Problem 5.7
+(Difference or Differential)` was the only problem in `/9/lesson-opamps`
+with no **Open in app** / **Open in split view** row. Its neighbours all
+carry one.
+
+**The cause was a real absence, and the build already said so.** `py
+Documentation\tools\app_links.py` had been printing it by name among its
+loose ends -- *lesson-opamps: PROBLEM AS2's Practice Problem 5.7
+(Difference or Differential) -- no entry* -- because `Lesson_05b.cir` had
+no entry for it. Nothing in the chapter source was wrong: the links row is
+generated from the title match at `build.py`'s problem head, so a problem
+with no entry gets no row and there is nothing to write in the `.md`. This
+item is a `.cir` change alone.
+
+**Why it had no entry.** Practice Problem 5.7 is a design problem with no
+circuit of its own -- it reuses Example 5.7's circuit and only moves the
+target gain from 3/-5 to 4, so its version 9 prose says *"Exactly as in
+the previous problem"* and the work happens in the {{card:Solve}} card. It
+is the only problem in the lesson with no `field 9 Circuit Description`.
+
+**One entry, not three.** Example 5.7 has three -- the v1 factor, the v2
+factor, checking the design. Practice Problem 5.7's two factor runs would
+be byte-identical to Example 5.7's (same circuit, same conditions; only
+the target differs, and the chapter says as much), so they would be two
+entries a reader cannot tell apart from the ones above. What is genuinely
+its own is the design *check*, the circuit carrying the book's values:
+
+    [AS2's Practice Problem 5.7 (checking the design)]
+    r1 = r3 = 10k, r2 = r4 = 40k     ->  vo = 4*v2 - 4*v1
+
+It takes Figure 5.24's scan, the same picture Example 5.7's two factor
+entries point at, the circuit being four elements deep inside that drawing.
+
+**Entry numbers are positional** -- `Entry(lesson, i // 2 + 1, ...)` in
+`app_links.py`, a plain 1-based file-order index -- so it went in at
+position 12, in the book's reading order, and the eleven entries after it
+moved up by one (Practice Problem 5.8 is now 13). What that does *not*
+touch was checked rather than assumed:
+
+* `tools/Lesson_05b.expected.json` is keyed by **title**, not index.
+* no entry number is hardcoded anywhere: the chapter's six `::: applink`
+  directives name entries by title, and `grep -rn "lesson=5b"` over every
+  `.md`, `.php`, `.py`, `.html` and `.js` outside `build/` finds nothing.
+* **the PDFs print no app links at all** (`build.py`: `if k == "applink":
+  return ""`), so a renumber cannot make a printed book wrong.
+* the docs' links regenerate on every build, so they self-heal.
+
+The only exposure is a URL someone had already bookmarked at 5b entries
+12--22, and the order entries appear in the app's Built-in Examples picker
+-- which is the reason for position 12 rather than the end of the file.
+
+**Verified by running it, at both ends.** `py tools\verify_lesson.py
+Lesson_05b` posts every entry through the real app: 23 entries, **0 with a
+problem**, and entry 12 answers `vo = -4*v1 + 4*v2` against the expected
+`vo = 4*v2 - 4*v1`. Then the dev server driven in a browser at
+`?lesson=5b&entry=12` -- the description box carries the 10k/40k circuit,
+the note renders, the Figure 5.24 scan actually loads (`naturalWidth`
+1100, so it was fetched and not merely referenced), and a real solve puts
+**node o voltage = -4v1 + 4v2** in the Results card.
+
+On the docs side, `app_links.py` went from *332 of 335 entries linked, 17
+loose ends* to *333 of 336, 16*, with the lesson-opamps line gone; and the
+rebuilt page's links row is character-for-character its neighbour's apart
+from the number and the anchor id. Measured in the browser, Practice
+Problem 5.7's two links and Practice Problem 5.8's are both 79x19 px.
+**The first measurement of that was wrong and worth recording:** the pane
+was hidden, `innerWidth` came back 0 and every width read 30px -- the trap
+this file's parent `CLAUDE.md` warns about. Front the tab, or emulate a
+viewport, before believing a pixel.
+
+**Deployed 10 Sep 2026, verified by fetching.** The offline pair is at
+cache **v177**, ZIP **31,933,190 b** -- the staged install site and the
+ZIP were proved the same build before either went up, all 62 staged files
+hashed against the ZIP's own copies, none differing. `learn.symbulator.com`
+carries the page: Practice Problem 5.7 serves `?lesson=5b&entry=12` and
+Practice Problem 5.8 `entry=13`, read back off the live HTML, and
+`install.symbulator.com/examples/Lesson_05b.cir` serves 23 entries with
+5.7 at 12. One page moved on learn and three files on install; no landing
+change and no solver release, so no `pip` anywhere.
+
+**A sequencing mistake worth keeping.** The pull was handed over *before
+the commit was pushed*, so Roberto ran it against a remote that did not
+yet have the entry, `/healthz` came back healthy and the live app went on
+serving the 22-entry book -- a pull that succeeds and changes nothing
+looks exactly like a pull that worked. It was caught by driving
+`?lesson=5b&entry=12` on the live app and reading the description box,
+which still held Practice Problem 5.8's instrumentation circuit. **Never
+hand over a PythonAnywhere pull before `git push` has been run and its
+output read**, and check the pull by loading the thing that changed, not
+by `/healthz` -- a `.cir` edit does not move the build stamp, so
+`/healthz` cannot see it at all.
+
+**`symbulator.pythonanywhere.com` took Roberto's pull the same
+morning**, and it was checked by loading the thing that changed rather
+than by `/healthz`: `?lesson=5b&entry=12` now serves the 10k/40k circuit,
+its note and the Figure 5.24 scan, and a real solve on the live host puts
+**node o voltage = -4v1 + 4v2** in the Results card. Nothing is
+outstanding on version 9.
+
+**Version X is one commit behind, and Roberto deferred the merge on
+10 Sep 2026** -- *"Let's leave that for a future push, then."* So X is
+deliberately one entry short of version 9's example book, and the next X
+merge picks this up along with whatever else has accumulated. Nothing in
+X is broken meanwhile. X's
+`server` lags by this commit alone and its `local` by three (the two here
+plus the 9 Sep date correction); its `solver` is level, and its site is in
+step with its own repos (build `2026-09-09 13:03 UTC`, solver
+`0.6.3+x22`). X has no tutorial, so the app link that motivated this item
+does not exist there -- what X lacks is the built-in entry itself, and its
+`Lesson_05b.cir` still holds 22. When the merge does come, it is the ordinary one:
+`git fetch v9 && git merge v9/main` in `server` and `local`, keep
+`branding.py`, take v9's side on the build stamp and the generated
+`index.html` and then **rebuild with X's own interpreter**
+(`Application\vX\.venv`) so the pages keep the gold X -- taking v9's
+generated page and stopping there is the shape that got X's host
+disabled. No `pip` for this commit; the solver did not move.
+
+**Do not open an X item for this on its own.** It is not X26 by itself --
+whatever X merge comes next carries it, and numbering it now would leave
+a phantom item that never had a session.
+
+**Version X has its own `Lesson_05b.cir`** and will take this on its next
+`git fetch v9 && git merge v9/main`; nothing fork-specific is involved.
+
+
 ## #353 — two words in the app's *What is Symbulator* paragraph — **done 9 Sep 2026, cache v175; live on the offline pair; `symbulator.pythonanywhere.com` needs its pull, no `pip`**
 
 Noticed while answering #350, the documentation's version of the same claim.
