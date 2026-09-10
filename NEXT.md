@@ -65,6 +65,41 @@ did not:
   by collapsing two op-amps of a cascade onto each other. Hop count fell
   because the drawing degenerated. Render one and look.
 
+**5. The output tip on the node row, and the names out of its way.**
+Roberto wanted the op-amp "perfectly in line with the resistor and the
+joining point behind it". The symbol puts its output at the triangle's
+centre and the inputs 14.5px off it, so only one of the two can sit on
+the row -- the output side is the one that reads as a line, so the tip
+goes there. That lifts the row-wired input *above* the row, which is the
+strip node names are lettered in, and six drawings put a wire through a
+name. So a raised op-amp's input node letters its name to the **left**
+of its dot; every other name keeps its place. Both together: the
+alignment, and the harness still at one finding.
+
+The raise decision moved to `_Layout.raised()` for this: the triangle's
+position and the node names both depend on it, and a rule stated in two
+places drifts -- which is exactly what the duplicated divider predicate
+did earlier the same day.
+
+**6. The divider predicate widened, and gated on a grounded input.** The
+feedback side may be several elements in parallel (AS7's Problem 10.77
+puts a resistor and a capacitor across it, and a strict one-each test
+rejected it). But not when the op-amp's *other* input is ground: that is
+a plain inverting stage whose summing node is the input side and belongs
+first, with its input resistor left of the triangle -- reordering there
+dragged the resistor across to the right, on Bo2's Example 5.5 and Drill
+Exercise 5.5. Both edges are one shared `_is_feedback_divider()`, called
+from `_node_order` and `_Layout`; it had been written out twice.
+
+**Where it stands:** 490 passed, **one** review-harness finding --
+`AS2's Practice Problem 5.9 (Cascade)`, whose `o1,1,2,2` is a follower
+with its output tied to its own inverting input. The lane allocator takes
+an op-amp's span as (row-wired input column, output column), which for a
+follower is a single node, so the span is zero-width, overlaps nothing,
+and both stages land in lane 0 -- triangles at a **-35px gap**. Diagnosed,
+not yet fixed. The other three cascades do not overlap (82px apart) and
+are a question of arrangement rather than a defect.
+
 **The next step is Roberto's framing, not another rule**: treat it as an
 optimisation -- every bend costs, every crossing costs a lot, straight
 lines and elements in the row are rewarded -- and let the drawer
