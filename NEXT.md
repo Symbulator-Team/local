@@ -1,6 +1,239 @@
 # Next build — accepted but not yet done
 
-## #367 — the op-amp drawings, redrawn from Roberto's own layout — **in the solver working tree, unreleased**
+## #369 — the drawer chooses by cost, and four rules that outlive their drawings — **solver 0.6.4, 10 Sep 2026**
+
+Roberto, 10 Sep 2026: *"the feedback I'm giving you here is meant not
+only to improve these specific images, but for you to derive rules that
+can be taught to the schematic tool"* — and *"My goal is not to have
+pretty circuits here, but to produce a tool that can create pretty
+circuits moving forward as well."* Every item below is written as a
+rule, with the drawing that found it as evidence rather than as the
+subject.
+
+**The chooser.** The drawer's only real choice is where each op-amp
+stands. A hand-written predicate for it took most of a day and still got
+AS2's Practice Problem 5.9 wrong in both directions. `_cost` prices a
+*finished* drawing and `_render` draws every option and keeps the
+cheapest: **crossings, then bends, then wires, compared in that order**,
+which is what "every bend costs money, and every cross costs a lot of
+money" means — no number of saved bends buys one more crossing. Over the
+example book it agrees with every layout Roberto has ruled on.
+
+Two things about it worth keeping:
+
+* **The winner is drawn again at the end.** The review harness and the
+  editable-drawing exporter both read the canvas by hooking
+  `_flush_wires`, and a hook sees the *last* pass, not the returned one.
+  Without this it put four label findings on drawings whose labels sit
+  nowhere near a wire, each naming a wire from the layout that lost.
+* **The tuple order is not currently load-bearing.** Swapping crossings
+  and bends inside `_cost` changes no drawing in the book: on every
+  candidate the cheaper option wins on both. It is written down and
+  enforced; nothing tests it, and that is stated rather than implied.
+
+**The four rules.**
+
+1. **A follower claims a column of its own.** `o1,1,2,2` names one node
+   twice, so it spans no columns and the ordering has nowhere to put its
+   body — the symbol is drawn to the right of that column regardless.
+   Practice Problem 5.9 drew its two triangles 35px into each other.
+   Roberto's balloon: every element claims its real footprint and the
+   canvas grows to hold the sum.
+2. **A lead leaves toward its destination.** The lower input exited 30px
+   left of its input column whatever side its node was on. Where the
+   node lies right that walks past the previous stage and turns back
+   across all of it — 137px the wrong way and 396px back in 5.9, with
+   **both** of that drawing's crossings on the westward leg. Leaving
+   left is kept where it is earned: a grounded input, and a captured
+   source drawn in the drop.
+3. **A body stands at the output end of a stretched span.** Centring is
+   right for a one-column span and wrong for one widened by a spacer: it
+   left 107px of bare output lead and parked the body against its
+   neighbour, leaving 31px for two verticals that ran 3px apart for
+   61px. The output is the signal path and reads as a line; an input
+   lead is a wire arriving and can take the slack.
+4. **A body may stand above the node row** — when its own feedback
+   resistor holds the row, which happens whenever that resistor runs
+   inverting-input-to-output, and **only where the strip above is
+   clear**. From up there all three connections are short drops. The
+   input whose node lies further right takes the upper pin, so the
+   symbol comes out `+` uppermost; that is a consequence of which lead
+   has room, not a rule of its own.
+
+**And one about labels.** A lead routed past a body must clear **what
+the body has written above it**, not the body. Since #338 an op-amp's
+name is set against its own hypotenuse, so a lead 12px over the top
+vertex passed 1.6px over the name — in all fifteen drawings that stood a
+body above the row, not just the one Roberto was looking at. Same
+distinction that cost #212 three rounds.
+
+**The bug this round produced, and the guard that missed it.** Standing
+a body above the node row without asking what was there put `r1` of
+Bo2's Drill Exercise 3.4 straight through o2. The harness passed it:
+it asks whether an element's **midpoint** falls inside a body, and a
+line can cross a body without its middle being in it (midpoint x = 322,
+body x 363..413). It now tests segment-against-body intersection as
+well, with the segment given its own half-thickness first — **a
+horizontal segment has zero height, so an "overlap on both axes" test
+reports nothing**, which is the mistake the scratch check hunting this
+bug also made. Proved red by restoring the drawer bug: it names TR5's
+Example 4-16 and Bo2's Drill Exercise 3.4, those two and nothing else.
+
+**Measured.** 59 of 63 op-amp drawings carry no crossing at all, against
+54 before. The four left are Roberto's rulings, not debt: Bo2's Example
+3.3 (which he calls perfect), Practice Problem 5.10, Example 5.10, and
+the monograph's *Two op-amps, all symbols* — which is Bo2's 3.3 with
+symbolic conductances, the same netlist bar element order. **21 of 356
+drawings move; 335 are byte for byte unchanged, and no monograph
+exemplar moves, so Appendix B is not stale** (measured, not asserted).
+Suite 503 passed, harness `failed=0 with_issues=0`.
+
+**Left open, deliberately.** #368 holds two fine-tuning items Roberto
+asked to be noted and not started. Beyond them, the thing he asked for
+last is a force-directed treatment — repulsion pushing out, springs
+pulling in — with seven stated values to serve. The objective for it is
+prototyped (`_cost` is its first three terms) and the remaining four,
+near-corner joins, unnecessary dots, figure size against element size,
+and wires that run together, are measured but not yet trusted: two of
+them return implausibly large numbers on drawings he calls good, which
+usually means a metric counting something other than its name. **Do not
+let a search optimise an objective that has not been validated against
+his own judgements** — it will happily produce drawings he dislikes.
+
+---
+
+## #368 — two op-amp drawings to fine-tune — **opened 10 Sep 2026, awaiting Roberto's brief**
+
+Roberto, 10 Sep 2026, after looking at all 63 op-amp drawings in the
+example book: *"I want to fine-tune TR5's Example 4-13. There must be a
+more compact way to represent this circuit. Both that one and this one:
+Bo2's Drill Exercise 3.3, could benefit from connecting the lines at the
+corners, instead of near the corners."* He asked for the note and said
+to **wait for further feedback** — so this is a placeholder for his
+design, not a problem to go and solve.
+
+**The two entries, by name and by netlist:**
+
+| Entry | Book | Description |
+|---|---|---|
+| TR5's Example 4-13 (Non-Inverting, in one) | `Lesson_05a.cir` | `e,1,0,vs : r1,1,2,r1 : r2,2,0,r2 : o,2,3,o : r3,o,3,r3 : r4,3,0,r4` |
+| Bo2's Drill Exercise 3.3 (Difference) | `Lesson_05b.cir` | `ea,4,0,va : eb,3,0,vb : r1,4,1,r1 : r2,1,o,r2 : r3,3,2,r1 : r4,2,0,r2 : o,2,1,o` |
+
+Neither is broken by any check we have: both come out of #367 with **no
+crossings at all** — 4-13 at 6 bends over 22 wires on a 629 × 421 canvas,
+3.3 at 7 bends over 24 wires on 638 × 333 — and the review harness passes
+both. This is a fine-tuning item on drawings that are already legal, which
+is the kind the harness cannot open for us.
+
+**Part 1 — 4-13 is bigger than the circuit it draws.** It is one
+non-inverting stage with a divider on each side, and it takes a canvas
+629px wide and 421px tall with a large empty region in the middle-bottom.
+Compare it against the drawings either side of it in the same lesson.
+Whatever "more compact" turns out to mean, it is Roberto's call and not a
+number to tune blind.
+
+**Part 2 — the joins sit near the corner, not on it.** Measured rather
+than described: a wire end that lands within 30px of another wire's end
+without meeting it.
+
+* **4-13** has two. One is **14.5px** — a wire ending at (322, 146) beside
+  one ending at (322, 132). The other is **29.0px**, at x = 363 between
+  y = 132 and y = 160.
+* **3.3** has one, **29.0px**, at x = 231 between y = 118 and y = 148.
+
+Those two numbers are not a coincidence and they say where to look: the
+op-amp's symbol puts its output at the triangle's centre and its two input
+pins **h/4 = 14.5px** either side of it, so **h/2 = 29px** is the pin-to-pin
+span. Every one of these near-misses is an input lead teeing into a node's
+own column *at the pin's height* instead of running to the node and turning
+there. The reader sees a short stub and a tee where the drawing means one
+corner.
+
+**Do not start on either part.** Roberto is looking at the gallery and
+will say what he wants. When he does, the things worth knowing are in
+#367: `_draw_opamp` places the pins, `_cost` prices a drawing (bends and
+crossings, crossings first), and `_render` already draws every layout it
+is offered and keeps the cheapest — so a candidate that joins at the
+corner can be *offered* rather than switched on, and the price list will
+say whether it wins. Anything that moves a drawing must be measured
+against all 356 with `py tools/review_schematics.py`, and against the
+byte-identical count: #367 moved 7 of 356 and left 349 untouched.
+
+**The six remaining crossings, and Roberto's verdict on each**
+(10 Sep 2026, reading the gallery of all 63 op-amp drawings):
+
+| Drawing | Crossings | Verdict |
+|---|---|---|
+| AS2's Practice Problem 5.9 (Cascade) | 2 | **done** -- #367 raised o2 onto the row above r6 as he asked, and that is what took it from 3 to 2. The only drawing in the book where raising *reduces* crossings |
+| Bo2's Example 3.3 (Cascade) | 1 | **settled, leave it.** *"I don't think the cross in Bo2's Example 3.3 can be avoided, to be honest, so this is as good as that one will get."* |
+| AS2's Practice Problem 5.10 (Cascade) | 1 | **settled, leave it.** *"I think the cross in AS2's Practice Problem 5.10 may also be unavoidable."* |
+| AS2's Example 5.10 (Cascade) | 1 | **settled, leave it.** *"Ditto for AS2's Example 5.10. Unavoidable, so this is as good as it gets."* |
+| Two op-amps, all symbols (`The_Monograph.cir`) | 1 | **settled by the row above** -- it is Bobrow's Example 3.3 with symbolic conductances, the same netlist bar the order the elements are listed in, so the same verdict. **It is a monograph exemplar**, drawn into Appendix B of the published PDF, not a synthetic test case |
+| **AS2's Practice Problem 5.8 (Instrumentation)** | 1 | **his fix, below** |
+
+Four of those are closed by his word, not by a measurement, so a later
+session should not go looking: the tag in the gallery says *1 crossing*
+and that is the intended state. Practice Problem 5.8 is the only one
+open.
+
+**Two of those four are one circuit.** *Two op-amps, all symbols* and
+*Bo2's Example 3.3 (Cascade)* have the same netlist -- the monograph's
+copy lists `r23`/`r34` before `r2o`/`r4o`, and that is the whole
+difference -- so they draw the same picture and cost the same, 1
+crossing, 8 bends, 30 wires. They were carried as separate open items
+until Roberto asked what "synthetic, never ruled on" meant and the two
+were put side by side. **When two entries have the same cost triple,
+check whether they are the same circuit before treating them as two
+problems.**
+
+**And the monograph is a consumer of this work.** Appendix B renders the
+eight `The_Monograph.cir` exemplars through the live engine, so any
+schematic change can silently put the published PDF a version behind --
+it has bitten three times. Measured for this round rather than asserted:
+**none of the eight moved**, across #367 or the rule above. The 21
+drawings that changed are all in Lessons 5a, 5b, 6d and 7. Appendix B
+needs no rebuild. Re-measure rather than quoting that sentence.
+
+**Part 3 -- Practice Problem 5.8.** Roberto, 10 Sep 2026: *"The cross in
+AS2's Practice Problem 5.8 can be avoided by moving the o3 above r3 and
+flipping it."*
+
+`e1,1,0,8. : e2,2,0,8.01 : o1,1,3,3 : o2,2,4,4 : r1,3,5,20'k :
+r2,4,6,20'k : r3,5,o,40'k : r4,6,0,40'k : o3,6,5,o : r5,o,0,10'k`
+
+What the crossing is, measured: o3's `+` input is node **6**, which sits
+at x = 718 while the body is at x = 363-413, so the lead takes the
+under-the-body route of #337 -- one wire from x = 292 to x = 688 at
+y = 234 -- and crosses **r4**'s drop at x = 586. That is the whole of it.
+
+**The cheap reading was tried and is wrong.** Putting o3's *other* input
+on the node row (so node 6 needs no under-run) takes the drawing from
+**1 crossing to 6**. "Flipping it" is not a pin swap.
+
+**Why o3 cannot take #367's raise.** The raise puts the body's tip on the
+node row across the op-amp's own columns, and `_raise_ok` demands that
+stretch of row be clear. Here it is not: **r3 runs 5 -> o, which is
+exactly o3's own span** (columns 2 -> 3). In Practice Problem 5.9 the
+feedback resistor sat *beside* the op-amp's span, which is why the same
+move worked there. The difference is topological -- r3 goes
+inverting-input to output -- not a matter of tuning the predicate.
+
+So "above r3" reads literally: **r3 stays on the node row and the body
+goes in a band above it**, which the drawer has never drawn. Every
+placement it has is on the row or below it. That is a new mode with its
+own lead routing and its own canvas growth, not an adjustment.
+
+**If it is built, build it as an option, not a rule.** `_render` already
+draws every layout it is offered and keeps the cheapest, so an
+above-the-row candidate can be *offered* and the price list will take it
+only where it actually removes a crossing. That is what kept #367 honest
+after two hand-written predicates got Practice Problem 5.9 wrong in both
+directions. Awaiting Roberto's confirmation that this is what he means
+before any of it starts.
+
+---
+
+## #367 — the op-amp drawings, redrawn from Roberto's own layout — **released in solver 0.6.4, 10 Sep 2026; see #369, which supersedes its predicate with a cost**
 
 Found by looking at the 2001 thesis circuits redrawn by version 9 (#363's
 by-product). Thesis Problem 081 put two unrelated nets 16px apart and ran
@@ -112,7 +345,7 @@ The solver is unreleased, so the app shows the old layout until a release
 carries this and #366.
 
 
-## #366 — an element drawn inside a two-port's body — **fixed in the solver working tree, unreleased**
+## #366 — an element drawn inside a two-port's body — **released in solver 0.6.4, 10 Sep 2026**
 
 Roberto, 10 Sep 2026, reading the thesis circuits redrawn by version 9:
 two looked wrong. Problem 040 was the real one -- its 50 ohm `r1` was
