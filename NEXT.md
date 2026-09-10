@@ -1,5 +1,42 @@
 # Next build — accepted but not yet done
 
+## #364 — a tool that took `--help` as a path, and the 3.5 MB it committed — **done 10 Sep 2026, nothing to deploy**
+
+`Application/v9/repos/server/--help/` held 42 tracked files, 3.5 MB of
+rendered schematic gallery. It was written on 8 Sep 2026 at 20:21 and
+swept into commit `c4e4f72` seventeen minutes later by a bulk `git add`
+during #339's write-up, and nothing has touched it since.
+
+**How a directory comes to be called `--help`.**
+`tools/review_schematics.py` read its output directory straight off
+`sys.argv[1]` with no flag handling, so running it with `--help` to see
+the usage created a folder of that name and filled it with the gallery.
+`tools/verify_lesson.py` has the same shape and fails obscurely on
+`examples/--help.cir`. Both now print usage and exit when the positional
+starts with `-`.
+
+**The first diagnosis of this was wrong and is worth recording.** It was
+attributed to `verify_lesson.py`, because that is the script that had
+just been run with `--help` in front of someone and had errored. But
+`verify_lesson.py` prints to stdout and writes no files at all -- it
+could not have produced a single one of those 42. The writer was
+identified by looking for what actually emits `grid_*.html`, which is
+`review_schematics.py` and nothing else. **A plausible culprit that was
+in the room is not the culprit; find the code that can produce the
+artefact.**
+
+Proved both ways: `--help` on each tool now prints usage and creates
+nothing (checked by looking for the directory afterwards), and each still
+does its job -- `verify_lesson.py Lesson_05b --only 12` reports its entry,
+and `review_schematics.py <dir>` renders into the directory named, ending
+**total=356 failed=0 with_issues=0**. A guard must not cost the feature it
+guards.
+
+Worth knowing from the deleted report: it recorded `total=353 ... 58` and
+was eleven days stale. The gallery is regenerable in one command and the
+files stay in git history, so nothing was lost.
+
+
 ## #363 — Lesson 5's Practice Problem 5.7 gets its app entry — **done 10 Sep 2026, cache v177; live on all five sites**
 
 Found by auditing the published pages: `AS2's Practice Problem 5.7
