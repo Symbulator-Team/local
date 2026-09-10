@@ -1,6 +1,19 @@
 # Next build — accepted but not yet done
 
-## #369 — the drawer chooses by cost, and four rules that outlive their drawings — **solver 0.6.4, 10 Sep 2026**
+> **A numbering correction, 10 Sep 2026.** The two items below were
+> first written as #368 and #369. The documentation session had already
+> taken those numbers that day (and #370), and they are live on
+> `learn.symbulator.com`; the app and the docs share one running
+> sequence, which is what the note after the #251 collision of 3 Sep
+> 2026 exists to prevent. The docs keep theirs and these moved up.
+>
+> **Solver 0.6.4's changelog and the commits `5e3b454`, `1a02485` and
+> `f8e7c86` say "#367–#369" and mean #371–#372.** The changelog is
+> published on PyPI and the commits are pushed, so neither is rewritten;
+> follow "#369" from either and you land on the documentation's item.
+> Claim a number in *both* trees before using it.
+
+## #372 — the drawer chooses by cost, and four rules that outlive their drawings — **solver 0.6.4, 10 Sep 2026**
 
 Roberto, 10 Sep 2026: *"the feedback I'm giving you here is meant not
 only to improve these specific images, but for you to derive rules that
@@ -88,7 +101,7 @@ drawings move; 335 are byte for byte unchanged, and no monograph
 exemplar moves, so Appendix B is not stale** (measured, not asserted).
 Suite 503 passed, harness `failed=0 with_issues=0`.
 
-**Left open, deliberately.** #368 holds two fine-tuning items Roberto
+**Left open, deliberately.** #371 holds two fine-tuning items Roberto
 asked to be noted and not started. Beyond them, the thing he asked for
 last is a force-directed treatment — repulsion pushing out, springs
 pulling in — with seven stated values to serve. The objective for it is
@@ -102,7 +115,7 @@ his own judgements** — it will happily produce drawings he dislikes.
 
 ---
 
-## #368 — two op-amp drawings to fine-tune — **opened 10 Sep 2026, awaiting Roberto's brief**
+## #371 — two op-amp drawings to fine-tune — **opened 10 Sep 2026, awaiting Roberto's brief**
 
 Roberto, 10 Sep 2026, after looking at all 63 op-amp drawings in the
 example book: *"I want to fine-tune TR5's Example 4-13. There must be a
@@ -233,7 +246,7 @@ before any of it starts.
 
 ---
 
-## #367 — the op-amp drawings, redrawn from Roberto's own layout — **released in solver 0.6.4, 10 Sep 2026; see #369, which supersedes its predicate with a cost**
+## #367 — the op-amp drawings, redrawn from Roberto's own layout — **released in solver 0.6.4, 10 Sep 2026; see #372, which supersedes its predicate with a cost**
 
 Found by looking at the 2001 thesis circuits redrawn by version 9 (#363's
 by-product). Thesis Problem 081 put two unrelated nets 16px apart and ran
