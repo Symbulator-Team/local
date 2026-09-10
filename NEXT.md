@@ -1,6 +1,6 @@
 # Next build — accepted but not yet done
 
-## #363 — Lesson 5's Practice Problem 5.7 gets its app entry — **built, not deployed**
+## #363 — Lesson 5's Practice Problem 5.7 gets its app entry — **done 10 Sep 2026, cache v177; live on the offline pair and on `learn.symbulator.com`; `symbulator.pythonanywhere.com` needs its pull, no `pip`**
 
 Found by auditing the published pages: `AS2's Practice Problem 5.7
 (Difference or Differential)` was the only problem in `/9/lesson-opamps`
@@ -72,15 +72,33 @@ was hidden, `innerWidth` came back 0 and every width read 30px -- the trap
 this file's parent `CLAUDE.md` warns about. Front the tab, or emulate a
 viewport, before believing a pixel.
 
-**What is stale until the next build.** `build_local.py` regenerates
-`repos/local/examples/Lesson_05b.cir`, so the offline pair
-(`Application/v9/local/examples/`, `install_site/examples/`) still has the
-22-entry book; the online app gets it on
-`cd /home/Symbulator/symbulator_web && git pull` plus a **Reload**, and
-needs no `pip` -- the solver did not move. **Until that pull, the live
-app's entry 12 is still Practice Problem 5.8**, so the newly built docs
-page must not be deployed ahead of the app pull, or the link lands on the
-wrong problem for as long as the two disagree.
+**Deployed 10 Sep 2026, verified by fetching.** The offline pair is at
+cache **v177**, ZIP **31,933,190 b** -- the staged install site and the
+ZIP were proved the same build before either went up, all 62 staged files
+hashed against the ZIP's own copies, none differing. `learn.symbulator.com`
+carries the page: Practice Problem 5.7 serves `?lesson=5b&entry=12` and
+Practice Problem 5.8 `entry=13`, read back off the live HTML, and
+`install.symbulator.com/examples/Lesson_05b.cir` serves 23 entries with
+5.7 at 12. One page moved on learn and three files on install; no landing
+change and no solver release, so no `pip` anywhere.
+
+**A sequencing mistake worth keeping.** The pull was handed over *before
+the commit was pushed*, so Roberto ran it against a remote that did not
+yet have the entry, `/healthz` came back healthy and the live app went on
+serving the 22-entry book -- a pull that succeeds and changes nothing
+looks exactly like a pull that worked. It was caught by driving
+`?lesson=5b&entry=12` on the live app and reading the description box,
+which still held Practice Problem 5.8's instrumentation circuit. **Never
+hand over a PythonAnywhere pull before `git push` has been run and its
+output read**, and check the pull by loading the thing that changed, not
+by `/healthz` -- a `.cir` edit does not move the build stamp, so
+`/healthz` cannot see it at all.
+
+**What is stale.** Only `symbulator.pythonanywhere.com`, which wants
+`cd /home/Symbulator/symbulator_web && git pull` and a **Reload**. Until
+that lands, learn's Practice Problem 5.7 link opens Practice Problem 5.8
+on the live app -- the two disagree by one entry, and the docs side is the
+one that moved first.
 
 **Version X has its own `Lesson_05b.cir`** and will take this on its next
 `git fetch v9 && git merge v9/main`; nothing fork-specific is involved.
