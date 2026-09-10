@@ -101,19 +101,27 @@ its note and the Figure 5.24 scan, and a real solve on the live host puts
 **node o voltage = -4v1 + 4v2** in the Results card. Nothing is
 outstanding on version 9.
 
-**Version X is one commit behind and nothing in it is broken.** X's
+**Version X is one commit behind, and Roberto deferred the merge on
+10 Sep 2026** -- *"Let's leave that for a future push, then."* So X is
+deliberately one entry short of version 9's example book, and the next X
+merge picks this up along with whatever else has accumulated. Nothing in
+X is broken meanwhile. X's
 `server` lags by this commit alone and its `local` by three (the two here
 plus the 9 Sep date correction); its `solver` is level, and its site is in
 step with its own repos (build `2026-09-09 13:03 UTC`, solver
 `0.6.3+x22`). X has no tutorial, so the app link that motivated this item
 does not exist there -- what X lacks is the built-in entry itself, and its
-`Lesson_05b.cir` still holds 22. A merge is X26 when Roberto wants it:
+`Lesson_05b.cir` still holds 22. When the merge does come, it is the ordinary one:
 `git fetch v9 && git merge v9/main` in `server` and `local`, keep
 `branding.py`, take v9's side on the build stamp and the generated
 `index.html` and then **rebuild with X's own interpreter**
 (`Application\vX\.venv`) so the pages keep the gold X -- taking v9's
 generated page and stopping there is the shape that got X's host
-disabled. No `pip`; the solver did not move.
+disabled. No `pip` for this commit; the solver did not move.
+
+**Do not open an X item for this on its own.** It is not X26 by itself --
+whatever X merge comes next carries it, and numbering it now would leave
+a phantom item that never had a session.
 
 **Version X has its own `Lesson_05b.cir`** and will take this on its next
 `git fetch v9 && git merge v9/main`; nothing fork-specific is involved.
