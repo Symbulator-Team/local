@@ -101,6 +101,56 @@ drawings move; 335 are byte for byte unchanged, and no monograph
 exemplar moves, so Appendix B is not stale** (measured, not asserted).
 Suite 503 passed, harness `failed=0 with_issues=0`.
 
+**Roberto's brief for it, 10 Sep 2026, in his words.** *"I want you to
+spend the next three hours thinking about how you can implement the
+ideas of the algorithm I mentioned by name a while ago"* — force-directed
+graph drawing — *"Their idea of forces that push out and springs that
+pull in sounds promising to me."* And what it is for: *"My goal is not
+to have pretty circuits here, but to produce a tool that can create
+pretty circuits moving forward as well."*
+
+Seven things he values in a good circuit image, quoted rather than
+paraphrased, because they are the specification:
+
+1. *no unnecessary crossings, only as few crossings as needed*
+2. *no unnecesary line bends/turns*
+3. *rewards lines joining at the corner or at middle points, and
+   penalises lines joining near corners (they look ugly)*
+4. *do not add dots unnecessarily*
+5. *keep as small a relative figure size compared to the size of the
+   elements*
+6. *align elements horizontally and vertically to the extent possible
+   without creating crossing*
+7. *imagine that lines repel each other. Lines should not be together if
+   they can be apart*
+
+`_cost` is the first two of those and nothing more. The remaining five
+were prototyped and are **not** trusted: two of them returned
+implausibly large numbers on drawings he calls good, which is usually a
+metric counting something other than its name, and one validation case
+was mislabelled by me rather than answered wrongly by the measurement.
+
+**Why it is not a particle simulation.** Applied literally, force-directed
+drawing settles nodes at arbitrary angles, and a circuit diagram is
+orthogonal — a diagonal wire is not a style, it is wrong. What transfers
+is the mechanics applied in the layout's own coordinates, which are
+one-dimensional per axis: horizontally the order of the node columns and
+the width of each gap, vertically the height of each band and which band
+each element sits in. Two 1-D relaxations plus a discrete choice, not an
+n-body problem. Repulsion is Roberto's balloon and his rule 7; springs
+are what stop the canvas inflating for ever, which is his rule 5 and his
+complaint that Bo2's Drill Exercise 3.2 hangs a 30px source in a 202px
+band.
+
+Every rule derived by hand in #372 is a local minimum this energy would
+have found without being told. That is the argument for doing it, and
+the reason not to rush it: **do not let a search optimise an objective
+that has not been validated against his own judgements.** It will
+happily produce drawings he dislikes. Bo2's Example 3.3 is the anchor to
+calibrate against — he called it *perfect*, and it carries a crossing he
+considers necessary, so an objective that treats every crossing as debt
+is already wrong.
+
 **Left open, deliberately.** #371 holds two fine-tuning items Roberto
 asked to be noted and not started. Beyond them, the thing he asked for
 last is a force-directed treatment — repulsion pushing out, springs
