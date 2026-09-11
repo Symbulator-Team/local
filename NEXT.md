@@ -42,6 +42,34 @@ the same number and neither could see the other's.
 commit it, and push it before using the number -- it costs one commit
 and it is the only thing that makes the claim visible to anyone else.
 
+## #426 — a coupled pair written as impedances — **live, 12 Sep 2026** (solver 0.6.8, cache v204)
+
+ names two elements, and in AC a coil is normally written as an
+impedance in ohms:  is Lesson 10's own idiom and eight of
+its entries use it. The island check of #322/#323 recognised a coupling
+only when the coupled elements were , so the far side of an
+-spelled pair was refused as floating while the identical circuit in
+henries solved and reported its local reference in note 221.
+
+**Roberto's own account of it (12 Sep 2026):** the local reference was
+added for transformers and coupled inductances, and *"we forgot (because
+I forgot) that resistors could be coupled in AC"*. An oversight, not a
+policy — which settles the question the fix raised, because the opposite
+reading was available:  might have been *meant* to couple inductors
+only, in which case the right fix would have been to refuse the 
+spelling at parse time. It was not.
+
+One condition dropped in . The two spellings now agree:
+same note, same reference node, every shared answer identical to the
+last digit. A genuinely stray piece — one no  names — is still
+refused. 507 passed, 2 skipped, the baseline.
+
+**Found from the other side.** NR12's Example 9.15 was first described
+with an isolated secondary, which the solver's  accepted and the
+app refused; chasing that disagreement turned up this. The example
+itself was a misreading — Figure 9.42 draws one unbroken bottom rail —
+but the bug was real and independent of it.
+
 ## #425 — a sampler of Nilsson & Riedel 12e — **live, 12 Sep 2026** (cache v203)
 
 Forty-three worked examples from *Electric Circuits*, 12th edition, each
