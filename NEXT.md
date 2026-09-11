@@ -13,6 +13,35 @@
 > follow "#369" from either and you land on the documentation's item.
 > Claim a number in *both* trees before using it.
 
+## A numbering collision, 11 Sep 2026 — recorded, not tidied
+
+**#391 through #396 were used twice on the same evening**, once by this
+tree and once by the documentation tree, which were running as separate
+sessions. The app's are the Numerical Solver round below; the docs' are
+the Manual's sidebar, its PDF, the home page's three books and a
+sideways-scroll fix, committed as `acf5d58`, `60ad617`, `649ba75` and
+`99b556e`.
+
+**Neither side is renumbered.** The app's #392 and #393 are named in
+solver **0.6.6's changelog, which is published on PyPI** and cannot be
+altered, and in comments in deployed code; the docs' are in pushed
+commits and live on `learn.symbulator.com`. That is the same ruling as
+the #368/#369 collision of 10 Sep 2026: follow a number from either
+side and you may land on the other's item, so check which tree you are
+in before trusting one.
+
+**Why claiming did not prevent it, which is the part worth keeping.**
+The convention is to claim a number in *both* trees before using it,
+and that was done -- the claims were written into
+`Documentation/NEXT_DOCS.md`. But they were only written, never
+committed, while the other session was editing the same file and
+committing as it went. Two sessions each held an uncommitted claim on
+the same number and neither could see the other's.
+
+**A claim you have not committed is not a claim.** Write the line,
+commit it, and push it before using the number -- it costs one commit
+and it is the only thing that makes the claim visible to anyone else.
+
 ## #393 — every equation says what it is — **live on install.symbulator.com** (11 Sep 2026)
 
 Roberto, using the Numerical Solver on #391: he wanted to tell the
