@@ -5,6 +5,43 @@ file version 9 never has, so a `git merge v9/main` can never conflict on
 it. `NEXT.md` beside this file is version 9's running list and arrives
 by merge; read it as upstream history, not as a record of X.
 
+## X31 — version 9's #425 and #426 (solver 0.6.8, cache v204)
+
+Two rounds from version 9 in one merge.
+
+**#425** is a built-in example book, `examples/Nilsson_Riedel.cir` — 43
+worked problems from Nilsson & Riedel's *Electric Circuits*, 12th
+edition, each checked against the answer the book prints, spread DC 16,
+TR 14, AC 8, FD 5. With it comes a new `?lesson=nr12` alias in
+`openFromUrl()`, so a link can name the book. X gets the book and the
+alias; the chapter that goes with it on `learn.symbulator.com` is
+version 9's documentation, and X has none.
+
+**#426** is the solver fix the book turned up: `m` names two elements,
+and in AC a coil is normally written as an impedance in ohms
+(`m,r2,r3,3j`), but the island check of #322/#323 recognised a coupling
+only when the coupled elements were `l`. The `r`-spelled far side was
+refused as floating while the same circuit in henries solved. One
+condition dropped in `elements.py`.
+
+**The solver moved, so X's site wants a pull of *both* clones** —
+`/home/symbulatorx/solver` and `/home/symbulatorx/symbulator_web` — and
+a Reload, and still no `pip`, X's solver being an editable checkout.
+
+Label **`0.6.8+x31`**. Three conflicts, all the expected kind: the
+version label in `solver` kept as X's, the build stamps in `server`
+(both templates) and the generated pages in `local` taken from v9 and
+then rebuilt with X's own interpreter. `branding.py` untouched by the
+merge, sha256 `0d5c661c…` before and after — verified by hash rather
+than assumed, and on both pages: X's `index.html` `5e710105…` against
+version 9's `032cf85e…`, X's `eqsheet.html` `05ca065f…` against version
+9's `5aa677ce…`, X's two carrying `#d9a521` and the fork's subtitle and
+version 9's carrying neither.
+
+X's suite **506 passed and 3 skipped**, the extra skip being ahkab. The
+editable install wanted `pip install -e . --no-deps` in
+`Application\vX\.venv` before the label moved — four for four now.
+
 ## X30 — version 9's #423 merged, the drawing restyled on Nilsson & Riedel; label **`0.6.7+x30`** — **done 12 Sep 2026, pushed; the site wants a pull of *both* clones and a reload, and no `pip`**
 
 Version 9's **#423** and solver **0.6.7**: the schematic drawer's
