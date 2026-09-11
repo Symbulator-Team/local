@@ -11,7 +11,7 @@
  * Bump CACHE_VERSION whenever the app files change, so returning users
  * get the new build instead of the cached one.
  */
-const CACHE_VERSION = 'symbulator-v200';
+const CACHE_VERSION = 'symbulator-v202';
 
 const ASSETS = [
   './',
@@ -46,6 +46,7 @@ const ASSETS = [
   'examples/Lesson_11.cir',
   'examples/Lesson_12.cir',
   'examples/Lesson_13.cir',
+  'examples/Nilsson_Riedel.cir',
   'examples/Showcase.cir',
   'examples/The_Monograph.cir',
   // ==== END examples ====

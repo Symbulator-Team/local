@@ -191,7 +191,11 @@ two pin stubs by assuming the pins a quarter of the height apart, and
 they are `OP_PIN` apart now; it reads the drawer's number and falls
 back to the old rule for older revisions. Crowded pairs are 124 → 124.
 `review_schematics.py`: **failed=0 with_issues=0** over all 356. Suite
-**507 passed, 2 skipped**. The gallery he reviews by eye is
+**507 passed, 2 skipped**. `pixel_clearance.py --all --min 3`, the slow
+one, run on the final geometry after the deploy and finished the same
+night: **356 drawings, tightest 3.75 px, 0 below the 3 px threshold** --
+the tightest ten are all the ground's `0`, which is GAP plus the bars'
+half-stroke, exactly as placed. The gallery he reviews by eye is
 `Notes/schematic_gallery_423_before_after.html`.
 
 **What the book does that the drawer still does not** -- the layout
