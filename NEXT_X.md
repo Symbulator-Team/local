@@ -5,6 +5,78 @@ file version 9 never has, so a `git merge v9/main` can never conflict on
 it. `NEXT.md` beside this file is version 9's running list and arrives
 by merge; read it as upstream history, not as a record of X.
 
+## X29 — version 9's Numerical Solver round merged; label **`0.6.6+x29`** — **done 11 Sep 2026, pushed; the site wants a pull of *both* clones and a reload, and no `pip`**
+
+Version 9's **#391–#419** and solver **0.6.6** — the round that grew out
+of Roberto testing the Numerical Solver on the install host. The third
+level (each element's power and voltage drop, and the resistance a source
+sees) crosses to the Solver as equations behind a tick, arriving
+**unticked** where the stamped system arrives ticked; Expert Mode's
+conditions cross as **restrictions** rather than equations; a value
+crosses rounded to the app's own Rounding setting; every equation carries
+a label saying what it is; and a chained `7 > vx > 3` is accepted
+wherever a condition is typed. Then the long layout round on the sheet
+itself. The write-ups are version 9's, in `NEXT.md` beside this file, and
+solver 0.6.6's CHANGELOG has the engine half.
+
+**The solver moved, so X's site needs a pull of *both* clones** —
+`/home/symbulatorx/solver` and `/home/symbulatorx/symbulator_web` — and
+a Reload. **Still no `pip`**: X's solver is an editable checkout, so the
+`git pull` in the solver clone *is* the install. Version 9's account is
+the opposite case this round and does want a `pip install --upgrade`,
+because version 9 installs the package from PyPI; do not copy one
+account's commands to the other.
+
+**Three conflicts, all the expected kind.**
+
+| repo | conflict | resolved |
+|---|---|---|
+| `solver` | the version label | kept as X's, **`0.6.6+x29`** |
+| `server` | the build stamp in `templates/index.html` | taken from v9, then rebuilt with X's own interpreter |
+| `local` | the generated `index.html` | taken from v9, then rebuilt |
+
+`templates/eqsheet.html` merged clean even though it now carries a build
+stamp of its own — X had no stamp there to disagree with, version 9's
+arriving with the round that added it. Next merge it will conflict like
+`index.html` does, and the resolution is the same: take v9's, rebuild.
+
+**`branding.py` was untouched by the merge** — sha256
+`0d5c661cef2ac1a4d9f3b5b61fec289aa698a6e0b94c6c31d6511f327f54c7d9`
+before and after, checked rather than assumed.
+
+**Verified by hash, and on both pages this time.** Taking v9's side on a
+generated page and stopping there is what once left X byte-identical to
+version 9 for a commit, which is the shape that got its host disabled —
+so the rebuild is the load-bearing step, not the merge. After it, all
+four pages hash differently:
+
+| page | X | version 9 |
+|---|---|---|
+| `index.html` | `fbf82444…` | `d8352d38…` |
+| `eqsheet.html` | `b8ae9137…` | `96bc31e3…` |
+
+and X's two carry `#d9a521` and the fork's subtitle where version 9's
+carry neither — measured in all four files rather than inferred from the
+one.
+
+**X's gates, run with X's own interpreter** (`Application\vX\.venv`):
+**506 passed and 3 skipped**, the extra skip against version 9's 507/2
+being ahkab, which X's venv does not have; `tools/i18n.py check` **ok**;
+and the round's own new guard, `tools/check_third_level_export.py`,
+**clean over 6 circuits and 80 answers** — it runs the exported equations
+through the Solver's own parse and solve rather than comparing source to
+source, so it is a real check on X's tree and not a restatement of
+version 9's result.
+
+**The editable install had to be refreshed** with `pip install -e .
+--no-deps` in `Application\vX\.venv` before the label moved — three for
+three now, X22, X27 and this one. The metadata `/healthz` reports comes
+from that install, not from the file, so the label in `__init__.py` and
+the label the site announces are two different things until it is re-run.
+
+**X28 was taken** by the notes-only merge earlier the same evening, which
+is why this round is X29 and not X28.
+
 ## X28 — version 9's #380–#393, notes only — 11 Sep 2026
 
 The documentation session's run of items, merged for the shared numbering
