@@ -13,6 +13,8 @@
 > follow "#369" from either and you land on the documentation's item.
 > Claim a number in *both* trees before using it.
 
+## #389 — claimed by the docs tree, 11 Sep 2026: version 9's tutorial is renamed the **Course**, ahead of a second, shorter book called the **Manual**. Versions 7 and 8 keep every word — all three naming sites in `Documentation/web/index.php` were version-blind and are now gated on `$v`. **No app work and no i18n work:** the app's ribbon link says *Documentation* in all thirteen languages and is untouched, and `book.yaml`'s title is plain *Symbulator*, so no PDF is affected. Built, not deployed — it ships with the Manual. Write-up in `Documentation/NEXT_DOCS.md`
+
 ## #388 — claimed by the docs tree, 11 Sep 2026: **Tech Note F**, every control in the {{card:Settings}} card in one place — Rounding, the four Display ticks, the AC power convention. New writing, not a move: the card is named in eight chapters and always in situ. Written from `repos/server/templates/index.html` and `syncSettings()` rather than from the chapters' prose, and two draft claims corrected by measurement — RMS reports twice what peak does and relabels the answer, and `si_prefix.py` takes three spellings of micro, not two. No app work. Write-up in `Documentation/NEXT_DOCS.md`
 
 ## #387 — claimed by the docs tree, 11 Sep 2026: **Tech Note E**, the SI prefix table out of Lesson 1. The lesson keeps the sentence saying what the apostrophe shorthand is; the eleven-row list becomes reference. Checked against `symbulator/si_prefix.py`'s `_SI_PREFIXES` rather than copied forward. No app work. Write-up in `Documentation/NEXT_DOCS.md`
