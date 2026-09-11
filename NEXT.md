@@ -62,6 +62,10 @@ activated and `pip install --upgrade symbulator` (it reports solver
 0.6.6 on build `2026-09-11 13:32 UTC`, fetched before the handover), a
 Reload, and the typed prune of the superseded 0.6.6 wheel on the
 install host. X is not merged (X30, when he asks: both clones, no pip).
+**One thing went out that should not have:** another session had an
+uncommitted NR12 sampler chapter in the docs tree, and the `learn`
+deploy for the monograph carried it — `/9/nr12-sampler` is live ahead
+of its author. Check `git status` in a tree before deploying from it.
 
 Roberto's brief: go through *Electric Circuits*, 12th edition (Nilsson &
 Riedel, `Other/NR12.pdf`), study its large circuit figures, and teach
