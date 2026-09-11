@@ -5,6 +5,27 @@ file version 9 never has, so a `git merge v9/main` can never conflict on
 it. `NEXT.md` beside this file is version 9's running list and arrives
 by merge; read it as upstream history, not as a record of X.
 
+## X28 — version 9's #380–#393, notes only — 11 Sep 2026
+
+The documentation session's run of items, merged for the shared numbering
+sequence alone. **One file changed, `NEXT.md`, and nothing else** — no
+code, no template, no generated page, no solver.
+
+**X's site needs nothing.** No pull, no reload, no `pip`. Nothing X
+serves has changed, and `symbulatorx.pythonanywhere.com` was already in
+step with its repos: `/healthz` reports solver `0.6.5+x27`, build
+`2026-09-11 04:03 UTC` running *and* on disk.
+
+Merged clean with no conflicts. Verified by hash rather than assumed:
+`branding.py` is `0d5c661c…` before and after, X's `index.html` is
+`fdc581e1…` before and after, and version 9's is `f2159367…` — still
+different, which is the property that matters.
+
+All thirteen of version 9's items are documentation: the Technical Notes
+section, five technical notes, the tutorial renamed the **Course**, and a
+second book on version 9 called the **Manual** with its own PDF. X has no
+documentation, so none of it applies to X beyond the numbers.
+
 ## X27 — version 9's relaxation round merged; label **`0.6.5+x27`** — **done 11 Sep 2026, pushed; the site wants a pull of *both* clones and a reload, and no `pip`**
 
 Version 9's **#373–#379** and solver **0.6.5**, the drawer's relaxation
