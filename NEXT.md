@@ -42,6 +42,185 @@ the same number and neither could see the other's.
 commit it, and push it before using the number -- it costs one commit
 and it is the only thing that makes the claim visible to anyone else.
 
+## #423 — the drawing restyled on Nilsson & Riedel — **live, 12 Sep 2026** (solver 0.6.7)
+
+**Deployed at Roberto's "Love it. Punch it." and verified by fetching,
+not by the upload log.** Solver **0.6.7** is on PyPI: the wheel it
+records and the wheel it serves both hash `f87db41b…`, the same bytes
+as the local build, and the built wheel's `schematic.py` was hashed
+against the tree before the upload (the 0.6.6 stale-wheel trap). The
+offline pair is at cache **v200**, ZIP **31,998,449 b (30.5 MB)**: the
+62 staged files were hashed against the ZIP's own copies before either
+went up (none differing), and afterwards `index.html`, `eqsheet.html`,
+`sw.js` and the vendored wheel on `install.symbulator.com` all hash
+identical to the local build, the published ZIP was downloaded and its
+bundled wheel hashes identical to PyPI's. `learn.symbulator.com` serves
+the rebuilt monograph byte-identical to the local build (`960143d6…`).
+Build stamp `2026-09-11 15:59 UTC`. **Left for Roberto:**
+`symbulator.pythonanywhere.com` wants its pull *with* the virtualenv
+activated and `pip install --upgrade symbulator` (it reports solver
+0.6.6 on build `2026-09-11 13:32 UTC`, fetched before the handover), a
+Reload, and the typed prune of the superseded 0.6.6 wheel on the
+install host. X is not merged (X30, when he asks: both clones, no pip).
+
+Roberto's brief: go through *Electric Circuits*, 12th edition (Nilsson &
+Riedel, `Other/NR12.pdf`), study its large circuit figures, and teach
+the drawer to draw as the book draws -- the symbols, the arrangement,
+and the font, size and colour of the labels.
+
+**The numbers were measured, not eyeballed.** The book is vector
+InDesign output, so every figure's paths, stroke widths, fonts, sizes
+and colours can be read off the PDF exactly, and were, with PyMuPDF.
+The geometry block at the head of `schematic.py` names the figure each
+number comes from -- P4.17, P4.18, P4.20 and P4.23 (page 138), P5.18
+(page 175), Fig. 6.1, 6.10 and 6.26, Fig. 9.47, P8.24 -- and it is the
+place to look before changing any of them. One point of the book is
+**`PT` = 1.6 px** of the drawing: the book's 9 pt label is the
+drawing's 14 px, and 1.6 is where the independent source and the op-amp
+land within a pixel of the sizes Roberto had already tuned by eye
+(16.5 and 58). He had been walking toward the book's proportions by
+feel for a fortnight -- the resistor smaller, the sources larger.
+
+What the book does, and the drawing now does:
+
+* **Two stroke weights.** Wires at 0.5 pt, every symbol body at 0.75 pt
+  (`STROKE` 0.8 px, `BODY_STROKE` 1.2 px), the body's weight carried on
+  its own `<g>`. Colour #231F20 in print; `currentColor` here.
+* **The resistor is not the book's.** P4.17's zigzag -- 13.72 pt in
+  seven equal segments, six sharp mitred peaks 1.98 pt off the axis --
+  was drawn at the book's size ("too small"), then a quarter larger
+  (*"Make the resistors about the same size as they were before. I do
+  not want an element being so much larger than another. The ratio of
+  the greatest symbol (by area) to the smallest symbol (by area) should
+  be closer to what it was before than what it is now"*), then at the
+  old 36.8 px with the book's slimmer proportions inside it -- and on
+  that one: *"There's something about this new resistor that I don't
+  like. Can you go back to the previous resistor symbol?"* So it is
+  **#218's symbol exactly as it was**: 36.8 px, six segments with
+  half-step ends, 7.2 off the axis, every peak rounded through
+  `ZIG_ROUND`, `REACH` built from the cut-down peak; only its stroke is
+  the round's body weight. The ratio he named, measured as length
+  times reach across the six symbols: **10.2 before #423, 14.4 at the
+  book's sizes, 10.0 now** -- the op-amp is the largest in all three,
+  and the smallest was the capacitor (below).
+* **The independent source** (P4.17, P4.18): a 10.5 pt circle with the
+  **+ and − inside it**, 5.9 pt either side of the centre, each 5.4 pt
+  across at a hair under the wire's weight; the current arrow a shaft
+  6 pt either side of the centre under a filled head 5.42 by 2.9 pt.
+* **The dependent source** (P4.17, P4.18, P4.20): **not a square on a
+  corner** -- 27 pt along the element and 16 pt across it, taller than
+  the circle and narrower. `DEP_ALONG` and `DEP_ACROSS` are separate
+  numbers because the leads stop at one and the labels clear the other.
+* **The capacitor** (Fig. 6.10, and every problem figure checked --
+  P8.24, P7.65): plates 13 pt long and 5.98 pt apart, **one straight
+  and one bowed inward** by 2.4 pt at the middle. Roberto had declined
+  the bow on 1 Sep 2026 as the mark of a polarised capacitor; told
+  today that the book draws every ordinary capacitor so and none with
+  a sign, he ruled: *"I'm open to using bowed-plate symbol as long as
+  it is without the polarity sign."* So it is bowed and unsigned, and
+  the test that guarded the straight plates now guards *that*. Scaled
+  up a fifth from the book's (`CAP_SCALE`: plates 25 px tall, 11.5
+  apart) for the same ratio ruling as the resistor -- at the book's
+  size it was the smallest symbol, 199 px² against the 286 it had.
+* **The inductor is Roberto's, not the book's.** Fig. 6.1 is four
+  semicircular humps; he kept his coil -- *"I prefer my inductor symbol,
+  with curls as it stands today, to the book's m-like symbol."* The
+  helix is untouched in shape and scaled uniformly (`_IND_SCALE`) to the
+  book's inductor length, 21.65 pt, so it stands in the book's 1.58 : 1
+  proportion to the resistor. The transformer's windings are that coil.
+* **The op-amp** (P5.18): 36 pt tall with the pins **8 pt** off the
+  axis (`OP_PIN`, which #377's node lift now reads too) and the signs
+  7 pt inside the back edge. **Not the book's 42 pt length**: drawn so,
+  Roberto ruled *"make the op-amp less pointy, by shortening its
+  length"*, and the triangle is equilateral again (49.9 px), the shape
+  it had always had. The book's supply pins and terminal dots are not
+  drawn: the solver has no supply rails, and a dot on a pin would be a
+  dot where fewer than three lines meet, which his fourth value forbids.
+* **The ground is not the book's either.** P5.18's filled triangle,
+  point down, was drawn and shown; Roberto: *"use the three lines model
+  of the ground, as opposed to the arrow pointing down. Make it finer if
+  you want."* So the three bars stand where they stood, half-widths 9,
+  6 and 3 at 3.5 px steps on a 12 px stem, at the body weight (1.2,
+  where they used to carry 1.7). The name `0` stays under them.
+* **Junction dots** of radius 2 pt (3.2 px, was 3.4).
+* **The transformer** (Fig. 9.47): windings 24.84 pt apart, core bars
+  4.98 pt apart and as long as the windings, dots 6.2 pt outside each
+  axis -- 19.9 / 4.0 / 9.9 px where Roberto's eye had put 19 / 2.5 / 9.
+* **The labels.** A Times face (`'Times New Roman',Times,'Liberation
+  Serif',serif`) at 14 px, subscripts at 0.7 with the baseline 2.9 px
+  down (the book's 6.3 on 9, dropped 1.84). A value upright, **with a
+  space before its unit** (`15 Ω`, `12 V`); a name italic, its digit
+  subscript upright and its letter subscript italic (*R*₁, *v*ₒ,
+  *i*_Δ). **The reference quantities a figure defines are blue** --
+  #005B7F in the book -- so a dependent source's control arrow, its
+  label and the drop's signs carry `class="ref"`/`refk`/`refh` and
+  `var(--schematic-ref, #005b7f)`; the app's stylesheet sets the
+  variable, lightened to #6cc0e8 in dark mode. Node names stay upright.
+* **The leads and the band.** `LEAD_MIN` 34 → 26, `ROW_H_MIN` 96 → 86,
+  the book's 15–20 pt leads and 54–56 pt band.
+* **Widths from the face's own metrics.** `_text_width` is a per-
+  character advance table for Times New Roman, used by the canvas, by
+  `_runs_width` and by the review harness, which used to carry its own
+  7.3; the transformer's ratio label uses it too, where a 6-per-char
+  guess had sent `1 : 5` above the row.
+
+**The label metrics were re-measured**, because a font change
+invalidates every one of #212's numbers: 14 px Times New Roman in
+headless Chrome ascends 9.75 (`-4j`, `1/gx`) and descends 3.0, digits
+alone 9.38 and 0.12, a capital Q 2.75, a Q in a subscript 4.88. So
+`LABEL_ASCENT` 9.75, `LABEL_DESCENT` 3.0, `CAP_DESCENT` 2.0. The first
+pass of that measurement was worthless and is worth recording: the SVG
+`style` attribute was written with the family in double quotes inside a
+double-quoted attribute, the shorthand failed to parse, and Chrome
+rendered the default 16 px serif -- every size came back identical at
+13 and 14. Read a measurement back for the thing you expected to vary.
+
+**What was not changed.** The layout: over the 356 built-in drawings
+crossings (17), bends (359), wires (1334), dots (881) and stray dots (0)
+are identical before and after (`schematic_lab/survey.py`, both
+snapshots in the session's scratchpad, the before one taken with
+`at_rev.py HEAD`); the canvas area is **95.5%** of before, 79 drawings
+grew, all 356 moved (measured again after his three rulings on the
+resistor, the op-amp and the ground; the counts did not move). `near_corner` read 3 → 29 on the first survey and
+that was the lab, not the drawing: `quality.py` exempted the op-amp's
+two pin stubs by assuming the pins a quarter of the height apart, and
+they are `OP_PIN` apart now; it reads the drawer's number and falls
+back to the old rule for older revisions. Crowded pairs are 124 → 124.
+`review_schematics.py`: **failed=0 with_issues=0** over all 356. Suite
+**507 passed, 2 skipped**. The gallery he reviews by eye is
+`Notes/schematic_gallery_423_before_after.html`.
+
+**What the book does that the drawer still does not** -- the layout
+half of the brief, measured and left for a round of its own: the book
+puts a series element between two nodes on the node row (P4.17's 5 Ω
+between nodes 1 and 2) where the drawer lifts it; its sources stand at
+the left edge with the value on the *outside*; its meshes are tighter
+in the column than ours; it draws a crossing without a hop; and it
+never draws a ground rail at all except in op-amp circuits, where each
+grounded point gets its own triangle. Each of those is a layout rule
+against #372's seven values, not a symbol, and none was attempted here.
+
+**Consumers that moved with it.** `Documentation/paper/render_exemplars.py`
+embeds **DejaVu Serif** now (Times New Roman has no angle sign), reads
+`LABEL_PX` and `SUB_SCALE` from the drawer instead of restating 13 and
+0.72, resolves the `ref` classes to the book's blue, and wraps at the
+wire weight; Appendix B's eight exemplars are re-rendered and the
+monograph rebuilt, **52 pages**, in the docs tree, uncommitted.
+`templates/index.html` gained the two `--schematic-ref` lines. The
+schematic tests that asserted the sans face, the 3.4 dot, the straight
+plates and the `fill="currentColor"` arrow head were rewritten to what
+is drawn now, each with the reason.
+
+**To deploy, on his word** -- the full solver train, since
+`schematic.py` is in the package: 0.6.7 to PyPI (`__version__` and the
+changelog are bumped, nothing is uploaded), the three wheel pins
+(`requirements.txt`, `build_local.py`, `sw.js`), the cache bump,
+`build_local.py` then `build_zip.py --assets ../../local` then
+`stage_install_site.py`, the `install` and `zip` deploys, `learn` for
+the monograph, and on `symbulator.pythonanywhere.com` a pull with the
+virtualenv activated and `pip install --upgrade symbulator`. X is not
+merged; its merge keeps `branding.py` as always and takes the rest.
+
 ## #393 — every equation says what it is — **live on install.symbulator.com** (11 Sep 2026)
 
 Roberto, using the Numerical Solver on #391: he wanted to tell the
@@ -456,6 +635,8 @@ guard**, and its sibling — a guard nobody *runs* is not one either. The
 check was working perfectly and saying so to no one for two days.
 
 
+
+## #424 — claimed by the docs tree, 12 Sep 2026 (the docs session first took #423, then found the drawing item above holding it uncommitted; renumbered): **the Course read as a version 9 book** — the adaptation from the 7/8 documentation left calculator vocabulary and habits in version 9's prose (*tool* for the three mini-tools, *aa* used before it was introduced, *store*, *evaluate the negative*, *Done*, cSolve). Every edit is gated to version 9; 7 and 8 render as before. **One app-side fix rides with it:** `examples/Lesson_06a.cir`'s *Bo2's Drill Exercise 5.1 (TR)* entry used `vc0` as the capacitor's initial condition with no Define, so the built-in example answered in terms of a symbol where its note promises 6e^(-4t); it now carries `define: vc0 = 6`. Write-up in `Documentation/NEXT_DOCS.md`
 
 ## #422 — claimed by the docs tree, 12 Sep 2026: **the back-of-book index, rebuilt for version 9** — 122 terms and 240 locations across the Course, the Manual and the Technical Notes, where there had been 33 terms in the Course alone. Every new marker is gated to version 9 (`{{v9|{{i:…}}}}` in shared prose), so versions 7 and 8 keep their index byte for byte; the index page names the book each number opens; `tools/check_index.py` is wired into `build.py --check` and proved red seven ways. No app work. **Live on `learn.symbulator.com` the same evening**, verified by fetching. Write-up in `Documentation/NEXT_DOCS.md`
 
