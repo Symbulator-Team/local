@@ -44,31 +44,45 @@ and it is the only thing that makes the claim visible to anyone else.
 
 ## #426 — a coupled pair written as impedances — **live, 12 Sep 2026** (solver 0.6.8, cache v204)
 
- names two elements, and in AC a coil is normally written as an
-impedance in ohms:  is Lesson 10's own idiom and eight of
-its entries use it. The island check of #322/#323 recognised a coupling
-only when the coupled elements were , so the far side of an
--spelled pair was refused as floating while the identical circuit in
+`m` names two elements, and in AC a coil is normally written as an
+impedance in ohms: `m,r2,r3,3j` is Lesson 10's own idiom and eight of its
+entries use it. The island check of #322/#323 recognised a coupling only
+when the coupled elements were `l`, so the far side of an `r`-spelled
+pair was refused as floating while the identical circuit written in
 henries solved and reported its local reference in note 221.
 
 **Roberto's own account of it (12 Sep 2026):** the local reference was
 added for transformers and coupled inductances, and *"we forgot (because
 I forgot) that resistors could be coupled in AC"*. An oversight, not a
 policy — which settles the question the fix raised, because the opposite
-reading was available:  might have been *meant* to couple inductors
-only, in which case the right fix would have been to refuse the 
-spelling at parse time. It was not.
+reading was genuinely available: `m` might have been *meant* to couple
+inductors only, in which case the right fix would have been to refuse
+`m,r2,r3,3j` at parse time, and that would have broken Lesson 10. It was
+not meant that way.
 
-One condition dropped in . The two spellings now agree:
-same note, same reference node, every shared answer identical to the
-last digit. A genuinely stray piece — one no  names — is still
-refused. 507 passed, 2 skipped, the baseline.
+One condition dropped in `elements.py`:
 
-**Found from the other side.** NR12's Example 9.15 was first described
-with an isolated secondary, which the solver's  accepted and the
-app refused; chasing that disagreement turned up this. The example
-itself was a misreading — Figure 9.42 draws one unbroken bottom rail —
-but the bug was real and independent of it.
+    -  if el.kind == "l" and el.name in coupled:
+    +  if el.name in coupled:
+
+The two spellings now agree — same note, same reference node, every
+shared answer identical to the last digit. A genuinely stray piece, one
+no `m` names, is still refused. **507 passed, 2 skipped**, the baseline.
+
+**Found from the other side, and the example that found it was wrong.**
+NR12's Example 9.15 was first described with an isolated secondary,
+which the solver's `th()` accepted and the app's Thevenin tool refused;
+chasing that disagreement turned this up. But Figure 9.42 draws one
+unbroken bottom rail, so the book's own circuit is not isolated and the
+description was simply a misreading — the app was right to refuse it and
+`th()` was too permissive. The bug is real and independent of the
+example that led to it, which is the only reason it survived the
+correction.
+
+**Verified in four places**, the wheel byte-identical in all of them:
+what PyPI records, what PyPI serves, the install host, and the published
+ZIP — and the bundled copy was checked for the *fix* rather than for its
+version number, which is the trap the 0.6.6 round recorded.
 
 ## #425 — a sampler of Nilsson & Riedel 12e — **live, 12 Sep 2026** (cache v203)
 
