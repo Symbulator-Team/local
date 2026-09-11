@@ -13,6 +13,8 @@
 > follow "#369" from either and you land on the documentation's item.
 > Claim a number in *both* trees before using it.
 
+## #380 — claimed by the docs tree, 11 Sep 2026: Technical Notes get a section of their own on `learn.symbulator.com`, under a rule below the lessons, and *Working with input files* moves into it as **Tech Note A**. No app work — the chapter order, the `kind` field and the card grid are all in `Documentation`. Write-up in `Documentation/NEXT_DOCS.md`
+
 ## #374-#379 — Roberto's review of the example book — **solver 0.6.5, 11 Sep 2026; live on the offline pair at cache v179, `learn` rebuilt; `symbulator.pythonanywhere.com` needs its pull *and* a `pip install --upgrade symbulator`**
 
 Six rules from a drawing-by-drawing review on 11 Sep 2026. Each is
