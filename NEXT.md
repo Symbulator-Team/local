@@ -13,6 +13,167 @@
 > follow "#369" from either and you land on the documentation's item.
 > Claim a number in *both* trees before using it.
 
+## A numbering collision, 11 Sep 2026 — recorded, not tidied
+
+**#391 through #396 were used twice on the same evening**, once by this
+tree and once by the documentation tree, which were running as separate
+sessions. The app's are the Numerical Solver round below; the docs' are
+the Manual's sidebar, its PDF, the home page's three books and a
+sideways-scroll fix, committed as `acf5d58`, `60ad617`, `649ba75` and
+`99b556e`.
+
+**Neither side is renumbered.** The app's #392 and #393 are named in
+solver **0.6.6's changelog, which is published on PyPI** and cannot be
+altered, and in comments in deployed code; the docs' are in pushed
+commits and live on `learn.symbulator.com`. That is the same ruling as
+the #368/#369 collision of 10 Sep 2026: follow a number from either
+side and you may land on the other's item, so check which tree you are
+in before trusting one.
+
+**Why claiming did not prevent it, which is the part worth keeping.**
+The convention is to claim a number in *both* trees before using it,
+and that was done -- the claims were written into
+`Documentation/NEXT_DOCS.md`. But they were only written, never
+committed, while the other session was editing the same file and
+committing as it went. Two sessions each held an uncommitted claim on
+the same number and neither could see the other's.
+
+**A claim you have not committed is not a claim.** Write the line,
+commit it, and push it before using the number -- it costs one commit
+and it is the only thing that makes the claim visible to anyone else.
+
+## #393 — every equation says what it is — **live on install.symbulator.com** (11 Sep 2026)
+
+Roberto, using the Numerical Solver on #391: he wanted to tell the
+stamped system from the expert extras from the third level in the
+checkbox list — and, "even better", a tag per equation: *"nodal equation
+for node x"*, *"special element equation for voltage source"*, *"power
+equation for resistor r1"*, *"expert mode equation"*.
+
+**The engine knew all of this and threw it away.** An equation is
+appended inside the `_stamp_<kind>` method that built it, which has the
+element in hand, and the KCL loop has the node. None of it survived the
+append. It does now: `Circuit.equation_labels`, one `(code, args)` pair
+per equation and in the same order.
+
+**The mechanism is the append, not a convention.** Every
+`self.equations.append` in the class goes through `_add_equation`, which
+appends to both lists — so they cannot drift by forgetting. `stamp_all`
+asserts the lengths match anyway, with a plain `RuntimeError` rather
+than a `CircuitError`, because no circuit can cause it: only editing
+that file can, and the next person adding a stamp method is who the
+check is for.
+
+**Codes, not prose** (#199): the engine emits `(code, args)` in
+`messages.py`'s **32x** range — engine.py's own, since stamping is what
+produces them — and severity `"label"`, so nothing that renders notes
+starts printing one line per equation on every solve. The app adds two
+of its own for what the engine never sees: **891** an expert-mode
+equation, **890** a third-level definition, whose `%{what}` and
+`%{kind}` slots are filled with terms the dictionaries already carry
+under `srv.*`, so seven new strings covered the lot rather than one per
+quantity.
+
+**A collision caught before it shipped.** The labels were first numbered
+801–805. The app's own messages already occupy 801–812 and the page
+looks a message up **by number alone**, so a label numbered 801 rendered
+as *"Please enter a circuit description."* Renumbered to 320–324, which
+is allowed precisely because 0.6.6 is unpublished — the "a code is
+permanent" rule bites after release, not before.
+
+**Kept by text, not by position.** The page stores the labels against
+the equation's own text, so editing a line drops its label rather than
+sliding someone else's onto it, and reordering the box keeps each label
+with its equation. Two equations of one circuit cannot share a line —
+each names its own element's current or its own node.
+
+**Refused rather than mislabelled**, in three places: `symbulator_ui`
+sends `labels` only when it has one per equation, the button drops the
+whole list rather than concatenating a short one, and the page falls
+back to the English in `text` for a code it does not know. A label one
+row out reads perfectly and is wrong, which is the failure worth
+spending three guards on.
+
+Live on the dev server: the divider with an expert equation and the
+third level shows *element equation for voltage source e1*, *current
+balance at node 1*, *expert mode equation*, *defines power consumed for
+resistor r1* — the stamped five ticked, the seven third-level rows not.
+
+**Rides solver 0.6.6 with #392.** Suite 507 passed, 2 skipped.
+
+## #392 — a chained comparison is a condition — **live on install.symbulator.com** (11 Sep 2026)
+
+Roberto, having seen #391 turn conditions into restrictions: he wanted
+`7 > x > 3` to work, "for the conditions in the Expert Mode and in the
+Solve area".
+
+**It was refused, and #391's write-up had already recorded why.** All
+three of the condition parsers — `engine._parse_inequality` for the
+circuit, `symbulator_ui._parse_condition` for the Solve and Evaluate
+cards — split on the first operator they met, so `7 > x > 3` became `7`
+and `x > 3`, and the second half went to a value parser that rightly
+refuses a comparison inside a value. The error even named the half
+rather than the whole: *"The value 'vs > 3' contains a comparison, which
+is not arithmetic."*
+
+**One splitter, in the solver.** `split_chained_comparison(text)` cuts a
+chain into the simple comparisons it stands for and hands anything else
+back whole, so each caller still reports a malformed condition in its
+own words. The engine builds an `sp.And` of the links;
+`_filter_solutions` substitutes and simplifies, and an `And` reduces to
+true or false like a single relation, so **nothing downstream changed**.
+The two app-side parsers import it rather than growing a third and
+fourth copy, which is also why the Evaluate card gets the feature
+without being asked for.
+
+`condition_restrictions` (#391) reads the fragments too, so a chain
+lands in the Numerical Solver as the range it always meant:
+`7 > vs > 3` → `{'vs': [3.0, 7.0]}`, which is exactly the example
+Roberto gave when he asked for #391's third part and which could not be
+typed at the time.
+
+**Proved by filtering, not by parsing.** A quadratic power constraint on
+a symbolic source gives ±5, so a condition that keeps one is visible in
+the answer: `7 > e > 3` keeps +5, `-3 > e > -7` keeps −5 (the case a
+sign-only reading gets backwards), `3 < e < 7` matches the first written
+upward, and `7 > e > 6` excludes both and raises the proper refusal
+naming the condition. The Solve card does the same on `x^2 = 25`. Five
+tests in `test_expert.py`, including the splitter's own shapes.
+
+**Solver 0.6.6**, so this is a release: PyPI, the three wheel pins, and
+`pip install --upgrade symbulator` on PythonAnywhere.
+`requirements.txt` is already at `symbulator>=0.6.6`, because
+`symbulator_ui` imports the splitter. Suite **507 passed, 2 skipped**.
+
+**The packaging trap caught it, as it did for X22 and X27:** the suite
+went red on `test_version_matches_the_installed_distribution_when_there_is_one`
+because the editable install's metadata still said 0.6.5. `pip install
+-e . --no-deps` is the fix, and that test is the only thing that would
+have noticed before `/healthz` did.
+
+## #394 — the Numerical Solver is wider — **live on install.symbulator.com** (11 Sep 2026)
+
+Roberto, while testing #391: *"Feel free to make the equations
+card/column wider. You can even put them equations above and results
+below, no need for them to be side by side."*
+
+Widened rather than stacked: `max-width` 76rem → **92rem**, and the
+equations take the larger share of the split (1.15fr against the
+variable sheet's 1fr — it was the other way round). The stack
+breakpoint rises 60rem → 68rem, since both columns are wider now and a
+cramped pair is worse than one full-width column.
+
+**Why not stacked, given he offered it.** The sheet's whole loop is
+ticking an equation and watching the variables answer — the tagline says
+so — and stacking puts the answer off-screen from the tick. The primary
+ask was a wider equations column, and that is met. It is one line to
+change if he prefers the stack having seen it; #393's label column will
+make that judgement easier, since it is what will want the width.
+
+Measured at 1500px: equations 751px, variables 653px, side by side, the
+variable table not scrolling. At 1000px they stack, 937px each, no
+horizontal page overflow.
+
 ## #391 — the third level crosses into the Numerical Solver — **live on `install.symbulator.com`, 11 Sep 2026**
 
 **Deploy state.** `install.symbulator.com` is live at cache **v180**
