@@ -5,6 +5,31 @@ file version 9 never has, so a `git merge v9/main` can never conflict on
 it. `NEXT.md` beside this file is version 9's running list and arrives
 by merge; read it as upstream history, not as a record of X.
 
+## X30 — version 9's #423 merged, the drawing restyled on Nilsson & Riedel; label **`0.6.7+x30`** — **done 12 Sep 2026, pushed; the site wants a pull of *both* clones and a reload, and no `pip`**
+
+Version 9's **#423** and solver **0.6.7**: the schematic drawer's
+symbols, stroke weights, label face and colours measured from *Electric
+Circuits*, 12th edition, with Roberto's five same-day rulings kept (his
+rounded resistor, his looping coil, the three-bar ground, the equilateral
+op-amp, the bowed capacitor plate without a sign). It rides along with
+#424 (Drill Exercise 5.1's `vc0`), which the other version 9 session had
+committed to `server` by then. **The solver moved, so X's site needs a
+pull of *both* clones** -- `/home/symbulatorx/solver` and
+`/home/symbulatorx/symbulator_web` -- and a Reload, and still no `pip`,
+X's solver being an editable checkout.
+
+Three conflicts, all the expected kind: the version label in `solver`
+kept as X's, the build stamp in `server`'s two templates and the two
+generated pages in `local` taken from v9 and then rebuilt with X's own
+interpreter. `branding.py` untouched, sha256 `0d5c661c…` before and
+after; verified by hash rather than assumed, on both pages: X's
+`index.html` `1f5f9f30…` against version 9's `3b2eada2…`, X's
+`eqsheet.html` `b7cbb497…` against version 9's `f91f9d3c…`, X's two
+carrying `#d9a521` and the fork's subtitle and version 9's carrying
+neither. `pip install -e . --no-deps` in `Application\vX\.venv` before
+the label moved, four for four now. Suite **506 passed and 3 skipped**,
+the extra skip being ahkab.
+
 ## X29 — version 9's Numerical Solver round merged; label **`0.6.6+x29`** — **done 11 Sep 2026, pushed; the site wants a pull of *both* clones and a reload, and no `pip`**
 
 Version 9's **#391–#419** and solver **0.6.6** — the round that grew out
