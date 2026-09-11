@@ -13,6 +13,317 @@
 > follow "#369" from either and you land on the documentation's item.
 > Claim a number in *both* trees before using it.
 
+## #391 — the third level crosses into the Numerical Solver — **live on `install.symbulator.com`, 11 Sep 2026**
+
+**Deploy state.** `install.symbulator.com` is live at cache **v180**
+(ZIP 31,970,129 b), deployed at Roberto's ask so he could test, and
+verified by driving the live site rather than by a clean upload log:
+`eqsheet.html`, `index.html` and `sw.js` each hash identical to the
+local build; a live Pyodide solve at 4 digits hands over `ir1 = 0.3333`;
+the sheet arrives *5 equations · 5 unknowns* with the seven third-level
+lines unticked; Restriction is the last header; the editable box sits
+below the ticked list; ticking `pr2` gives *6 · 6*, solved,
+`pr2 = 222.222 mW`. The staged site and the ZIP were proved the same
+build **before** the upload — all 62 files hashed against the ZIP's own
+copies, none differing — and that proof was itself proved red by
+sabotaging a staged file and re-staging.
+
+**Not deployed:** `symbulator.com/9/local.zip` (the same build, normally
+deployed twice — it is one build behind install until Roberto says go)
+and `symbulator.pythonanywhere.com`, which wants a pull and a Reload and
+**no `pip`**, the solver not having moved. `learn` and the landing page
+are untouched. X is not merged.
+
+
+Roberto's ask: the handover sends the stamped system and the expert
+equations; add the option to send the third level too — "for power, I
+think, not sure if there are others."
+
+There are others, and they are one tier and one mechanism, so the tick
+covers all of them: a branch voltage `v_<el>`, a power `p_<el>` (in ac
+the complex power `s_<el>` and its real part, `p_` with RMS phasors and
+`ap_` without), and — sources only — the resistance or impedance
+`r_`/`z_<el>` the source sees. Everything `analysis._derived` computes
+after the KCL system is solved.
+
+**What was already there, and what was missing.** The values had been
+crossing all along: `values` is `res.values`, which `analysis._run` has
+updated with `_derived`, so `pr1` and `re1` were already in the payload's
+`results`. What was missing was any equation tying them to the circuit,
+which is why they only showed up in the Variable sheet when some other
+equation happened to name one. So this item ships equations, not values.
+
+**They arrive unticked** (Roberto's second ask, same day): the stamped
+system arrives ticked as always, the third level arrives in the List of
+Equations but switched off. So the tick costs nothing on arrival — the
+sheet lands exactly where it landed before, square on the circuit alone,
+5 equations and 5 unknowns on the divider — and the reader ticks the one
+line they came for, which is one more equation and one more unknown,
+square again. Until then the derived name is not in the Variable sheet,
+which is the rule derived results have always followed there.
+
+That needed **the one change to the Solver's own `?import=` contract**
+this item makes: an optional `unticked`, indices into `equations` whose
+lines arrive off. Indices rather than a count, so the field says nothing
+about where in the list they sit; rather than the equations' text,
+because two elements of one circuit can produce the same line. The page
+maps index *i* to line *i+1*, which is what `doParse`'s rules are keyed
+on. A payload without the field is unchanged by it, which is what keeps this
+backward compatible.
+
+**A deploy warning I wrote here and then had to delete.** It said the
+offline builds hand over to the live server's Solver, so there would be
+a window between deploying the offline pair and pulling the server in
+which a handover met an older Solver. **There is no such window.**
+`build_local.py` rewrites `EQSHEET_URL` to `'eqsheet.html'`, and the
+offline builds have carried their own Solver beside the app since #208:
+each build hands over to the Solver it ships with. What misled me was
+the comment above that constant in the server template, which still
+said there was exactly one Solver and it lived on the server — true
+until #208, wrong for the three months since, and read as current. It
+now says what the line does and carries its own history; `build_local.py`
+was already rewriting that prose for the offline page, so only the
+server-side copy had been stale, and its guard fired on the edit, which
+is how the rewrite was found at all.
+
+**The switch.** A tick on the Numerical Solver card, *Include the derived
+answers*, **off by default**. Both lists ride in every payload —
+`equations` and a new `third_level` — and `whatifPayload()` merges them
+at **click** time, so changing your mind costs no re-solve. The key is
+deleted before encoding: the Solver's `?import=` contract is untouched,
+and a saved `numerical_system.json` is the documented shape either way.
+The tick hides itself when the run offers nothing — FD derives no powers,
+TR hands over answers rather than a system.
+
+**Where the formulas come from, and the one place they are written
+twice.** `engine._derived_definition` already writes most of them, and it
+is deliberately the source: `v_` in both domains, `p_` in dc, `r_`/`z_`.
+Two things it gets right that are easy to get wrong — it writes the seen
+resistance as `-ie1*re1 = v1` rather than `re1 = v1/(-ie1)`, so a zero
+current cannot put a division into the system, and it looks a `j`
+source's current (and a capacitor's in ac) up in `known` rather than
+among the unknowns.
+
+It refuses the three **ac powers**, and the reason does not apply here:
+`conjugate` cannot go into a symbolic stamp the linear solver then has to
+invert, but the Numerical Solver evaluates to complex and splits the
+residual, and `conj`, `re` and `im` are in its ac namespace. So those
+three are written in `symbulator_ui.third_level_equations`, mirroring
+`analysis._derived`. **That is the whole reason this item has a checker.**
+The ac op-amp is the case that shows it earning its keep: its power
+crosses here and cannot be stamped at all.
+
+Everything is written in the system's own first- and second-level
+variables, never in each other, so the block has no internal ordering to
+get wrong and any subset of it stands on its own.
+
+**The checker, and what it does not do.** `tools/check_third_level_export.py`
+does not compare the two pieces of source — that would only prove they
+still look alike. It builds the payload through the real `solve_ui`,
+merges the lists the way the button does, and runs the result through
+`eqsheet.api_parse` and `api_solve`, the same two calls the page makes,
+with every equation ticked and every variable Unknown on its solved
+guess — the `?import=` contract's own arrival state. Then it compares the
+**sheet's** answers with the solver's. Six circuits, 80 answers.
+`build_local.py` runs it.
+
+It also checks the **arrival state**: that what the button sends unticks
+exactly the third level's lines and no stamped one, and that without the
+tick the sheet is the circuit alone again. Those are asserted on the line
+numbers the Solver keys on, not on the indices alone — an off-by-one
+there would untick a stamped equation and leave the sheet quietly one
+short, which is the kind of fault that still "solves".
+
+It also covers the conditions and the rounding, and the whole thing is
+**proved red seven ways** rather than assumed: drop the ac halving,
+conjugate the voltage instead of the current, render `conjugate` under a
+name the Solver's namespace lacks, shift the `unticked` indices by one,
+export the rounded Float without its decimal read-back, read a lower
+bound as an upper one, and treat a zero bound as a sign before the other
+end is known. All seven go red.
+
+**A claim of mine that measurement corrected.** I wrote in two comments
+that an unknown function name would parse silently as a product —
+`conjugate(ir1)` reading as `conjugate * ir1` and leaving a free variable
+in the sheet — on the reasoning that `parse_expr` runs with implicit
+multiplication. It does not: a *called* name outside the namespace raises
+`NameError` out of parse_expr's code generation, so the sheet refuses the
+line. Loud, not silent. Both comments now say what was measured. The
+stray-variable check is still there, for the case that **is** silent: a
+*bare* unknown name, which is how a rename that half-ate a name would
+arrive.
+
+**Verified live, not just in Python.** Driven on the dev server: a DC
+solve, tick on, 5 equations became 12, the URL built and opened in the
+Solver, which reported *12 equations · 12 unknowns* and solved in 16
+evaluations — `pe1 = -48 mW`, `re1 = 3 kΩ`, `vr1 = 8 V`, the unit guess
+by first letter working on all three. Then the thing the feature is for:
+untick `v1 = 12`, pin `pr2` Known at 36 mW, solve — *11 equations · 11
+unknowns*, `v1 = 18 V`. That is right by hand (36 mW into 1 kΩ is 6 V
+across r2; ×3 for the divider), which is why it is quoted in the card's
+help text and in `EQSHEET.md`.
+
+Then, with the arrival state in: the twelve lines land with the first
+five ticked and the seven third-level ones off, the sheet reporting
+*5 equations · 5 unknowns* and the Variable sheet holding the five
+circuit variables alone; tick `pr2 = ir2*v2` and it is *6 equations ·
+6 unknowns*, solved, with `pr2 = 16 mW`.
+
+The help text was **reworded twice, both times after a run rather than
+before one**: the first draft said "pin a power Known and solve the
+circuit backwards", which omits the unticking of the source's equation
+that makes it work; the second did not say they arrive switched off,
+which a reader would discover by looking at the boxes.
+
+**Measured, and the trap it walked into.** The first measurement of the
+tick said 285px tall and 0 wide, which reads exactly like a broken flex
+rule. It was the Browser pane being hidden — `innerWidth: 0`, and
+everything under it measures 0. With a real viewport: 34px, one line, in
+English, Spanish, German and Ukrainian alike; 57px and two lines at
+375px, with no horizontal overflow.
+
+### The four that followed, same day
+
+**Conditions cross as restrictions, never as equations** (Roberto's
+third ask). `vs > 0` sets Positive on `vs`; `vs > 3` with `vs < 7` sets a
+range. Payload field `restrictions`, `{name: "pos" | "neg" | [lo, hi]}`
+in base units with either end null for open.
+
+**His example could not be typed.** He wrote `7 > x > 3` for the range
+case, and the app refuses it: `engine._parse_inequality` splits on the
+first operator it finds, so the chained form reaches `safe_sympify` as
+the value `x > 3` and comes back "contains a comparison, which is not
+arithmetic". Probed rather than assumed, over every spelling. So a range
+can only ever arrive as **two** conditions, which is how a reader writes
+one today, and bounds on a name are combined: tightest lower wins,
+lowest upper wins, contradictory pairs dropped. Teaching the solver the
+chained spelling is a separate item and a solver release; it is not
+needed for this one.
+
+`> 0` and `< 0` are read as ordinary bounds and only become the sign
+restrictions when nothing has bounded the other side — one rule instead
+of two, so `x > 0` with `x < 7` is the range it is rather than Positive
+with the 7 thrown away. Left unrestricted rather than approximated:
+`2*vs > 3`, `vs > ir1`, and `=` conditions.
+
+**DC only**, Roberto's call: every imported ac variable arrives Complex,
+where the menu is greyed out, and the only way to make a restriction
+bite would be to set the variable Real only — a claim about the circuit,
+not about the search.
+
+**A one-sided bound needed the page to relax.** `x > 3` has one number
+and no ceiling. `_restriction_bounds` has accepted a null end since
+#131 — it leaves that bound at ±infinity — and only `restrictionOf`
+insisted on both, so the engine needed nothing and the page needed four
+lines. Both ends empty is still a refusal, and its message was renamed
+`js.eq.rangeBothEnds` → `js.eq.rangeOneEnd` because "both" stopped being
+true; **the rename is the point** — keeping the key would have left
+twelve languages quietly saying the old thing while English said the new.
+
+**Values cross rounded to the app's Rounding setting** at the moment the
+button is pushed, through the app's own `_round_expr` so the two cannot
+disagree. At "exact" nothing is rounded, as before.
+
+**The trap in that one is worth the paragraph.** `_round_expr` returns a
+`sp.Float` carrying `digits` digits of *precision*, which is right for
+printing and wrong for exporting: it displays as "0.3333" and its
+nearest double is 0.3333015441894531, so the obvious
+`complex(_round_expr(...))` shipped thirteen digits of noise dressed as
+a four-digit answer — worse than the unrounded number it replaced. Each
+part goes out through the Float's own decimal string instead. The check
+asserts the exact decimal for that reason: "shorter than before" would
+have passed the broken version.
+
+**Three cosmetic moves in the sheet.** Restriction is the last column,
+in both modes — it used to sit between Status and the value, putting the
+widest and least-used control between the reader and the number. Its
+range boxes are a full-size value box now (6.2rem/14px, from
+3.8rem/13px), the cramping having been a consequence of the old
+position. And the editable equations box moved *below* the ticked list,
+since the sheet arrives preloaded far more often than it is typed into.
+Nothing is keyed on any of those orders.
+
+**One measurement that was my test's fault, not the app's.** A first run
+suggested 4 and 6 digits produced identical payloads. They do not — the
+test dispatched `input` on the digit field and not `change`. Worth
+recording because the conclusion "the setting is ignored" was wrong and
+would have sent the next session into `roundingState()` looking for a
+bug that is not there.
+
+**The URL cap, measured rather than worried about.** The tick roughly
+doubles the equation count, and past 6,000 characters the button stops
+using the link and saves `numerical_system.json` instead. So the question
+is whether the tick starts pushing ordinary circuits into the file path.
+It does not: over the twelve largest dc/ac circuits in the books, the
+worst case is **AS7's Example 10.14**, which adds 30 equations and goes
+from 2,792 characters to **3,898** — still well inside the cap. The
+Showing-off Problem adds 32 and reaches 1,509. **Nothing in the 356
+built-in entries trips the fallback with the tick on.** (That is a
+measurement of the largest twelve, not of all 244 dc/ac entries; the
+script is in the session scratchpad, and re-running it is a few minutes.)
+
+**Files.** `symbulator_ui.py` (a new `third_level_equations`, and the
+render into the payload), `templates/index.html` (the tick, the bullet,
+`whatifPayload()`, `syncWhatifThird()` wired into `activatePostSolve` and
+`clearResults`), `templates/eqsheet.html` (`importData` honours
+`unticked`), `tools/check_third_level_export.py` (new),
+`build_local.py` (runs it), `EQSHEET.md`, the thirteen dictionaries, and
+`sw.js` at **v180**. No solver change, so **no PyPI release and no `pip`
+anywhere** — the server wants a pull and a Reload when Roberto says go,
+and the offline pair wants a build.
+
+### A stray fixed in passing, with no number of its own
+
+`tools/i18n.py check` was **already red at HEAD**, and had been since
+9 Sep 2026. #353 changed two phrases in the *Symbulator is a free…*
+paragraph and updated all thirteen dictionaries, but never re-ran `tag`,
+so the element kept the key hashed from the old English —
+`symbulator-is-a-free.2be5`. Nothing rendered wrong, because template and
+dictionaries agreed on the stale key; the damage was latent, and it
+landed on the next `tag` run, which was this one: the key rehashed to
+`.8289` in the template and `en.json` and left the other twelve behind,
+which would have dropped twelve languages to English fallback on that
+paragraph.
+
+The values were already the new wording, so the repair is the rename
+alone, applied to the twelve. `i18n check` now reports **ok** for the
+first time since. Recorded here rather than given a number because it
+changes no rendered word — say so if you would rather it had one.
+
+The lesson is the file's own: **a guard nobody has watched fail is not a
+guard**, and its sibling — a guard nobody *runs* is not one either. The
+check was working perfectly and saying so to no one for two days.
+
+
+
+## #393 — claimed by the docs tree, 11 Sep 2026: `tools/check_white_text.py` refused the Manual's PDF for *invisible text* on a page that renders perfectly — the last contents page, mostly blank. Its rule is `ink < 0.15 * len(text)`, and a page of dot leaders is hundreds of characters of text layer with almost no ink. Leaders no longer count as prose; the narrowing was proved not to have gone too far by compiling a page in `\color{white}` and watching it still be caught. No app work. Write-up in `Documentation/NEXT_DOCS.md`
+
+## #392 — claimed by the docs tree, 11 Sep 2026: the **Manual's own PDF**, `symbulator-manual.pdf`, 35 pages — a fourth book rather than a fourth version, built from the chapters the three tutorial PDFs exclude. `tex/symbulator.cls` gains `\manualpart`, mirroring `\technote`, so the parts are numbered in print as on the web. The ribbon's *Download as PDF* follows the book you are in. No app work. Write-up in `Documentation/NEXT_DOCS.md`
+
+## #391 — claimed by the docs tree, 11 Sep 2026: the documentation sidebar shows only the book you are in — the Course's 21 chapters or the Manual's 14 — with a link at the foot to the other. Versions 7 and 8 see one book and no such link. No app work. Write-up in `Documentation/NEXT_DOCS.md`
+
+## #390 — claimed by the docs tree, 11 Sep 2026: **the Manual**, a second book on version 9 — fourteen parts, 6,384 words, beside the Course's 49,712. A chapter names its book in front matter rather than becoming a fourth version, because the routing is `^([789])` and a pseudo-version would cross every `versions:` check that keeps 7 and 8 safe. **Touches the join between the trees:** `Documentation/tools/check_manual_examples.py` solves every invented circuit through `repos/server/symbulator_ui.py`, so the docs build now imports the app tree for a third reason (after #219's images and #224's app links), and `build.py --check` fails without it. The Manual documents four things the Course never mentions — the Numerical Solver, the SPICE Translator, more-than-one-solution and the DC sweep plot. No app work. Built, not deployed. Write-up in `Documentation/NEXT_DOCS.md`
+
+## #389 — claimed by the docs tree, 11 Sep 2026: version 9's tutorial is renamed the **Course**, ahead of a second, shorter book called the **Manual**. Versions 7 and 8 keep every word — all three naming sites in `Documentation/web/index.php` were version-blind and are now gated on `$v`. **No app work and no i18n work:** the app's ribbon link says *Documentation* in all thirteen languages and is untouched, and `book.yaml`'s title is plain *Symbulator*, so no PDF is affected. Built, not deployed — it ships with the Manual. Write-up in `Documentation/NEXT_DOCS.md`
+
+## #388 — claimed by the docs tree, 11 Sep 2026: **Tech Note F**, every control in the {{card:Settings}} card in one place — Rounding, the four Display ticks, the AC power convention. New writing, not a move: the card is named in eight chapters and always in situ. Written from `repos/server/templates/index.html` and `syncSettings()` rather than from the chapters' prose, and two draft claims corrected by measurement — RMS reports twice what peak does and relabels the answer, and `si_prefix.py` takes three spellings of micro, not two. No app work. Write-up in `Documentation/NEXT_DOCS.md`
+
+## #387 — claimed by the docs tree, 11 Sep 2026: **Tech Note E**, the SI prefix table out of Lesson 1. The lesson keeps the sentence saying what the apostrophe shorthand is; the eleven-row list becomes reference. Checked against `symbulator/si_prefix.py`'s `_SI_PREFIXES` rather than copied forward. No app work. Write-up in `Documentation/NEXT_DOCS.md`
+
+## #386 — claimed by the docs tree, 11 Sep 2026: **Tech Note D**, the {{btn:Load circuit equivalent?}} button and RM3's Example 9-8. The load checkbox stays in Lesson 4; versions 7 and 8 keep the worked problem unchanged, wrapped in `::: only 7,8`. No app work. Write-up in `Documentation/NEXT_DOCS.md`
+
+## #385 — claimed by the docs tree, 11 Sep 2026: **Tech Note C**, the two jobs of the underscore, gathered from Lessons 1 and 3 with the subscript example. Both `::: result` panels were solved through `symbulator_ui` and matched against what the app returns, which is not something the build checks. No app work. Write-up in `Documentation/NEXT_DOCS.md`
+
+## #384 — claimed by the docs tree, 11 Sep 2026: `Documentation/build.py --check` walked into a version wrapper nested inside another directive regardless of the version being checked, so an `::: only 9` block inside a `::: problem` had its references checked against versions 7 and 8 as well. Fixed and proved red three ways. No app work. Write-up in `Documentation/NEXT_DOCS.md`
+
+## #383 — claimed by the docs tree, 11 Sep 2026: a technical note may carry worked examples, naming its example books in front matter (`books: [4a, 4b]`) instead of relying on `tools/app_links.py`'s chapter-id map. **Touches the join between the trees:** a `.cir` book can now be claimed from two chapters, and the coverage report pools claims across them rather than blaming the second chapter for the first one's entries. `py Documentation\tools\app_links.py` reads **334 of 336** entries linked. No app work. Write-up in `Documentation/NEXT_DOCS.md`
+
+## #382 — claimed by the docs tree, 11 Sep 2026: the Introduction's *Built-in examples* section now points at the input-files technical note and says it is optional reading that no lesson depends on. Version 9 only. No app work. Write-up in `Documentation/NEXT_DOCS.md`
+
+## #381 — claimed by the docs tree, 11 Sep 2026: a **Symbulator Tutorial** heading over the lessons, matching the Technical Notes one, and a card grid whose last row always fills — an orphan card spans the row rather than leaving the grid's own background showing as a grey block. Also: a chapter is ordered by its `kind` now, not by its place in `book.yaml`, so a note listed first still renders, prints and pages last. No app work. Write-up in `Documentation/NEXT_DOCS.md`
+
+## #380 — claimed by the docs tree, 11 Sep 2026: Technical Notes get a section of their own on `learn.symbulator.com`, under a rule below the lessons, and *Working with input files* moves into it as **Tech Note A**. No app work — the chapter order, the `kind` field and the card grid are all in `Documentation`. Write-up in `Documentation/NEXT_DOCS.md`
+
 ## #374-#379 — Roberto's review of the example book — **solver 0.6.5, 11 Sep 2026; live on the offline pair at cache v179, `learn` rebuilt; `symbulator.pythonanywhere.com` needs its pull *and* a `pip install --upgrade symbulator`**
 
 Six rules from a drawing-by-drawing review on 11 Sep 2026. Each is
