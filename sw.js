@@ -11,7 +11,7 @@
  * Bump CACHE_VERSION whenever the app files change, so returning users
  * get the new build instead of the cached one.
  */
-const CACHE_VERSION = 'symbulator-v200';
+const CACHE_VERSION = 'symbulator-v204';
 
 const ASSETS = [
   './',
@@ -46,6 +46,7 @@ const ASSETS = [
   'examples/Lesson_11.cir',
   'examples/Lesson_12.cir',
   'examples/Lesson_13.cir',
+  'examples/Nilsson_Riedel.cir',
   'examples/Showcase.cir',
   'examples/The_Monograph.cir',
   // ==== END examples ====
@@ -83,7 +84,7 @@ const ASSETS = [
   // never opens the Solver, and would also mean the Solver did not work
   // offline -- which is the one thing this file exists to guarantee.
   'vendor/scipy-1.18.0-cp314-cp314-pyemscripten_2026_0_wasm32.whl',
-  'vendor/symbulator-0.6.7-py3-none-any.whl',
+  'vendor/symbulator-0.6.8-py3-none-any.whl',
 ];
 
 self.addEventListener('install', event => {

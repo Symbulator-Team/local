@@ -42,6 +42,129 @@ the same number and neither could see the other's.
 commit it, and push it before using the number -- it costs one commit
 and it is the only thing that makes the claim visible to anyone else.
 
+## #426 — a coupled pair written as impedances — **live, 12 Sep 2026** (solver 0.6.8, cache v204)
+
+`m` names two elements, and in AC a coil is normally written as an
+impedance in ohms: `m,r2,r3,3j` is Lesson 10's own idiom and eight of its
+entries use it. The island check of #322/#323 recognised a coupling only
+when the coupled elements were `l`, so the far side of an `r`-spelled
+pair was refused as floating while the identical circuit written in
+henries solved and reported its local reference in note 221.
+
+**Roberto's own account of it (12 Sep 2026):** the local reference was
+added for transformers and coupled inductances, and *"we forgot (because
+I forgot) that resistors could be coupled in AC"*. An oversight, not a
+policy — which settles the question the fix raised, because the opposite
+reading was genuinely available: `m` might have been *meant* to couple
+inductors only, in which case the right fix would have been to refuse
+`m,r2,r3,3j` at parse time, and that would have broken Lesson 10. It was
+not meant that way.
+
+One condition dropped in `elements.py`:
+
+    -  if el.kind == "l" and el.name in coupled:
+    +  if el.name in coupled:
+
+The two spellings now agree — same note, same reference node, every
+shared answer identical to the last digit. A genuinely stray piece, one
+no `m` names, is still refused. **507 passed, 2 skipped**, the baseline.
+
+**Found from the other side, and the example that found it was wrong.**
+NR12's Example 9.15 was first described with an isolated secondary,
+which the solver's `th()` accepted and the app's Thevenin tool refused;
+chasing that disagreement turned this up. But Figure 9.42 draws one
+unbroken bottom rail, so the book's own circuit is not isolated and the
+description was simply a misreading — the app was right to refuse it and
+`th()` was too permissive. The bug is real and independent of the
+example that led to it, which is the only reason it survived the
+correction.
+
+**Verified in four places**, the wheel byte-identical in all of them:
+what PyPI records, what PyPI serves, the install host, and the published
+ZIP — and the bundled copy was checked for the *fix* rather than for its
+version number, which is the trap the 0.6.6 round recorded.
+
+## #425 — a sampler of Nilsson & Riedel 12e — **live, 12 Sep 2026** (cache v203)
+
+Forty-three worked examples from *Electric Circuits*, 12th edition, each
+described in Symbulator and **checked against the answer the book prints**.
+They ship two ways: a chapter at `learn.symbulator.com/9/nr12-sampler`, and a
+built-in example book, `Nilsson_Riedel.cir`, so the app now carries **399
+entries across 21 books** (measured, not quoted).
+
+The spread is deliberate — **DC 16, TR 14, AC 8, FD 5** — and so is the
+selection: the problems where the distance between *describing* a circuit and
+*solving it by hand* is widest. A delta that must be transformed (3.11, 9.10), a
+supermesh (4.8), a dependent source three steps from its controlling current
+(4.4, 4.7, 9.12, 9.14), a transformer whose secondary floats (9.15), a switch
+that opens twice (7.11), an impulse (13.13), the full three-phase circuit rather
+than its single-phase equivalent (11.1), cascaded two-ports (18.6). Expert Mode
+appears twice, where the thing you know is an answer and the thing you want is a
+component: the Wheatstone balance (3.10, `i_rg = 0` → `rx = 4*r3`) and a
+saturating summing amplifier's feedback resistor (5.3c, `v_4 = -12` → 40 kΩ).
+
+### Four things this round is worth remembering for
+
+**The solver API is not the app.** Every example was verified through
+`symbulator.dc/ac/tr/fd/th/port` and all 43 passed — then `verify_lesson.py`
+ran the book through the *real app* and 9.15 failed outright: `th()` gives a
+floating island its own reference, the app's Thévenin tool refuses the circuit.
+Referencing the secondary to node 0 fixes it and cannot change the answer
+(nothing else joins the two sides — checked, identical `vth` and `z`). **A
+`.cir` entry is only verified when the app has run it.**
+
+**A mangled PDF misleads in both directions.** The text layer renders
+`v = 24(2) = 48 V` as `v 24 24 8V`, and twice a wrong expectation was written
+from it — 3.7's 48 V read as 8 V, 4.7's sign inverted. Both were caught by
+Symbulator *disagreeing*, which is the whole point of comparing against a
+printed answer rather than against one's own reading of it.
+
+**`round_sig` takes a SymPy expression, not a float** — hand it a Python float
+and it returns it unchanged, silently. And a rounded `Float` carries only
+`digits` of precision, so `r == int(r)` is *False* for a rounded 200.0; compare
+through `float(r)`. Both are #318's trap wearing new clothes.
+
+**The join to the app is on the title, and the title is capped at 80
+characters.** `parse_book` truncates an entry name silently, so the page's
+problem headings are short — `NR12's Example 4.4` — with the book's own
+descriptive title moved into the body, and each entry named
+`NR12's Example 4.4 (DC)`. That is the shape `app_links`' stage 4 claims, and
+it resolves all 43 with no loose ends. The two pairs that share a figure
+(5.3/5.3c, 7.11a/7.11b) were given bases that differ, because the figure key
+alone cannot tell them apart.
+
+### The three files that had to change together
+
+- `repos/server/templates/index.html` — `?lesson=nr12` resolves to
+  `Nilsson_Riedel.cir`, beside the `showcase` and `monograph` aliases.
+- `Documentation/tools/app_links.py` — a `NAMED_BOOKS` table for books with no
+  lesson number, and `"nr12-sampler": ["nr12"]` in `CHAPTER_BOOKS`, which is
+  also what writes the split view's `lessons.json` in both directions.
+- the chapter itself, generated so the page and the `.cir` cannot drift.
+
+Change the alias and `NAMED_BOOKS` together or the links point at a book the
+app cannot name.
+
+### Verified live, by fetching and by driving
+
+`install` at cache **v203**, the ZIP at **32,003,789 b**, the served book
+byte-identical to the local one and to the copy inside the published ZIP; the
+chapter serving 43 problem cards, 41 figures, 43 **Open in app** and 43 **Open
+in split view** links, and 404 in versions 7 and 8. Then the part a hash cannot
+show: `install.symbulator.com/?lesson=nr12&entry=4` was opened on the live site
+and run — *NR12's Example 4.4 (DC)*, v₂ = 16 V, v₃ = 10 V, the book's answers.
+
+**The stale service worker bit once during that check** and looked exactly like
+a failed deploy: the deep link opened Lesson 1 from cache. Unregistering the
+worker and clearing the caches fixed it. The deploy was never wrong.
+
+### The book's figures
+
+41 crops from the PDF, `assets/circuit/nr12-ex*.jpg`, taken by clustering the
+vector ink above each `Figure N.M ▲` caption. The chapter carries the credits
+chapter's own wording: *for the purpose of teaching students how to use
+Symbulator, these diagrams are reproduced under the principle of fair use.*
+
 ## #423 — the drawing restyled on Nilsson & Riedel — **live, 12 Sep 2026** (solver 0.6.7)
 
 **Deployed at Roberto's "Love it. Punch it." and verified by fetching,
@@ -191,7 +314,11 @@ two pin stubs by assuming the pins a quarter of the height apart, and
 they are `OP_PIN` apart now; it reads the drawer's number and falls
 back to the old rule for older revisions. Crowded pairs are 124 → 124.
 `review_schematics.py`: **failed=0 with_issues=0** over all 356. Suite
-**507 passed, 2 skipped**. The gallery he reviews by eye is
+**507 passed, 2 skipped**. `pixel_clearance.py --all --min 3`, the slow
+one, run on the final geometry after the deploy and finished the same
+night: **356 drawings, tightest 3.75 px, 0 below the 3 px threshold** --
+the tightest ten are all the ground's `0`, which is GAP plus the bars'
+half-stroke, exactly as placed. The gallery he reviews by eye is
 `Notes/schematic_gallery_423_before_after.html`.
 
 **What the book does that the drawer still does not** -- the layout
