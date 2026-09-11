@@ -13,18 +13,88 @@
 > follow "#369" from either and you land on the documentation's item.
 > Claim a number in *both* trees before using it.
 
-## #373 — the balloon deflates: the band and the column gaps close to what a drawing needs — **built 11 Sep 2026, NOT on `main` and NOT deployed; awaiting Roberto's look**
+## #374-#379 — Roberto's review of the example book — **solver 0.6.5, 11 Sep 2026; live on the offline pair at cache v179, `learn` rebuilt; `symbulator.pythonanywhere.com` needs its pull *and* a `pip install --upgrade symbulator`**
+
+Six rules from a drawing-by-drawing review on 11 Sep 2026. Each is
+written as a rule, with the drawing that found it as evidence. The
+write-ups live in the solver's CHANGELOG for 0.6.5; what follows is what
+a later session needs and cannot get there.
+
+**#374 — the independent source 10% larger.** `SRC_R` 15.0 -> 16.5.
+`DEP_SCALE` drops to 1.0 so the dependent source's diamond stays at
+16.5, which means **the two are now the same size** and the 10% that
+told them apart at a glance is gone. Roberto was told; 1.1 restores it
+at 18.15 if he ever wants it back.
+
+**#375 — both op-amp legs bend at the same distance.** Of 78 op-amps,
+not one had equal legs. **58 have a reason** -- the lower input drops to
+the rail or carries a captured source drawn in that drop, and either
+needs a column clear of the upper input's riser -- and 20 did not. The
+answer to "why is this one still asymmetric" is almost always that it is
+one of the 58; `tools/schematic_lab/oplegs.py` says which.
+
+**#376 — a junction dot goes where three lines meet on the page.** The
+old pass marked a node's column whenever three elements touched that
+node in the *netlist*. Two traps in redoing it: **merge collinear runs
+first** (an op-amp input turning down onto a row its node's riser
+already covers is two records of one line, and unmerged it reads as a
+tee), and **a dot is not always a junction** -- a coupling dot and a
+transformer's polarity dots are the same shape saying a different thing,
+drawn inside the symbol's own group.
+
+**#377 — a node lifts to meet a raised op-amp's input.** `_Layout.row_y
+(node)` is the height connections to a node are made at. Every site that
+assumed the row now asks it, **including the node name**, which had to
+move because the wire runs through the strip names are lettered in.
+
+**#378 — a cramped return gets a column.** Two things it turned up: the
+spacer must not be claimed when the pass may draw the op-amp *above* the
+row (claiming it unconditionally pushed two bodies 11.1px into each
+other), and it made a drawing's two candidates **tie**, which exposed
+that ties were going to whichever `_placements` yielded first. Size is
+the tiebreak, and **it must be measured on the finished drawing** -- the
+band and the gaps close afterwards, and the two orderings disagree.
+
+**#379 — a label keeps clear of every line that is not its own
+element's.** Labels carry an owner (`_Canvas.label_owner`). The trap:
+the canvas normalises a segment's endpoints while the owner tuple keeps
+the declared order, so matching them literally measures an element
+against its own axis. That invented a population of 68 drawings at
+11.4px. With it fixed, **exactly one drawing in 356** was closer than
+12px to an unrelated line -- the one Roberto found by eye.
+
+**What shipped.** Over the book: bends 372 -> 359, near-corner joins
+10 -> 3, dots where fewer than three lines meet 64 -> 0, crowded pairs
+140 -> 125, wires 1346 -> 1334, canvas area **75.8%** of before.
+**Crossings unchanged at 17**, including the four Roberto ruled
+unavoidable. All 356 drawings move; three are larger, each one where
+#378 bought a column.
+
+**Declined, with the measurement, so it is not re-derived:** the
+rightmost grounded element laid horizontally along the ground rail.
+Roberto raised it, saw both readings drawn, called one "plain wrong" and
+kept the vertical version. The reasons are in `schematic.py`'s
+LIMITATIONS block beside the delta/wye/diamond note, and
+`tools/schematic_lab/mock_ground.py` redraws it.
+
+**The measuring tools are committed**, in
+`repos/server/tools/schematic_lab/` with a README naming the trap each
+one exists to avoid. The 10 Sep handover opened by listing four tools
+the previous session had built and lost; these are not lost.
+
+---
+
+## #373 — the balloon deflates: the band and the column gaps close to what a drawing needs — **solver 0.6.5, 11 Sep 2026; approved by Roberto and shipped with #374–#379**
 
 **Number claimed in both trees before use** — the app tree was at #372
 and `Documentation/NEXT_DOCS.md` at #370 when this was taken.
 
-**Where the code is.** The solver's **`sch-relax`** branch, commit
-`5798815`. `main` is untouched at 0.6.4, so nothing can reach a build or
-a deploy by accident. `git -C Application/v9/repos/solver checkout
-sch-relax` to look, `git checkout main` to put it back. The measuring
-tools are on `main` of the server repo, in
-`repos/server/tools/schematic_lab/` (commit `8545ec1`), with a README
-naming the trap each one exists to avoid.
+**Where the code is.** Merged to the solver's `main` and released as
+0.6.5 on 11 Sep 2026, after Roberto reviewed the gallery: *"I think
+every single one is better, if not the same, so that modification is a
+success."* The branch `sch-relax` is kept as the record of how it was
+built. The measuring tools are in `repos/server/tools/schematic_lab/`,
+with a README naming the trap each one exists to avoid.
 
 **What it does.** `ROW_H` and `COL_W` are constants, so a drawing of one
 source and two resistors is laid out on the same grid as a three-phase
@@ -87,15 +157,15 @@ happen** — that one was fitted to this book and came out non-monotonic
 under a sweep — so it is written down as taste rather than dressed up as
 arithmetic.
 
-**Two things that must be said before it ships.**
+**Two things that were said before it shipped, and both were done.**
 
-1. **355 of 356 drawings move.** He asked for this to be done
-   deliberately and it cannot be done quietly.
-2. **All eight monograph exemplars move, so Appendix B goes stale.**
-   Measured, not asserted. The fix is the usual three commands in the
-   same release: `py paper/render_exemplars.py`, `xelatex
-   symbulator_monograph.tex` twice, `py build.py --web` and a `learn`
-   deploy.
+1. **355 of 356 drawings move** (356 with #374-#379). He reviewed the
+   whole gallery before the merge.
+2. **All eight monograph exemplars move, so Appendix B went stale.**
+   Measured, not asserted, and rebuilt in the same release:
+   `py paper/render_exemplars.py`, `xelatex symbulator_monograph.tex`
+   twice, `py build.py --web`, `learn` deploy. The monograph is **52
+   pages**, was 51, and was verified live by fetching and hashing.
 
 **His own case, measured.** Bo2's Drill Exercise 3.2's band goes
 **202px → 157px** (the `ROW_H` part 150 → 105), so the 30px source that
