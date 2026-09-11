@@ -13,6 +13,270 @@
 > follow "#369" from either and you land on the documentation's item.
 > Claim a number in *both* trees before using it.
 
+## #374-#379 — Roberto's review of the example book — **solver 0.6.5, 11 Sep 2026; live on the offline pair at cache v179, `learn` rebuilt; `symbulator.pythonanywhere.com` needs its pull *and* a `pip install --upgrade symbulator`**
+
+Six rules from a drawing-by-drawing review on 11 Sep 2026. Each is
+written as a rule, with the drawing that found it as evidence. The
+write-ups live in the solver's CHANGELOG for 0.6.5; what follows is what
+a later session needs and cannot get there.
+
+**#374 — the independent source 10% larger.** `SRC_R` 15.0 -> 16.5.
+`DEP_SCALE` drops to 1.0 so the dependent source's diamond stays at
+16.5, which means **the two are now the same size** and the 10% that
+told them apart at a glance is gone. Roberto was told; 1.1 restores it
+at 18.15 if he ever wants it back.
+
+**#375 — both op-amp legs bend at the same distance.** Of 78 op-amps,
+not one had equal legs. **58 have a reason** -- the lower input drops to
+the rail or carries a captured source drawn in that drop, and either
+needs a column clear of the upper input's riser -- and 20 did not. The
+answer to "why is this one still asymmetric" is almost always that it is
+one of the 58; `tools/schematic_lab/oplegs.py` says which.
+
+**#376 — a junction dot goes where three lines meet on the page.** The
+old pass marked a node's column whenever three elements touched that
+node in the *netlist*. Two traps in redoing it: **merge collinear runs
+first** (an op-amp input turning down onto a row its node's riser
+already covers is two records of one line, and unmerged it reads as a
+tee), and **a dot is not always a junction** -- a coupling dot and a
+transformer's polarity dots are the same shape saying a different thing,
+drawn inside the symbol's own group.
+
+**#377 — a node lifts to meet a raised op-amp's input.** `_Layout.row_y
+(node)` is the height connections to a node are made at. Every site that
+assumed the row now asks it, **including the node name**, which had to
+move because the wire runs through the strip names are lettered in.
+
+**#378 — a cramped return gets a column.** Two things it turned up: the
+spacer must not be claimed when the pass may draw the op-amp *above* the
+row (claiming it unconditionally pushed two bodies 11.1px into each
+other), and it made a drawing's two candidates **tie**, which exposed
+that ties were going to whichever `_placements` yielded first. Size is
+the tiebreak, and **it must be measured on the finished drawing** -- the
+band and the gaps close afterwards, and the two orderings disagree.
+
+**#379 — a label keeps clear of every line that is not its own
+element's.** Labels carry an owner (`_Canvas.label_owner`). The trap:
+the canvas normalises a segment's endpoints while the owner tuple keeps
+the declared order, so matching them literally measures an element
+against its own axis. That invented a population of 68 drawings at
+11.4px. With it fixed, **exactly one drawing in 356** was closer than
+12px to an unrelated line -- the one Roberto found by eye.
+
+**What shipped.** Over the book: bends 372 -> 359, near-corner joins
+10 -> 3, dots where fewer than three lines meet 64 -> 0, crowded pairs
+140 -> 125, wires 1346 -> 1334, canvas area **75.8%** of before.
+**Crossings unchanged at 17**, including the four Roberto ruled
+unavoidable. All 356 drawings move; three are larger, each one where
+#378 bought a column.
+
+**Declined, with the measurement, so it is not re-derived:** the
+rightmost grounded element laid horizontally along the ground rail.
+Roberto raised it, saw both readings drawn, called one "plain wrong" and
+kept the vertical version. The reasons are in `schematic.py`'s
+LIMITATIONS block beside the delta/wye/diamond note, and
+`tools/schematic_lab/mock_ground.py` redraws it.
+
+**The measuring tools are committed**, in
+`repos/server/tools/schematic_lab/` with a README naming the trap each
+one exists to avoid. The 10 Sep handover opened by listing four tools
+the previous session had built and lost; these are not lost.
+
+---
+
+## #373 — the balloon deflates: the band and the column gaps close to what a drawing needs — **solver 0.6.5, 11 Sep 2026; approved by Roberto and shipped with #374–#379**
+
+**Number claimed in both trees before use** — the app tree was at #372
+and `Documentation/NEXT_DOCS.md` at #370 when this was taken.
+
+**Where the code is.** Merged to the solver's `main` and released as
+0.6.5 on 11 Sep 2026, after Roberto reviewed the gallery: *"I think
+every single one is better, if not the same, so that modification is a
+success."* The branch `sch-relax` is kept as the record of how it was
+built. The measuring tools are in `repos/server/tools/schematic_lab/`,
+with a README naming the trap each one exists to avoid.
+
+**What it does.** `ROW_H` and `COL_W` are constants, so a drawing of one
+source and two resistors is laid out on the same grid as a three-phase
+network. Both are now closed to what the particular drawing needs.
+Measured over the 356 built-in drawings before any change:
+
+* the **median drawing carries 113px of air** in the band between the
+  node row and the ground rail, whose tallest occupant is about 37px;
+* the **median column gap carries 95px of air** in its 132px, and 881 of
+  919 gaps carry nothing wider than 60px.
+
+Bo2's Drill Exercise 3.2 is the one Roberto named: 165px of air in a
+202px band, a 30px source with about 156px of bare lead wrapped round
+it.
+
+**Measured, not modelled.** The drawing is rendered once at full size,
+asked what actually stands in it, and redrawn. The vertical needs one
+number for the whole band, because every vertical gap in it closes at
+the same rate — a body hangs at the band's midpoint and the rail at its
+foot, so shortening the band by `d` moves each body up `d/2` and the
+rail `d`, taking `d/2` off the gap above *and* below. The horizontal
+needs one number per gap and then a short relaxation, because two
+labels at the same height need the **sum** of their widths and not the
+larger of them; the first estimate took the larger, and the review
+harness reported 25 findings.
+
+**The acceptance test is what makes it safe.** A tightening is kept only
+when `(crossings, bends, wires)` is unchanged **and** nothing new
+collides. Over the whole book: **crossings, bends, near-corner joins,
+stray dots and wire counts are all identical**, `crowd` is worse on two
+drawings, **area is 73.1% of before and no drawing grew**.
+
+**Two budgets, not one, and this is the bug worth remembering.** The
+acceptance test first compared a single collision *total*, and a
+relaxation that does that will spend a near-miss it started with on a
+real overlap. It did exactly that: `iCO` sat 17.5px from `8∠-40°` on
+AS7's Example 10.13 — one near-miss — and the narrowed drawing had them
+overlapping — one overlap — so the totals matched and the fault shipped
+past a green check. `_collisions` returns `(hard, soft)` now, and `soft`
+is a *distance deficit* rather than a count, because a count also lets
+an already-tight pair be tightened further for free.
+
+**And the harness does not ask Roberto's question.** It asks *do they
+overlap?*, with a 1px tolerance. Rule 7 is *lines should not be together
+if they can be apart*. Narrowed to the point where nothing quite
+touched, the closest pair of labels in the book went from 45px apart
+(median) to **2.0px**, and every one of those passed the harness.
+`LABEL_APART` is what stops it; the median is now 26.8px and **no pair
+is tighter than the book's own tightest**, 8.9px, which is unchanged.
+
+**What is his to decide, and why it is not derived.** `LEAD_MIN`,
+`H_CLEAR` and `LABEL_APART` are look-and-feel numbers. Measurement can
+only bound them: below about 5px of lead the review harness goes red (at
+2 it reports 26 findings), and the book as shipped sits at 56px of lead
+and 45px between neighbouring labels — a number nobody chose either, it
+is what `(ROW_H - 36.8) / 2` happens to leave beside a resistor.
+`tools/schematic_lab/variations.py` renders eight circuits at four
+settings side by side. **This is the `OP_ABOVE_GAP` mistake waiting to
+happen** — that one was fitted to this book and came out non-monotonic
+under a sweep — so it is written down as taste rather than dressed up as
+arithmetic.
+
+**Two things that were said before it shipped, and both were done.**
+
+1. **355 of 356 drawings move** (356 with #374-#379). He reviewed the
+   whole gallery before the merge.
+2. **All eight monograph exemplars move, so Appendix B went stale.**
+   Measured, not asserted, and rebuilt in the same release:
+   `py paper/render_exemplars.py`, `xelatex symbulator_monograph.tex`
+   twice, `py build.py --web`, `learn` deploy. The monograph is **52
+   pages**, was 51, and was verified live by fetching and hashing.
+
+**His own case, measured.** Bo2's Drill Exercise 3.2's band goes
+**202px → 157px** (the `ROW_H` part 150 → 105), so the 30px source that
+had about 172px of bare lead wrapped round it now has about 75px. The
+canvas goes 504 × 430 → 460 × 385. Its width barely moves because its
+labels are wide and its op-amp stands above the row — which is the
+**second** of his two size complaints, `OP_ABOVE_GAP`, and that one is
+**not** done. It is still the fitted 60 that swept non-monotonically,
+and it wants the same treatment: a clearance measured from what is
+actually there. It was left alone deliberately rather than stacked on
+top of an unreviewed change.
+
+**The acceptance test is proved load-bearing, not assumed.** Forcing
+`LEAD_MIN` to 2 — an absurdly tight band — and leaving the test in
+place, the harness still reports `with_issues=0`, because the test
+refuses every tightening that would collide. Disable the test at the
+same `LEAD_MIN` and it reports **26**. That is the check going red on
+purpose. (Worth knowing for whoever changes this: with `LEAD_MIN` at its
+proper 34 the test rejects nothing on this book — the drawings it saves
+are the ones nobody has drawn yet, which is the point.)
+
+**One drawing of the 356 does not move at all:** AS2's Figure 5.17
+(Voltage Follower). Nothing in it has room to give.
+
+Suite **503 passed, 2 skipped**; harness `failed=0 with_issues=0`.
+
+**Related: one of #371's two complaints is already gone.** Bo2's Drill
+Exercise 3.3 measured one near-corner join at 29.0px when #371 was
+written and now measures **zero** — #372's own rules moved it. TR5's
+Example 4-13 still has two, and #371's count of two for it included the
+op-amp's own pin spacing, which is the symbol and not the layout.
+
+### The objective, validated against his own rulings — read this before optimising anything
+
+#372 left the remaining five of Roberto's seven values "measured but not
+yet trusted", and warned: *do not let a search optimise an objective
+that has not been validated against his own judgements.* This is that
+validation, and it produced one result that changes what the
+force-directed work may do.
+
+**The ground truth.** 22 drawings moved between `5224d54` (#366) and the
+released 0.6.4. He reviewed all 63 op-amp drawings after that change,
+named exactly two for fine-tuning (#371) and four crossings as
+unavoidable, and accepted the rest — so for those 22 the *after* is his
+ruling and the *before* is what he replaced. 22 pairs with a known
+answer. `tools/schematic_lab/energy.py` scores a candidate ordering
+against them.
+
+| ordering | right | wrong | tie |
+|---|---|---|---|
+| `(crossings, bends, wires)` — what #372 shipped | 21 | 0 | 1 |
+| `(crossings, bends, joins, crowd, wires)` | **22** | **0** | 0 |
+| `(crossings, bends, joins, crowd, wires, size)` | **22** | **0** | 0 |
+| `(crossings, joins, bends, crowd, wires)` | 20 | **2** | 0 |
+| `(crossings, bends, size)` | 21 | 1 | 0 |
+| **`(size, crossings, bends)`** | **3** | **19** | 0 |
+
+**An objective that minimises figure size first contradicts his rulings
+on 19 of the 22 drawings.** He accepted a *bigger* canvas almost every
+time — the approved drawing is worse on `area_per_elem` in 19 of 22
+pairs. Rule 5 is real and it is the **last** thing served, never the
+first. That matters because a literal force-directed energy, which pulls
+a layout in until the springs balance, *is* "size first": it is the
+shape of objective his own judgements reject hardest. #373 above obeys
+this — it shrinks a drawing only where the price list is unchanged, and
+it is checked, not trusted.
+
+**Bends outrank the join and crowding terms.** Putting `joins` before
+`bends` calls two of his approved drawings worse — Bo2's Figure 6.23 and
+Drill Exercise 6.10, where the ruling took a bend off and paid two stray
+dots for it.
+
+**Crossings are the only term never paid.** In all 22 pairs the approved
+state is never worse on crossings. Every other term is traded away for
+crossings at least once. Bo2's Example 3.3 keeps its crossing because he
+ruled it unavoidable, not because the objective likes it — an objective
+that treats every crossing as debt is still wrong, and the anchor still
+has to be respected by hand.
+
+**The two new terms, and what they actually count.** `near_corner` and
+`stray_dots` are two views of one defect, which is why they are summed
+rather than ordered against each other:
+
+* `near_corner` — two line ends within 30px that do not meet. It
+  reproduces #371's documented distances exactly (14.5px at x = 322 on
+  Example 4-13; 29.0px at x = 231 on Drill Exercise 3.3).
+* `stray_dots` — a junction dot with fewer than three lines actually
+  meeting at it. The drawer places these from the **netlist**
+  (`touching[n] >= 3`), not from the geometry, so the dot lands on the
+  node row while the third lead tees in 14.5px above it. **On Example
+  4-13 the two stray dots sit at exactly the two near-corner joins'
+  columns** — the same defect from the drawer's side and the reader's.
+
+**Four false positives were removed from `near_corner`, each found by
+printing the evidence rather than trusting the count:** the two ends of
+one short run reporting themselves; two lines that already meet at a
+corner; **the op-amp's own pin spacing**, `h/2` = 29px, fixed by the
+symbol and counted by #371; and **ends that are near each other only
+diagonally**, which are two corners and not a missed one. That last was
+worth catching: with it in, narrowing a drawing looked like a regression
+on five cascades when nothing had moved out of line.
+
+**Size and slack are not comparable across circuits.** They are large on
+every drawing — 355 of 356 — because the grid stretches everything.
+They mean something only between candidate layouts of the *same*
+circuit. That is almost certainly what #372 meant by "two of them return
+implausibly large numbers on drawings he calls good": the numbers were
+not wrong, the comparison was.
+
+---
+
 ## #372 — the drawer chooses by cost, and four rules that outlive their drawings — **solver 0.6.4, 10 Sep 2026**
 
 Roberto, 10 Sep 2026: *"the feedback I'm giving you here is meant not
@@ -100,6 +364,56 @@ symbolic conductances, the same netlist bar element order. **21 of 356
 drawings move; 335 are byte for byte unchanged, and no monograph
 exemplar moves, so Appendix B is not stale** (measured, not asserted).
 Suite 503 passed, harness `failed=0 with_issues=0`.
+
+**Roberto's brief for it, 10 Sep 2026, in his words.** *"I want you to
+spend the next three hours thinking about how you can implement the
+ideas of the algorithm I mentioned by name a while ago"* — force-directed
+graph drawing — *"Their idea of forces that push out and springs that
+pull in sounds promising to me."* And what it is for: *"My goal is not
+to have pretty circuits here, but to produce a tool that can create
+pretty circuits moving forward as well."*
+
+Seven things he values in a good circuit image, quoted rather than
+paraphrased, because they are the specification:
+
+1. *no unnecessary crossings, only as few crossings as needed*
+2. *no unnecesary line bends/turns*
+3. *rewards lines joining at the corner or at middle points, and
+   penalises lines joining near corners (they look ugly)*
+4. *do not add dots unnecessarily*
+5. *keep as small a relative figure size compared to the size of the
+   elements*
+6. *align elements horizontally and vertically to the extent possible
+   without creating crossing*
+7. *imagine that lines repel each other. Lines should not be together if
+   they can be apart*
+
+`_cost` is the first two of those and nothing more. The remaining five
+were prototyped and are **not** trusted: two of them returned
+implausibly large numbers on drawings he calls good, which is usually a
+metric counting something other than its name, and one validation case
+was mislabelled by me rather than answered wrongly by the measurement.
+
+**Why it is not a particle simulation.** Applied literally, force-directed
+drawing settles nodes at arbitrary angles, and a circuit diagram is
+orthogonal — a diagonal wire is not a style, it is wrong. What transfers
+is the mechanics applied in the layout's own coordinates, which are
+one-dimensional per axis: horizontally the order of the node columns and
+the width of each gap, vertically the height of each band and which band
+each element sits in. Two 1-D relaxations plus a discrete choice, not an
+n-body problem. Repulsion is Roberto's balloon and his rule 7; springs
+are what stop the canvas inflating for ever, which is his rule 5 and his
+complaint that Bo2's Drill Exercise 3.2 hangs a 30px source in a 202px
+band.
+
+Every rule derived by hand in #372 is a local minimum this energy would
+have found without being told. That is the argument for doing it, and
+the reason not to rush it: **do not let a search optimise an objective
+that has not been validated against his own judgements.** It will
+happily produce drawings he dislikes. Bo2's Example 3.3 is the anchor to
+calibrate against — he called it *perfect*, and it carries a crossing he
+considers necessary, so an objective that treats every crossing as debt
+is already wrong.
 
 **Left open, deliberately.** #371 holds two fine-tuning items Roberto
 asked to be noted and not started. Beyond them, the thing he asked for
