@@ -5,6 +5,57 @@ file version 9 never has, so a `git merge v9/main` can never conflict on
 it. `NEXT.md` beside this file is version 9's running list and arrives
 by merge; read it as upstream history, not as a record of X.
 
+## X27 — version 9's relaxation round merged; label **`0.6.5+x27`** — **done 11 Sep 2026, pushed; the site wants a pull of *both* clones and a reload, and no `pip`**
+
+Version 9's **#373–#379** and solver **0.6.5**, the drawer's relaxation
+round from Roberto's drawing-by-drawing review: the band and each column
+gap close to what the drawing actually needs, the independent source is
+10% larger, both op-amp input legs bend at the same distance, a junction
+dot goes where three lines meet **on the page** rather than in the
+netlist, a node lifts to meet a raised op-amp's input, a cramped return
+buys a column, and a label keeps clear of lines that are not its own.
+The write-ups are version 9's, in `NEXT.md` beside this file; the
+solver's CHANGELOG for 0.6.5 has the detail.
+
+**The solver moved, so X's site needs a pull of *both* clones** —
+`/home/symbulatorx/solver` and `/home/symbulatorx/symbulator_web` — and
+a Reload. **Still no `pip`**: X's solver is an editable checkout, so a
+`git pull` in the solver clone is the install.
+
+**Three conflicts, all the expected kind.**
+
+| repo | conflict | resolved |
+|---|---|---|
+| `solver` | the version label | kept as X's, **`0.6.5+x27`** |
+| `server` | the build stamp | taken from v9, then rebuilt with X's own interpreter |
+| `local` | the generated `index.html` | taken from v9, then rebuilt |
+
+**`branding.py` was untouched by the merge** — sha256
+`0d5c661cef2ac1a4d9f3b5b61fec289aa698a6e0b94c6c31d6511f327f54c7d9`
+before and after, checked rather than assumed.
+
+**Verified by hash, not by reflex.** Taking v9's side on the generated
+page and stopping is what once left X byte-identical to version 9 for a
+commit, which is the shape that got its host disabled. After the
+rebuild: X's `index.html` hashes `fdc581e1…` against version 9's
+`5a91c27e…`, X's page carries `#d9a521` and the fork's subtitle and
+version 9's carries neither. X's build stamp is `2026-09-11 04:03 UTC`,
+version 9's `2026-09-11 03:42 UTC`.
+
+**The editable install had to be refreshed before the suite would
+pass** — the packaging test compares `importlib.metadata` against
+`__version__`, and an editable install keeps the old label until
+`pip install -e . --no-deps` is re-run in `Application\vX\.venv`. This
+is the same trap X22 recorded; it is now two for two.
+
+**X's suite: 502 passed, 3 skipped.** Version 9 reports 503 passed and 2
+skipped; the extra skip is ahkab, which X's venv does not have, and the
+package is complete either way. X's schematic harness: `failed=0
+with_issues=0` over all 356 entries.
+
+**No language work, as ever** — X is English-only, and the round touched
+no dictionary.
+
 ## X26 — version 9's op-amp drawing round merged; label **`0.6.4+x26`** — **done 10 Sep 2026, pushed; the site wants a pull of *both* clones and a reload**
 
 Version 9's #366, #367 and #372 — solver **0.6.4**, the op-amp drawings.
@@ -254,7 +305,7 @@ pull landed, not the version.
 
 X's suite: **484 passed and 1 skipped** — the skip is
 `test_spice_groundtruth.py`, whose ahkab is not installed in
-`ApplicationX\.venv`, exactly as it should be. `i18n check`,
+`Application\vX\.venv`, exactly as it should be. `i18n check`,
 `palettes check`, the hidden-guard check and the export-field check all
 clean.
 
