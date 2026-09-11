@@ -13,6 +13,18 @@
 > follow "#369" from either and you land on the documentation's item.
 > Claim a number in *both* trees before using it.
 
+## #388 — claimed by the docs tree, 11 Sep 2026: **Tech Note F**, every control in the {{card:Settings}} card in one place — Rounding, the four Display ticks, the AC power convention. New writing, not a move: the card is named in eight chapters and always in situ. Written from `repos/server/templates/index.html` and `syncSettings()` rather than from the chapters' prose, and two draft claims corrected by measurement — RMS reports twice what peak does and relabels the answer, and `si_prefix.py` takes three spellings of micro, not two. No app work. Write-up in `Documentation/NEXT_DOCS.md`
+
+## #387 — claimed by the docs tree, 11 Sep 2026: **Tech Note E**, the SI prefix table out of Lesson 1. The lesson keeps the sentence saying what the apostrophe shorthand is; the eleven-row list becomes reference. Checked against `symbulator/si_prefix.py`'s `_SI_PREFIXES` rather than copied forward. No app work. Write-up in `Documentation/NEXT_DOCS.md`
+
+## #386 — claimed by the docs tree, 11 Sep 2026: **Tech Note D**, the {{btn:Load circuit equivalent?}} button and RM3's Example 9-8. The load checkbox stays in Lesson 4; versions 7 and 8 keep the worked problem unchanged, wrapped in `::: only 7,8`. No app work. Write-up in `Documentation/NEXT_DOCS.md`
+
+## #385 — claimed by the docs tree, 11 Sep 2026: **Tech Note C**, the two jobs of the underscore, gathered from Lessons 1 and 3 with the subscript example. Both `::: result` panels were solved through `symbulator_ui` and matched against what the app returns, which is not something the build checks. No app work. Write-up in `Documentation/NEXT_DOCS.md`
+
+## #384 — claimed by the docs tree, 11 Sep 2026: `Documentation/build.py --check` walked into a version wrapper nested inside another directive regardless of the version being checked, so an `::: only 9` block inside a `::: problem` had its references checked against versions 7 and 8 as well. Fixed and proved red three ways. No app work. Write-up in `Documentation/NEXT_DOCS.md`
+
+## #383 — claimed by the docs tree, 11 Sep 2026: a technical note may carry worked examples, naming its example books in front matter (`books: [4a, 4b]`) instead of relying on `tools/app_links.py`'s chapter-id map. **Touches the join between the trees:** a `.cir` book can now be claimed from two chapters, and the coverage report pools claims across them rather than blaming the second chapter for the first one's entries. `py Documentation\tools\app_links.py` reads **334 of 336** entries linked. No app work. Write-up in `Documentation/NEXT_DOCS.md`
+
 ## #382 — claimed by the docs tree, 11 Sep 2026: the Introduction's *Built-in examples* section now points at the input-files technical note and says it is optional reading that no lesson depends on. Version 9 only. No app work. Write-up in `Documentation/NEXT_DOCS.md`
 
 ## #381 — claimed by the docs tree, 11 Sep 2026: a **Symbulator Tutorial** heading over the lessons, matching the Technical Notes one, and a card grid whose last row always fills — an orphan card spans the row rather than leaving the grid's own background showing as a grey block. Also: a chapter is ordered by its `kind` now, not by its place in `book.yaml`, so a note listed first still renders, prints and pages last. No app work. Write-up in `Documentation/NEXT_DOCS.md`
