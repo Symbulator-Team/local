@@ -13,6 +13,8 @@
 > follow "#369" from either and you land on the documentation's item.
 > Claim a number in *both* trees before using it.
 
+## #382 — claimed by the docs tree, 11 Sep 2026: the Introduction's *Built-in examples* section now points at the input-files technical note and says it is optional reading that no lesson depends on. Version 9 only. No app work. Write-up in `Documentation/NEXT_DOCS.md`
+
 ## #381 — claimed by the docs tree, 11 Sep 2026: a **Symbulator Tutorial** heading over the lessons, matching the Technical Notes one, and a card grid whose last row always fills — an orphan card spans the row rather than leaving the grid's own background showing as a grey block. Also: a chapter is ordered by its `kind` now, not by its place in `book.yaml`, so a note listed first still renders, prints and pages last. No app work. Write-up in `Documentation/NEXT_DOCS.md`
 
 ## #380 — claimed by the docs tree, 11 Sep 2026: Technical Notes get a section of their own on `learn.symbulator.com`, under a rule below the lessons, and *Working with input files* moves into it as **Tech Note A**. No app work — the chapter order, the `kind` field and the card grid are all in `Documentation`. Write-up in `Documentation/NEXT_DOCS.md`
