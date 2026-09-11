@@ -87,7 +87,7 @@ I18N_OUT = HERE / "i18n"
 SW_I18N_BEGIN = "  // ==== BEGIN i18n ==== written by build_local.py; do not edit"
 SW_I18N_END = "  // ==== END i18n ===="
 
-WHEEL = "symbulator-0.6.5-py3-none-any.whl"
+WHEEL = "symbulator-0.6.6-py3-none-any.whl"
 
 # The Numerical Solver's one expensive dependency (#208). eqsheet.py
 # calls scipy.optimize.root for a square system and least_squares for a
@@ -123,13 +123,20 @@ def stamp_template() -> str:
     for byte, and a stamp read off the clock would make every check fail
     with nothing actually wrong."""
     now = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
-    text = TEMPLATE.read_text(encoding="utf-8")
-    text, found = STAMP_RE.subn(lambda m: m.group(1) + now, text)
-    if found != 1:
-        raise SystemExit(f"build_local.py: expected exactly one build stamp "
-                         f"in {TEMPLATE.name}, found {found}. The footer line "
-                         f"changed shape -- fix STAMP_RE to match it.")
-    TEMPLATE.write_text(text, encoding="utf-8", newline="")
+    # #400: both pages, not just the app. The Solver carries its own
+    # stamp now, so a reader can say which build they are looking at --
+    # the question that was unanswerable there, and that cost four
+    # exchanges on 11 Sep 2026 when a cached page and an undeployed
+    # change looked identical from the outside.
+    for path in (TEMPLATE, EQ_TEMPLATE):
+        text = path.read_text(encoding="utf-8")
+        text, found = STAMP_RE.subn(lambda m: m.group(1) + now, text)
+        if found != 1:
+            raise SystemExit(f"build_local.py: expected exactly one build "
+                             f"stamp in {path.name}, found {found}. The "
+                             f"footer line changed shape -- fix STAMP_RE to "
+                             f"match it.")
+        path.write_text(text, encoding="utf-8", newline="")
     return now
 
 
@@ -293,6 +300,47 @@ if ('serviceWorker' in navigator) {
     });
   });
 }
+
+// #400: tell the reader when a newer build has installed behind this
+// page, instead of leaving them to guess whether a change is missing
+// because it is cached or because it was never deployed. That ambiguity
+// cost four exchanges on 11 Sep 2026, with the wrong answer given in
+// both directions.
+//
+// **Deliberately not an auto-reload.** The service worker calls
+// skipWaiting and clients.claim, so a new build takes over the moment it
+// installs and `controllerchange` fires while the reader is still
+// looking at the old page. Reloading there would discard a typed
+// circuit, which is worse than being one build behind. So: a bar, and
+// the reader chooses when.
+(function () {
+  if (!('serviceWorker' in navigator)) return;
+  var shown = false;
+  navigator.serviceWorker.addEventListener('controllerchange', function () {
+    if (shown) return;
+    shown = true;
+    var bar = document.createElement('div');
+    bar.setAttribute('role', 'status');
+    bar.style.cssText = 'position:fixed;left:0;right:0;bottom:0;z-index:9999;'
+      + 'display:flex;gap:.8rem;align-items:center;justify-content:center;'
+      + 'padding:.6rem 1rem;font:14px system-ui,sans-serif;'
+      + 'background:var(--card-2,#eef2f7);color:var(--ink,#1b2430);'
+      + 'border-top:1px solid var(--line,#c7d2de)';
+    var msg = document.createElement('span');
+    msg.textContent = (window.t ? t('js.sw.updated',
+      'A newer version of Symbulator has been downloaded.')
+      : 'A newer version of Symbulator has been downloaded.');
+    var go = document.createElement('button');
+    go.textContent = (window.t ? t('js.sw.reload', 'Reload to use it')
+                               : 'Reload to use it');
+    go.onclick = function () { location.reload(); };
+    var no = document.createElement('button');
+    no.textContent = (window.t ? t('js.sw.later', 'Not now') : 'Not now');
+    no.onclick = function () { bar.remove(); };
+    bar.appendChild(msg); bar.appendChild(go); bar.appendChild(no);
+    document.body.appendChild(bar);
+  });
+}());
 </script>
 <script>
 // Offering installation from inside the page, because the browser's own
@@ -740,6 +788,31 @@ def check_export_fields() -> None:
               "round trip (see above).")
 
 
+def check_third_level_export() -> None:
+    """Stop the build if the third level does not survive the handover to
+    the Numerical Solver.
+
+    #391: most of those defining equations come from
+    `engine._derived_definition`, but the three ac powers are written in
+    `symbulator_ui.third_level_equations` itself, because the symbolic
+    stamp cannot take a `conjugate`. One formula in two places. The
+    checker does not compare the two -- it runs the exported equations
+    through `eqsheet`'s own parse and solve and compares the sheet's
+    answers with the solver's, which is the artefact rather than the
+    model. Hard failure: it needs nothing outside the two repositories."""
+    checker = SERVER / "tools" / "check_third_level_export.py"
+    if not checker.is_file():
+        raise SystemExit("build_local.py: tools/check_third_level_export.py "
+                         "is missing; the handover check cannot run.")
+    result = subprocess.run([sys.executable, str(checker)],
+                            capture_output=True, text=True)
+    if result.returncode != 0:
+        raise SystemExit(
+            (result.stdout or "") + (result.stderr or "")
+            + "build_local.py: the third level does not reach the Numerical "
+              "Solver intact (see above).")
+
+
 def check_byhand_rounding() -> None:
     """Stop the build if the By-Hand card ignores the Rounding setting.
 
@@ -918,6 +991,47 @@ if ('serviceWorker' in navigator) {
     });
   });
 }
+
+// #400: tell the reader when a newer build has installed behind this
+// page, instead of leaving them to guess whether a change is missing
+// because it is cached or because it was never deployed. That ambiguity
+// cost four exchanges on 11 Sep 2026, with the wrong answer given in
+// both directions.
+//
+// **Deliberately not an auto-reload.** The service worker calls
+// skipWaiting and clients.claim, so a new build takes over the moment it
+// installs and `controllerchange` fires while the reader is still
+// looking at the old page. Reloading there would discard a typed
+// circuit, which is worse than being one build behind. So: a bar, and
+// the reader chooses when.
+(function () {
+  if (!('serviceWorker' in navigator)) return;
+  var shown = false;
+  navigator.serviceWorker.addEventListener('controllerchange', function () {
+    if (shown) return;
+    shown = true;
+    var bar = document.createElement('div');
+    bar.setAttribute('role', 'status');
+    bar.style.cssText = 'position:fixed;left:0;right:0;bottom:0;z-index:9999;'
+      + 'display:flex;gap:.8rem;align-items:center;justify-content:center;'
+      + 'padding:.6rem 1rem;font:14px system-ui,sans-serif;'
+      + 'background:var(--card-2,#eef2f7);color:var(--ink,#1b2430);'
+      + 'border-top:1px solid var(--line,#c7d2de)';
+    var msg = document.createElement('span');
+    msg.textContent = (window.t ? t('js.sw.updated',
+      'A newer version of Symbulator has been downloaded.')
+      : 'A newer version of Symbulator has been downloaded.');
+    var go = document.createElement('button');
+    go.textContent = (window.t ? t('js.sw.reload', 'Reload to use it')
+                               : 'Reload to use it');
+    go.onclick = function () { location.reload(); };
+    var no = document.createElement('button');
+    no.textContent = (window.t ? t('js.sw.later', 'Not now') : 'Not now');
+    no.onclick = function () { bar.remove(); };
+    bar.appendChild(msg); bar.appendChild(go); bar.appendChild(no);
+    document.body.appendChild(bar);
+  });
+}());
 </script>
 </body>"""
 
@@ -1132,6 +1246,10 @@ def build() -> str:
     # proves it against the parser, the writer and the front end.
     check_export_fields()
     check_byhand_rounding()
+
+    # #391: the third level reaches the Numerical Solver as equations,
+    # and half those formulas are written twice by necessity.
+    check_third_level_export()
 
     # #278: the theme blocks in both templates come from one table.
     check_palettes()
@@ -1473,17 +1591,29 @@ def build() -> str:
     )
 
     # The comment above that constant explains an absolute URL that is
-    # no longer absolute here, and says the Solver works offline only
-    # when the network does -- which is now the opposite of true.
+    # no longer absolute here, and points at a rewrite this build has
+    # just done -- so the offline page gets the plain statement instead.
+    #
+    # #391 corrected the server-side wording this replaces. It had said
+    # the Solver lived only on the server and was an outward link that
+    # worked offline only when the network did, which stopped being true
+    # at #208 and read as current for three months.
     s = sub(
         s,
         """// preloaded. The payload normally travels in the URL (base64url of its
 // JSON, the ?import= contract in eqsheet.py), so the new tab needs
-// nothing further from this page. The URL is absolute on purpose: the
-// offline builds carry this same script, and the solver needs SciPy, so
-// there is exactly one of it and it lives on the server -- like the
-// Documentation link, this is an outward link that works offline only
-// when the network does.""",
+// nothing further from this page. The URL is absolute because this is
+// the *server* build's copy; `build_local.py` rewrites this one line to
+// 'eqsheet.html' for the offline builds, which have carried their own
+// Solver beside the app since #208.
+//
+// This comment used to say the opposite -- that there was exactly one
+// Solver and it lived on the server, an outward link like the
+// Documentation one. That was true until #208 and has been wrong since,
+// and it cost #391 a deploy note warning of a window between the
+// offline pair and the server's pull in which a handover would meet an
+// older Solver. There is no such window: each build hands over to the
+// Solver it ships with.""",
         """// preloaded. The payload normally travels in the URL (base64url of its
 // JSON, the ?import= contract in eqsheet.py), so the new tab needs
 // nothing further from this page. This build's Solver is the page
