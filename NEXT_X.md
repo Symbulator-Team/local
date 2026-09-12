@@ -5,6 +5,37 @@ file version 9 never has, so a `git merge v9/main` can never conflict on
 it. `NEXT.md` beside this file is version 9's running list and arrives
 by merge; read it as upstream history, not as a record of X.
 
+## X36 — version 9's #433 to #436 (cache v218) — 13 Sep 2026
+
+Four items of version 9's 12–13 Sep 2026, merged together: **#433**,
+the Solve card's conditions and equations behaving like Expert Mode's
+(an equality condition on a symbol substitutes, an equation naming
+none of the unknowns is solved, the offline bridge expands the ` and `
+form); **#434**, a source's card reading the power it *delivers*
+(`-pe1 = 10 W` under *power delivered*; in AC *real power delivered*
+over `-pe`, *complex power delivered* over `-se`, and a *delivered —
+power factor* row; a passive element's rows *power consumed*, *real
+power consumed*, *complex power consumed* — "power" never alone);
+**#435**, *real solutions only* ticked by default in DC and TR and
+unticked in AC and FD; and **#436**'s share of the app tree, the
+Nilsson & Riedel book's entries at `rounding: 4` or the book's own
+precision. Six `srv.` labels moved in every dictionary.
+
+**The solver did not move** (*Already up to date*), so the label stays
+**`0.6.9+x34`**, there is no `pip` step, and X's site needs a pull of
+`/home/symbulatorx/symbulator_web` **alone** — it is still on X34's
+build (`2026-09-12 10:27 UTC`, fetched before this merge), so that one
+pull carries X35 and X36 together. Two stamp conflicts in `server` and
+two generated pages in `local`, all taken from v9 and rebuilt with X's
+own interpreter; `branding.py` untouched, sha256 `0d5c661c…` before
+and after. Verified by hash: X's `index.html` `11e7d30e…` against
+version 9's `bf77bcad…`, `eqsheet.html` `c20229ff…` against
+`08c648ac…`, X's carrying `#d9a521` and the fork's subtitle and
+version 9's carrying neither; X's `symbulator_ui.py` carries *real
+power delivered*, its `sw.js` v218. Under X's interpreter: `i18n.py
+check` ok, `check_pf_tool.py` ok, `check_solveq_conditions.py` all
+checks passed, `build_local.py --check` up to date.
+
 ## X35 — version 9's #431 (cache v209) — 13 Sep 2026
 
 No underscores in the variables the interface shows as examples or
