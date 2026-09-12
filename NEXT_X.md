@@ -5,6 +5,36 @@ file version 9 never has, so a `git merge v9/main` can never conflict on
 it. `NEXT.md` beside this file is version 9's running list and arrives
 by merge; read it as upstream history, not as a record of X.
 
+## X32 — version 9's #427 (cache v205)
+
+`m`… no: this one is the interface. Version 9's **#427**, the fix that
+stops the results label stripping the underscore from a *symbolic
+variable* — `Symbol('v_s') != Symbol('vs')`, so a solve for `v_s` was
+labelled `vs`. Three display sites, none computational.
+
+**The solver did not move** (the `solver` merge came back *Already up to
+date*), so X's label stays **`0.6.8+x31`**, there is no `pip` step, and
+X's site needs a pull of `/home/symbulatorx/symbulator_web` **alone**.
+
+**Why this needed a merge at all, which is the part worth remembering.**
+#427 was committed to version 9's `repos/server`; X's `symbulator_web`
+clone pulls from `Symbulator-Team/server`. A pull on X therefore succeeded
+and changed nothing, and X went on serving the old page while `/healthz`
+looked perfectly healthy — its build stamp simply had not moved. That is
+the failure the root `CLAUDE.md` warns about in the other direction: **a
+pull that succeeds and changes nothing is indistinguishable from one that
+worked.** An improvement reaches X only after `git fetch v9 && git merge
+v9/main`, and the pull instruction is worth nothing before that.
+
+Two conflicts, both the build stamp in `server`, both taken from v9 and
+then rebuilt with X's own interpreter; the generated pages in `local`
+likewise. `branding.py` untouched, sha256 `0d5c661c…` before and after.
+Verified by hash rather than assumed: X's `index.html` `1f223e97…`
+against version 9's `d74943f8…`, X's `eqsheet.html` `51f00c5a…` against
+`5e5af4f2…`, X's two carrying `#d9a521` and the fork's subtitle, and both
+with **zero** underscore-stripping left. Suite **506 passed and 3
+skipped**.
+
 ## X31 — version 9's #425 and #426 (solver 0.6.8, cache v204)
 
 Two rounds from version 9 in one merge.
