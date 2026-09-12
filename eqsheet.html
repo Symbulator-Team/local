@@ -39,7 +39,7 @@
 //
 // The <script> written below is parser-blocking on purpose: see
 // pack_block() in tools/i18n.py for why it cannot be a fetch.
-window.SYMB_I18N_V = "51949e6467";
+window.SYMB_I18N_V = "0dbc0c956a";
 // Rewritten to a relative path by build_local.py: the offline page
 // sits at the root of its own folder, and the server serves the
 // app at / and the Numerical Solver at /eqsheet/, so only a
@@ -1448,7 +1448,7 @@ window.SYMB_I18N_CODES = ["bn","de","eo","es","fr","hi","id","ja","ko","pt","uk"
         <!-- The β is temporary (Roberto, 28 Aug 2026): version 9 is in
              beta, and the numeral says so until it is not. Banner
              wordmark only -- nowhere else. -->
-        <h1 class="brand-name notranslate">Symbulator <span class="tm">9<span class="beta">β</span></span></h1>
+        <h1 class="brand-name notranslate">Symbulator <span class="tm" style="color: #d9a521">X</span></h1>
         <!-- #228: the subtitle. Empty brand_sub means version 9, whose
              subtitle is a translated UI string and must stay one; a fork
              sets brand_sub and gets its own untranslated tagline. Both
@@ -1462,7 +1462,7 @@ window.SYMB_I18N_CODES = ["bn","de","eo","es","fr","hi","id","ja","ko","pt","uk"
              stray expression. It now bans Jinja statements and comments
              too, which is why this note cannot spell either of them
              out. -->
-        <p class="brand-sub" data-i18n="the-best-portable-symbolic.4e2c">the best portable symbolic simulator of linear circuits</p>
+        <p class="brand-sub notranslate">an experimental fork of Symbulator 9 — testing the limits of symbolic simulation</p>
         <!-- The property mark (#135): one word, two spellings, exactly
              one shown -- the top form on wide screens, this slot form
              on phones. Styled by the shared banner.css. -->
@@ -1639,7 +1639,7 @@ system and results.</p>
      file as well. `notranslate` for the same reason as the app's: the
      stamp is not prose. -->
 <footer class="eqfoot">
-  <span class="notranslate" style="white-space:nowrap">Release 2026-09-12 08:58 UTC</span>
+  <span class="notranslate" style="white-space:nowrap">Release 2026-09-12 09:35 UTC</span>
 </footer>
 
 <script>

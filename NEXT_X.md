@@ -5,6 +5,42 @@ file version 9 never has, so a `git merge v9/main` can never conflict on
 it. `NEXT.md` beside this file is version 9's running list and arrives
 by merge; read it as upstream history, not as a record of X.
 
+## X33 — version 9's #429 and #430 (solver 0.6.9, cache v206) — **for Roberto to test the pf tool on X, 13 Sep 2026**
+
+Merged so that **#430 can be tested on `symbulatorx.pythonanywhere.com`
+without publishing a package**: X's solver is an editable checkout, so a
+solver change reaches X's site by a pull alone, which is what X is for.
+Version 9's **#430** is the `pf` tool as version 8 had it — **one value**,
+a complex power (`se`) for the factor alone or an element's name (`e`)
+for the factor and the word, the word read on the power a source
+*delivers* and an impedance *consumes*, with a line under every reading
+saying which. **#429** rides along: the Nilsson & Riedel sampler's 50
+entries and cache v206, which X had not taken.
+
+**The solver moved, so X's site needs a pull of *both* clones** —
+`/home/symbulatorx/solver` and `/home/symbulatorx/symbulator_web` — and a
+Reload, and no `pip`. Label **`0.6.9+x33`**. Note that version 9's app
+half of #430 does *not* need the new solver (the tool lives in
+`symbulator_ui.py`); X pulls both because its label moved.
+
+**Fetched from the local version 9 checkouts rather than `v9/main`** —
+version 9 was not yet pushed when the merge began — and version 9 was
+pushed the same hour at Roberto's word, so `git fetch v9` now sees the
+same commits. Three conflicts, all the expected kind: the version label
+in `solver` kept as X's, the build stamp in `server` and the generated
+pages in `local` taken from v9 and then rebuilt with X's own interpreter.
+`branding.py` untouched, sha256 `0d5c661c…` before and after. Verified by
+hash rather than assumed: X's `index.html` `65a920cb…` against version
+9's `515198b5…`, X's `eqsheet.html` `1431969a…` against `8c5990a2…`, X's
+two carrying `#d9a521` and the fork's subtitle and version 9's carrying
+neither. The editable install wanted `pip install -e . --no-deps` in
+`Application\vX\.venv` before the label moved — four for four now.
+Suite **518 passed and 3 skipped**; `i18n.py check` ok;
+`tools/check_pf_tool.py` ok on X's tree with X's interpreter.
+
+X's site was on `0.6.8+x31`, build `2026-09-12 03:59 UTC`,
+`needs_reload: false`, fetched before this was handed over.
+
 ## X32 — version 9's #427 (cache v205)
 
 `m`… no: this one is the interface. Version 9's **#427**, the fix that
