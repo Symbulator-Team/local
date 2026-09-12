@@ -42,6 +42,63 @@ the same number and neither could see the other's.
 commit it, and push it before using the number -- it costs one commit
 and it is the only thing that makes the claim visible to anyone else.
 
+## #432 — Roberto's Course review round of 13 Sep 2026 (docs) — **claimed; the write-up is in `Documentation/NEXT_DOCS.md`**
+
+## #431 — no underscores in the interface's example variables — **live, 13 Sep 2026** (cache v209; both PythonAnywhere accounts want a pull and a Reload, no `pip`)
+
+Roberto, 13 Sep 2026: *eliminate all the underscores from the variables
+shown in examples or placeholders in the app's interface, unless they
+are being used to explain how underscores are used.* The interface
+showed `i_r1`, `v_2`, `p_r2` and kin as its examples while the Course
+writes `ir1`, `v2`, `pr2` — two spellings of one name (#427), and the
+underscored one is the package's, not the reader's.
+
+**What changed, and the inventory it came from** (`grep` over the
+template, the English dictionary and the message catalogue for an
+underscored short name, minus every string that mentions underscores):
+
+  * four tagged paragraphs — the format reference's *A value can be a
+    number, a symbol (`rload`, `vin`)… like `2*v2`*; Expert Mode's *e.g.
+    `v2 = 6 and pe1=10`*; the By-Hand card's *`v2` is still node 2's
+    voltage, `ir3` is still the current…*; and the Variables box's *e.g.
+    `v2, il1`*;
+  * three script strings — the `aa` hint (*as in `ir1`*), the Solve
+    card's placeholder (*e.g. `pr2 = 0.05`*) and message 827 (*such as
+    `vr1`*);
+  * two raw placeholders, `v2, il1` and `v2`, and the two server-side
+    copies in `symbulator_ui.py` (the `aa` hint and 827's text).
+
+**Kept, on purpose:** the four hints that show both spellings side by
+side — *e.g. `vx` or `v_x`*, *`v2 = 6` or `v_2 = 6`*, *`pr1 + pr2` or
+`p_r1 + p_r2`* — because they are the underscore explanation, the one
+place the interface tells the reader the two spellings are the same
+name. Roberto's exception covers them; say the word and they go too.
+
+**The mechanics are the part worth keeping.** A tagged paragraph's
+dictionary key is a slug plus four hex of its English, so changing the
+English *moves the key*, and `i18n.py tag` regenerates `en.json` but
+leaves the twelve translations under the old keys as orphans. The script
+carried each translation to its new key with the **same substitution
+applied to the translated text** — every one of the twelve carried the
+underscored example literally, so `v_2` → `v2` inside a Japanese sentence
+is the right edit — and `check` came back with one surprise: the
+placeholder `v2, il1` is a translation unit now (`v_2, i_l1` had no run
+of letters `has_words` counted), so it needed a key in all twelve
+dictionaries, filled verbatim as the `rx` placeholder is. `i18n check`
+ok. The four hashed keys moved: `a-value-can-be.5443` → `.7c2b`,
+`add-equation-s-one.e3a4` → `.a992`, `these-are-the-ones.dca0` →
+`.1889`, `what-results-are-you.b148` → `.9954`.
+
+**Not touched:** the Course's own prose, which writes `i_l1` in the
+Nilsson & Riedel sampler's explanations (*here `i_l1` is the book's
+i₁*) — that is documentation naming the package's spelling, not the
+interface, and it is a separate decision.
+
+No solver change. Offline pair at cache **v209**, staged site proved
+identical to the ZIP, both deployed and verified; the server and X want
+their pulls. X carries it as X35.
+
+
 ## #430 — the pf tool as version 8 has it: one value, a power or a name — **live, 13 Sep 2026** (solver 0.6.9 on PyPI, cache v208; both PythonAnywhere accounts want a pull and a Reload, no `pip`)
 
 **Deployed at Roberto's word (*Punch it*), 13 Sep 2026, after three
