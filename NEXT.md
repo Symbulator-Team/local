@@ -42,9 +42,149 @@ the same number and neither could see the other's.
 commit it, and push it before using the number -- it costs one commit
 and it is the only thing that makes the claim visible to anyone else.
 
-## #430 — the pf tool as version 8 has it: one value, a power or a name — **claimed 13 Sep 2026, in progress**
+## #430 — the pf tool as version 8 has it: one value, a power or a name — **built and verified on the dev server, 13 Sep 2026; not deployed** (solver 0.6.9 in the tree, unpublished)
 
-Claimed in both trees before use. Write-up follows.
+Roberto found that `pf` had not been ported faithfully. Version 9's tool
+asked for **a voltage and a current** and left the reader to negate the
+current for a source, with a warning box in Lesson 8 to say so. The
+calculator's `pf` never did that. It took **one value**, and what it
+answered depended on what the value was. The program is in
+`Application/calc/decoded/v8_programs.txt` under `===== pf =====`, and
+this item makes the app, the package and the documentation say what it
+says.
+
+**The two forms, from the v8 program.**
+
+  * **A complex expression** -- `s\pf(se)`, or a number, or an expression
+    with symbols in it: `approx(abs(real(x))/abs(x))`. The value alone,
+    symbolic if the input is; **no leading or lagging**.
+  * **The name of an element**, as a string right after an `s\ac` run:
+    `s\pf("e")`. The angle between the element's voltage and its current,
+    read off `v<name>` and `i<name>`, then `cos` of it to five decimals
+    and a word from the angle's sign: **lagging** when positive,
+    **leading** when negative, no word when zero. Numerical only --
+    *Did not evaluate numerically* otherwise. And the angle is not read
+    the same way for every kind:
+
+        e:  angle(ve) - angle(-ie)
+        j:  angle(-vj) - angle(ij)
+        r:  angle(vr) - angle(ir)
+
+**Which power the word is read on -- Roberto's rule, 13 Sep 2026, and the
+thing the documentation now states in so many words.** Given a
+*variable* -- `se`, `sj`, `sr` -- the calculation is on the value as it
+stands: the complex power *consumed*, which is what every element stores,
+source or load alike; and since |Re|/|S| is the same for a power and its
+opposite, this form cannot tell leading from lagging and gives the value
+alone. Given a *name*, a source (`e`, `j`) is read on the power it
+**delivers** -- the current negated first, so the reading is of the
+circuit the source sees -- and an impedance (`r`) on the power it
+**consumes**, its own. The value is the same either way; only the word
+depends on it, and a source read on `se` says the opposite word. That is
+exactly what the old two-argument port made the reader do by hand, and
+get wrong by leaving out the minus sign.
+
+**In version 9 `i_<name>` is the consumed current for every kind, sources
+included** (`s_<name> = v * conj(i)`, `p_e` negative when delivering), so
+the three calculator formulas collapse to one rule: a source's power is
+`v * conj(-i)`, a load's `v * conj(i)`. Checked on the engine, not
+assumed: `e,1,0,10:r,1,0,3+4j` gives `s_e = -12-16j`, `s_r = 12+16j`,
+and `pf` reads `0.6 lagging` at both, as the book would. `l` and `c`
+take the load convention with `r`, because version 9 writes a coil or a
+capacitor as an element where the calculator wrote an impedance under
+`r`; the program's *Element type not right* survives as message 855 for
+anything else. The direction is taken from `sign(Im S)` rather than from
+a difference of two `angle()` calls, which is the same thing wrapped
+into (-pi, pi] -- the calculator's raw difference could land past 180
+degrees and flip the word, and there is no reason to port that.
+
+**The app.** `MINI_TOOLS["pf"]` takes one argument with the hint *a
+complex power, as in se, or an element's name, as in e*; the card shows
+one **Value** box (`js.mini.value`, already in every language --
+`js.mini.voltage` and `js.mini.current` are gone from the thirteen
+dictionaries). `_pf_of` in `symbulator_ui.py` answers both the mini-tool
+and Evaluate's `pf(...)`, so `pf(e)` and `pf(se)` work typed into
+Evaluate too, and `pf(ve, -ie)` -- the form this replaces -- is refused
+with 853, which now says what pf takes. The name form finds `v_<name>`
+and `i_<name>` under any spelling through `_norm_name`; the value form
+resolves against the answers and, when the input is a stored complex
+power (`se`, `s_e`, `-se`), says whose. A symbol in the value is taken as
+**real**, as the calculator takes it: SymPy's `Abs(re(x))/Abs(x)` for a
+complex-unknown `x` is a page of conjugates, so the ratio is computed on
+real twins and the reader's own symbols put back, and Problem 11.75's
+`pf(se)` with a symbolic capacitor comes out as an expression in `x`. The
+mini-tool prints the value form at the card's usual two extra digits
+(`0.9734172`) and the name form at the calculator's five decimals
+(`0.97342 leading`).
+
+**A line under every reading, at Roberto's word (13 Sep 2026: *since we
+have a whole screen to report answers, let's spell this out*).** Five
+notes in the 878-882 range, severity `note`, rendered by the page under
+the mini-tool's value and under Evaluate's:
+
+    878  This is the power factor for the power consumed in `e`.        (pf se)
+    879  This is the power factor for the power delivered by `e`.       (pf -se)
+    880  This is the power factor of the value given. A value alone
+         cannot say leading or lagging.                                  (pf 3+4j)
+    881  This is the power factor for the power delivered by source `e`. (pf e)
+    882  This is the power factor for the power consumed by impedance `r1`. (pf r1)
+
+The element in the line is named as the solve stored it, so `pf S_E`
+says `e` like the Results card. Four errors go with them: 853 (one
+value), 854 (the name form needs numbers -- *give it `se` instead for the
+value alone*), 855 (no convention for that kind), 856 (zero). All nine
+are in the thirteen dictionaries, `i18n.py check` ok after a `pack`.
+
+**The package.** `symbulator.utils.pf(value, result=None)`: `pf(res["s_e"])`
+is the ratio, `pf("e", res)` the sentence `pf: 0.97342 leading`, reading a
+plain `{name: expr}` dict as well as a `Result`. `pf_reading(s)` is the
+shared value-and-word step. **The app does not import it** -- the app's
+answers are strings keyed by name, which is what the name form has to
+search, and keeping the tool in `symbulator_ui.py` means **the app's fix
+needs no solver release and no `pip` anywhere**; `tools/check_pf_tool.py`
+holds the two to the same readings. The version label is **0.6.9** in the
+tree with a changelog entry, unpublished: the README's *sign note on
+`pf()` at a source* is gone with the reason for it, and the scope list no
+longer calls `pf()` a simplified port. Releasing it is Roberto's call and
+rides whatever train he names.
+
+**Verified, not assumed.** `tools/check_pf_tool.py` runs Lesson 8's three
+circuits through the real app -- `solve_ui`, then `mini_tool_ui` and
+`evaluate_ui` on the values it hands the page -- and asserts every
+reading the chapter prints (`0.97342 leading`, `0.93595 lagging`,
+`0.99805 leading`), the source/load distinction with its notes, the
+value form's notes under `se`, `s_e`, `S_E` and `-se`, the symbolic
+circuit refusing the name and answering the value, the three refusals,
+and the package agreeing with the app on four readings. **Proved red**
+with `--prove-red`, which swaps the two conventions: 15 of the checks
+fail. The solver suite is **519 passed, 2 skipped** with the twelve new
+tests in `test_pf.py` (the editable install had to be refreshed with
+`pip install -e . --no-deps` before the packaging test would pass, as
+X22 recorded). Then the dev server, driven and read rather than
+screenshotted: `pf e` -> *0.97342 leading* with the *delivered by source
+e* line, `pf se` -> *0.9734172* with *consumed in e*, `pf -se` with
+*delivered by e*, `pf r2` -> *0.0 leading* with *consumed by impedance
+r2*, `pf r1` -> *1.0*, `pf 3+4j` -> *0.6000000* with the value-only line;
+Evaluate's `pf(e)` and `pf(se)` the same, and `pf(ve, -ie)` refused with
+the new 853.
+
+**The documentation half is #430 in `Documentation/NEXT_DOCS.md`.**
+Lesson 7's card list, Lesson 8's pf section rewritten around the two
+forms with a note box carrying Roberto's rule, Practice Problem 11.10 and
+Problem 11.75 on the name form, the Manual's AC chapter and reference
+table, and `examples/Lesson_08.cir`'s three notes. `build.py --check`
+clean, 384 of 386 entries linked as before, and the lesson page read
+back through the local PHP server.
+
+**Not done, deliberately.** Nothing is built or deployed: no
+`build_local.py`, no cache bump, no ZIP, no `learn` deploy. When Roberto
+says go, the app half is the ordinary train -- cache bump,
+`build_local.py`, `build_zip.py --assets ../../local`,
+`stage_install_site.py`, `install` + `zip`, a pull and a Reload on both
+PythonAnywhere accounts, **no `pip`** -- and the docs half is `build.py`
+(full, not `--web`: the lesson's typeset text changed) plus `learn`. The
+solver's 0.6.9 can go to PyPI with it or wait; nothing deployed depends
+on it.
 
 ## #427 — a symbolic variable keeps its underscore — **live, 13 Sep 2026** (cache v205)
 
