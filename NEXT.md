@@ -42,6 +42,12 @@ the same number and neither could see the other's.
 commit it, and push it before using the number -- it costs one commit
 and it is the only thing that makes the claim visible to anyone else.
 
+## #432 — Roberto's Course review round of 13 Sep 2026 (docs) — **claimed; the write-up is in `Documentation/NEXT_DOCS.md`**
+
+## #431 — no underscores in the interface's example variables — **claimed 13 Sep 2026, not started**
+
+Roberto, 13 Sep 2026: *eliminate all the underscores from the variables shown in examples or placeholders in the app's interface, unless they are being used to explain how underscores are used.* Two placeholders in the template (`v_2`, `v_2, i_l1`) and twelve strings in `i18n/en.json` with their twelve translations each; the tagged ones re-key when their English changes, so `i18n.py tag` and a re-key of the translations go with it. Its own commit, push and X merge.
+
 ## #430 — the pf tool as version 8 has it: one value, a power or a name — **live, 13 Sep 2026** (solver 0.6.9 on PyPI, cache v208; both PythonAnywhere accounts want a pull and a Reload, no `pip`)
 
 **Deployed at Roberto's word (*Punch it*), 13 Sep 2026, after three
