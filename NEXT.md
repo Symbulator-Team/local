@@ -58,7 +58,7 @@ The sampler's Solve card lines follow it: *Press Solve equations* where
 the default is what the run wants, *Tick* or *Untick* only where it is
 not (13.9's poles in FD leave it off, 14.6's design in FD ticks it).
 
-## #434 — a source's card reads the power it delivers — **live everywhere, 13 Sep 2026** (cache v218 after the two rounds below; `symbulator.pythonanywhere.com` on build `2026-09-12 21:36 UTC` after Roberto's pull, proved by driving `/api/solve` on the live server: 3.11's source reads *power delivered* 20 W, the Manual's 3-4-5 source *average power delivered* 0.6 W and *power factor* 0.6000 lagging — both labels since reworded, see the rounds below)
+## #434 — a source's card reads the power it delivers — **live everywhere, 13 Sep 2026** (cache v220 after the three rounds below; `symbulator.pythonanywhere.com` on build `2026-09-12 21:36 UTC` after Roberto's pull, proved by driving `/api/solve` on the live server: 3.11's source reads *power delivered* 20 W, the Manual's 3-4-5 source *average power delivered* 0.6 W and *power factor* 0.6000 lagging — both labels since reworded, see the rounds below)
 
 Roberto, 13 Sep 2026: *"in the result cards for sources of both types,
 we should display not the 'power consumed' (e.g. pe1=10W), but their
@@ -121,6 +121,16 @@ element loop both changed; `srv.average power consumed` and
 the vocabulary in `i18n.py` following (`check` ok). The Manual's two
 tables say *real power consumed* and its inductor sentence *no real
 power*; the answer names `ape`, `apr1` are untouched, being names.
+
+**Roberto's fourth word, from a screenshot of an RMS source card (cache
+v220):** the `p` row in AC said *power delivered* with no *real* — under
+RMS the card shows `p` rather than `ap`, and the branch above had only
+renamed `ap`. Now in AC the `p` row reads **real power delivered** on a
+source and **real power consumed** on anything else, DC keeping *power
+delivered* / *power consumed*; and the power-factor row is labelled
+**power factor (delivered)** rather than *delivered — power factor*.
+One `srv.` key retired and one added in every dictionary; the cards
+read through `solve_ui` in AC, AC with RMS and DC before the build.
 
 ## #433 — the Solve card's conditions and equations behave like Expert Mode's — **live everywhere, 12 Sep 2026** (cache v210, ZIP 32,013,326 b, `symbulator_ui.py`, `bridge.py` and `sw.js` hash-verified on the install host; `symbulator.pythonanywhere.com` on build `2026-09-12 11:49 UTC` after Roberto's pull, proved by driving both of his forms against the live server; X takes it at its next merge)
 
