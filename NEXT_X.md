@@ -5,6 +5,19 @@ file version 9 never has, so a `git merge v9/main` can never conflict on
 it. `NEXT.md` beside this file is version 9's running list and arrives
 by merge; read it as upstream history, not as a record of X.
 
+## X38 — version 9's fourth word on #434 (cache v220) — 13 Sep 2026
+
+In AC the `p` row reads *real power delivered* on a source and *real
+power consumed* otherwise — under RMS the card shows `p` rather than
+`ap`, and only `ap` had been renamed — and the power-factor row is
+labelled *power factor (delivered)*. One `srv.` key retired and one
+added in every dictionary. **The solver did not move**; label
+**`0.6.9+x34`**, no `pip`, one pull of `/home/symbulatorx/symbulator_web`
+and a Reload. The usual four stamp conflicts, taken from v9 and rebuilt
+with X's own interpreter; `branding.py` `0d5c661c…`; X's pages hash
+different from version 9's and carry `#d9a521`; `sw.js` v220;
+`i18n.py check` ok under X's interpreter.
+
 ## X37 — version 9's Example 5.3 note (cache v219) — 13 Sep 2026
 
 One `note:` line in `examples/Nilsson_Riedel.cir`: part (a) of Example
