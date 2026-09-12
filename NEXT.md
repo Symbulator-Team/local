@@ -42,7 +42,47 @@ the same number and neither could see the other's.
 commit it, and push it before using the number -- it costs one commit
 and it is the only thing that makes the claim visible to anyone else.
 
-## #430 — the pf tool as version 8 has it: one value, a power or a name — **built and verified on the dev server, 13 Sep 2026; not deployed** (solver 0.6.9 in the tree, unpublished)
+## #430 — the pf tool as version 8 has it: one value, a power or a name — **live, 13 Sep 2026** (solver 0.6.9 on PyPI, cache v208; both PythonAnywhere accounts want a pull and a Reload, no `pip`)
+
+**Deployed at Roberto's word (*Punch it*), 13 Sep 2026, after three
+rounds of his review on X.** Solver **0.6.9** is on PyPI (wheel sha256
+`ed7a5741…`, sdist `00bcec7a…`, hash-verified three ways: what PyPI
+records, what it serves, and the copy the offline builds bundle; the
+wheel's own `utils.py` hashed against the tree before the upload). The
+offline pair is at cache **v208** with the ZIP at **32,012,337 b**, the
+staged install site proved the same build as the ZIP file by file before
+either went up (63 of 63, the proof itself proved red by sabotage), both
+verified live by hash. `learn` carries the chapter, the Manual and all
+four rebuilt PDFs — v9 **354** pages (353 before), v7 **235**, v8 **223**,
+the Manual **40** — served at the local byte counts, with the six
+captured version 7 and 8 pages unmoved across the deploy. **v207 was
+built and deployed and superseded within the hour** by the rounding
+change below. `repos/server/requirements.txt` stays at `>=0.6.8` on
+purpose: nothing the server runs imports the package's `pf()`, so **the
+pull needs no `pip`**.
+
+**Roberto's three review rounds, on X, and what each settled.**
+
+  1. *The word was missing for `se`.* Version 8 gave no word for an
+     expression; the screen has room, so a numerical value now carries
+     the word read on the value as given — which means **`se` at a
+     source says `lagging` where `e` says `leading`**, `se` being the
+     consumed power. Lesson 8 says so in a paragraph of its own (*the
+     same number, the opposite word*).
+  2. *Simplify.* A **name** gets the sentence (*the power delivered by
+     source e*, *the power consumed by impedance r1*); an **expression or
+     answer** gets the factor and the word and nothing else — *the user
+     should know this by now*. The four value-form notes written in
+     round one (878–880, 883) are gone from the code, the page and the
+     thirteen dictionaries; 881 and 882 stay.
+  3. *Too many digits.* The number obeys the **Rounding** setting in both
+     forms and in Evaluate — `0.97342` at five — rather than the two extra
+     digits `aa` shows. The package's `pf("e", res)` keeps version 8's five
+     decimals; `check_pf_tool.py` compares the two as numbers.
+
+X carried each round as it landed (X33, X34) so he could test without a
+package, and the version 9 train went out once the third had settled.
+
 
 Roberto found that `pf` had not been ported faithfully. Version 9's tool
 asked for **a voltage and a current** and left the reader to negate the
