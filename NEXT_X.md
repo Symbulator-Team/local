@@ -5,6 +5,23 @@ file version 9 never has, so a `git merge v9/main` can never conflict on
 it. `NEXT.md` beside this file is version 9's running list and arrives
 by merge; read it as upstream history, not as a record of X.
 
+## X35 — version 9's #431 (cache v209) — 13 Sep 2026
+
+No underscores in the variables the interface shows as examples or
+placeholders (`ir1`, `v2`, `pr2` where it said `i_r1`, `v_2`, `p_r2`);
+the hints that show both spellings on purpose stay. Four tagged
+paragraphs re-keyed with their translations, three script strings, two
+placeholders, two server-side copies.
+
+**The solver did not move** (*Already up to date*), so the label stays
+**`0.6.9+x34`**, there is no `pip` step, and X's site needs a pull of
+`/home/symbulatorx/symbulator_web` **alone**. Two stamp conflicts in
+`server` and two generated pages in `local`, all taken from v9 and
+rebuilt with X's own interpreter; `branding.py` untouched, sha256
+`0d5c661c…`. Verified by hash: X's `index.html` `2bd0339a…` against
+version 9's `460d8d14…`, `eqsheet.html` `e92567a1…` against `30641a0c…`,
+X's carrying `#d9a521` and the three new hints. `i18n.py check` ok.
+
 ## X34 — version 9's #430 as settled (solver 0.6.9 released, cache v208) — 13 Sep 2026
 
 The three review rounds Roberto ran on X33, merged back from version 9
