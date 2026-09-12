@@ -5,6 +5,18 @@ file version 9 never has, so a `git merge v9/main` can never conflict on
 it. `NEXT.md` beside this file is version 9's running list and arrives
 by merge; read it as upstream history, not as a record of X.
 
+## X37 — version 9's Example 5.3 note (cache v219) — 13 Sep 2026
+
+One `note:` line in `examples/Nilsson_Riedel.cir`: part (a) of Example
+5.3 reads *You have designed a summing amplifier, as per the problem's
+specifications. Verify that its output voltage is …* (Roberto, 13 Sep
+2026), merged within the hour of X36. **The solver did not move**;
+label **`0.6.9+x34`**, no `pip`, and the same single pull of
+`/home/symbulatorx/symbulator_web` X36 asked for carries this too. The
+usual four stamp conflicts, taken from v9 and rebuilt with X's own
+interpreter; `branding.py` `0d5c661c…`; X's pages hash different from
+version 9's and carry `#d9a521`; `sw.js` v219.
+
 ## X36 — version 9's #433 to #436 (cache v218) — 13 Sep 2026
 
 Four items of version 9's 12–13 Sep 2026, merged together: **#433**,
