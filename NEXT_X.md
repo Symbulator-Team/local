@@ -5,6 +5,32 @@ file version 9 never has, so a `git merge v9/main` can never conflict on
 it. `NEXT.md` beside this file is version 9's running list and arrives
 by merge; read it as upstream history, not as a record of X.
 
+## X34 — version 9's #430 as settled (solver 0.6.9 released, cache v208) — 13 Sep 2026
+
+The three review rounds Roberto ran on X33, merged back from version 9
+now that they are settled and deployed there: a **name** gets the factor,
+the word and the sentence saying which power; an **expression or answer**
+(`se`, `-se`, `3+4j`) gets the factor and the word and nothing else, read
+on the value as given — so `se` at a source says `lagging` where `e` says
+`leading`; and the number obeys the **Rounding** setting rather than the
+mini-tools' two extra digits. Solver **0.6.9** is on PyPI, which X does
+not need (its solver is the editable checkout) but whose wheel the merged
+`vendor/` now carries for X's offline build.
+
+**Label `0.6.9+x34`.** The `solver` merge was clean — version 9's label
+had not moved since X33 — so the bump was a one-line commit of X's own.
+Two stamp conflicts in `server` and **sixteen** in `local`, every one of
+them a generated file (the two pages, `symbulator_ui.py`, the packed
+dictionaries, `Lesson_08.cir`) that X33's rebuild had committed on X's
+side: all taken from v9 and rebuilt with X's interpreter, the standing
+way. `branding.py` untouched, sha256 `0d5c661c…`. Verified by hash: X's
+`index.html` `b82e4f4c…` against version 9's `dea6bae4…`, `eqsheet.html`
+`ece06ecd…` against `e2d7fd20…`, X's carrying `#d9a521`. Suite **518
+passed and 3 skipped**; `i18n.py check` ok; `check_pf_tool.py` ok.
+
+**X's site needs a pull of *both* clones** — the label moved — and a
+Reload, no `pip`.
+
 ## X33 — version 9's #429 and #430 (solver 0.6.9, cache v206) — **for Roberto to test the pf tool on X, 13 Sep 2026**
 
 Merged so that **#430 can be tested on `symbulatorx.pythonanywhere.com`
