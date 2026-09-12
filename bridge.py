@@ -391,6 +391,12 @@ def solve_equations(payload_json: str) -> str:
     equations = ([str(x).strip() for x in raw if str(x).strip()]
                  if isinstance(raw, list)
                  else [ln.strip() for ln in ui.re.split(r"[\r\n]+", str(raw)) if ln.strip()])
+    # One per line, or joined with ` and ` -- the same as app.py's route
+    # and Expert Mode's boxes. The equations were never expanded here
+    # (#433): `isg=0 and R_3=10` reached the parser whole, which read
+    # `0 and R_3=10` as a value and refused it, while the hosted app
+    # solved the same line. Only the conditions had the expansion.
+    equations = ui._expand_and(equations)
     if not equations:
         return json.dumps({"ok": False, "error": "Enter at least one equation to solve."})
     unknowns = [u.strip() for u in

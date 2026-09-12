@@ -42,6 +42,156 @@ the same number and neither could see the other's.
 commit it, and push it before using the number -- it costs one commit
 and it is the only thing that makes the claim visible to anyone else.
 
+## #435 — *real solutions only* ticked by default in DC and TR — **live everywhere, 13 Sep 2026** (cache v216; `symbulator.pythonanywhere.com` on build `2026-09-12 21:36 UTC` after Roberto's pull)
+
+Roberto, 13 Sep 2026: *"I'm thinking that the 'real solutions only'
+checkbox tick should be default in DC, and maybe even required."* Default,
+yes; required, no. The tick is on when the analysis is DC or TR, where a
+complex root of a real circuit is never physical, and off in AC and FD,
+where phasors and $s$ are complex by nature — set on every change of the
+{{ui:Analysis}} menu, on *Clear all inputs*, and at page load. It stays a
+tick rather than a rule because a complex root of a DC circuit is the sign
+of a mis-set problem, and a reader debugging wants to see it. A loaded
+entry's own `solve_real_only:` wins over the default; an entry without
+the field takes it. One function in the template, `defaultRealOnly()`.
+The sampler's Solve card lines follow it: *Press Solve equations* where
+the default is what the run wants, *Tick* or *Untick* only where it is
+not (13.9's poles in FD leave it off, 14.6's design in FD ticks it).
+
+## #434 — a source's card reads the power it delivers — **live everywhere, 13 Sep 2026** (cache v218 after the two rounds below; `symbulator.pythonanywhere.com` on build `2026-09-12 21:36 UTC` after Roberto's pull, proved by driving `/api/solve` on the live server: 3.11's source reads *power delivered* 20 W, the Manual's 3-4-5 source *average power delivered* 0.6 W and *power factor* 0.6000 lagging — both labels since reworded, see the rounds below)
+
+Roberto, 13 Sep 2026: *"in the result cards for sources of both types,
+we should display not the 'power consumed' (e.g. pe1=10W), but their
+negative, labelled as 'power delivered' and accordingly show the negative
+ahead of the variable (e.g. -pe1=10W). Even I am getting tired of the
+references to changing signs."* And: *"by default in AC analysis we
+should display the delivered power's power factor for every source e or
+j."*
+
+**What changed, and what did not.** The answer `p_e1` is exactly what it
+was — power consumed, in Evaluate, in Solve, in every saved file and in
+`values` — and only the card's row changed: for an `e` or a `j` it reads
+**power delivered** over `-pe1 = 10 W` (in AC, **average power delivered**
+over `-pe1`, the complex power `se1` untouched). In AC a source's card
+gains a **power factor** row, `pf_e1 = 0.6 lagging`, the pf tool's own
+element reading of #430 — the power the source *delivers*, current
+negated first — shown when the voltage and current came out as numbers
+and skipped otherwise, at the Rounding setting's digits or four. Both are
+in the element loop of `solve_ui`; the labels are `srv.` words in all
+thirteen dictionaries (`srv.power delivered`, `srv.average power
+delivered`, `srv.power factor`), added by hand and packed, and
+`i18n.py`'s vocabulary names them so `check` stays green.
+
+**Roberto's placement round, an hour later (cache v217).** From two
+screenshots of the live cards: a source's complex power reads `-se` too,
+labelled *complex power delivered*, in line with the real power above
+it; the power factor's label says whose it is, *delivered — power
+factor*; and **a rule for every card: "power" never stands alone** — a
+passive element's rows are *power consumed*, *average power consumed*
+and *complex power consumed*, a source's are the delivered forms. Three
+`srv.` words retired and four added in every dictionary; the Manual's
+3-4-5 panel and its two tables, and the sampler's 10.8, follow the card.
+
+**Read through the app before it was written:** 3.11's source card
+`-p = 20 W`; the Manual's 3-4-5 source `-0.6 W` average delivered and
+`0.6000 lagging`; NR12 9.9's current source `0.8000 leading`, its load
+being capacitive; Lesson 3's Drill Problem 1.11, `-pei = -1.92 W` (the
+source absorbs) and `-ped = 3.07 W`. `check_pf_tool.py` ok; `i18n check`
+ok; `verify_lesson.py` clean on Nilsson_Riedel, Lessons 02, 03 and 07 —
+no expected-answer file names a source's power, so nothing keyed on the
+old row. **The documentation moved with it:** the Manual's *Signs*
+paragraph says what the card shows and why `pe1` itself does not change;
+Lesson 2's version 9 line reads the *power delivered* row instead of
+switching a sign; Lesson 3's Drill Problem 1.11 shows its two sources as
+the card now does; and the sampler's 3.11 and 4.13 read the card rather
+than typing `-p_e` into Evaluate — the current still needs the minus
+sign, and the page says so once.
+
+**Roberto's third word, the same evening (cache v218):** *"In the case
+of AC, for values like pe and pj, add 'real' to 'power delivered', so
+it reads 'real power delivered', compared to 'complex power
+delivered'."* So the AC pair on every card is **real** and **complex**:
+a source's rows read *real power delivered* over `-pe` and *complex
+power delivered* over `-se`; a passive element's read *real power
+consumed* over `ape` and *complex power consumed* over `se`. The
+`ap_{n}` key's label in `_ELEMENT_KEYS` and the source branch of the
+element loop both changed; `srv.average power consumed` and
+`srv.average power delivered` retired from every dictionary and
+`srv.real power consumed` / `srv.real power delivered` added, with
+the vocabulary in `i18n.py` following (`check` ok). The Manual's two
+tables say *real power consumed* and its inductor sentence *no real
+power*; the answer names `ape`, `apr1` are untouched, being names.
+
+## #433 — the Solve card's conditions and equations behave like Expert Mode's — **live everywhere, 12 Sep 2026** (cache v210, ZIP 32,013,326 b, `symbulator_ui.py`, `bridge.py` and `sw.js` hash-verified on the install host; `symbulator.pythonanywhere.com` on build `2026-09-12 11:49 UTC` after Roberto's pull, proved by driving both of his forms against the live server; X takes it at its next merge)
+
+Roberto solved NR12's Example 3.10, the Wheatstone bridge, with the
+Solve card instead of Expert Mode: the galvanometer a short `sg`, the
+equation `isg = 0`, the unknown `R_x`, and `R_3 = 10` as a condition.
+The card answered `R_x = 4 R_3`. Writing `R_3 = 10` as a second
+equation instead answered the same. Expert Mode, fed the identical
+three things, answers **40 Ω**. His ruling: *"In theory, the Solve
+approach should do the same as the Expert one"*, and of the second
+form, *"that is just plain wrong."*
+
+**Two faults, both in `solveq_ui` (`symbulator_ui.py`), neither in the
+solver.**
+
+  * **A condition was only ever a filter.** The card solved first and
+    then tested each condition against the solution, keeping any it
+    could not decide. `R_3 = 10` tested against `R_x = 4·R_3` decides
+    nothing, so it was kept as satisfied and changed nothing. Expert
+    Mode hands its conditions to the solver, which has always read an
+    equality as the calculator's `|` ("with") operator — a substitution
+    applied before solving — and an inequality as a filter after. The
+    card now makes the same split: an equality with a bare symbol on
+    one side, the symbol not one of the unknowns, substitutes into the
+    equations first (`_equality_binding`); everything else — an
+    inequality, a chained comparison, an equality between two
+    expressions, an equality *on an unknown* — stays a filter, so
+    `x**2 = 4` with `x = -2` still keeps the named root.
+  * **An equation naming no unknown was dropped.** `sp.solve` is asked
+    only for the named unknowns, and an equation with none of them in
+    it constrains nothing it is solving for, so `R_3 = 10` beside
+    `isg = 0` with `R_x` asked for fell on the floor. The solver picks
+    such a symbol up as an unknown of its own accord ("a brand-new
+    symbol appearing in an extra equation becomes an unknown
+    automatically"), and so does the card now: every free symbol of an
+    equation that names none of the unknowns is solved for too, so the
+    two-equation form returns `R_x = 40` **and** `R_3 = 10`, as Expert
+    Mode does. With neither a condition nor a second equation the
+    answer stays the symbolic `4 R_3`: nothing is invented for a
+    symbol nothing gives a value to.
+
+Evaluate's Conditions box already substituted (`t = 2`), so the Solve
+card was the odd one of the three; now all three read `name = value`
+the same way.
+
+**A third fault, found by running his file through the other front
+end.** His first entry writes the two equations on one line, `isg=0 and
+R_3=10`. The hosted app's route splits that on ` and ` before parsing;
+`bridge.py`, which the install and ZIP builds call instead, split only
+the *conditions* and handed the equations over whole, so the offline
+app refused the line as *"Could not read the value '0 and R_3=10'"*
+while `symbulator.pythonanywhere.com` solved it. One line in
+`bridge.py`, and the check now drives the bridge too when the sibling
+repo is present. Worth knowing why nothing had caught it: the drift
+harness `verify_bridge.py` compares the two front ends over every
+example's *solve*, and no example exercises the Solve card.
+
+**Guard:** `tools/check_solveq_conditions.py` runs Roberto's file
+through the real app — `solve_ui`, then `solveq_ui` on the values the
+page holds — and asserts both forms give 40, the symbolic answer
+survives when nothing sets `R_3`, an inequality still filters, an
+equality on the unknown still filters, and the card and Expert Mode
+agree to the digit. `--prove-red` disables both halves and fails five
+checks. Both his files were also posted through `/api/solve` and
+`/api/solveq` exactly as the page posts them, the `and` form included
+(`isg=0 and R_3=10` is split by the endpoint's `_expand_and`).
+
+**No solver change, so no `pip`.** The shared module moved, so the
+offline pair is rebuilt at cache **v210** and both PythonAnywhere
+accounts want a pull and a Reload.
+
 ## #432 — Roberto's Course review round of 13 Sep 2026 (docs) — **claimed; the write-up is in `Documentation/NEXT_DOCS.md`**
 
 ## #431 — no underscores in the interface's example variables — **live, 13 Sep 2026** (cache v209; both PythonAnywhere accounts want a pull and a Reload, no `pip`)
