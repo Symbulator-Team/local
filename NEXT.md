@@ -42,6 +42,10 @@ the same number and neither could see the other's.
 commit it, and push it before using the number -- it costs one commit
 and it is the only thing that makes the claim visible to anyone else.
 
+## #430 — the pf tool as version 8 has it: one value, a power or a name — **claimed 13 Sep 2026, in progress**
+
+Claimed in both trees before use. Write-up follows.
+
 ## #427 — a symbolic variable keeps its underscore — **live, 13 Sep 2026** (cache v205)
 
 Roberto solved for `v_s` and `i_s` and the results were labelled `vs` and
