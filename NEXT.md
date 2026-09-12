@@ -42,6 +42,44 @@ the same number and neither could see the other's.
 commit it, and push it before using the number -- it costs one commit
 and it is the only thing that makes the claim visible to anyone else.
 
+## #427 — a symbolic variable keeps its underscore — **live, 13 Sep 2026** (cache v205)
+
+Roberto solved for `v_s` and `i_s` and the results were labelled `vs` and
+`is`. **The solve was never wrong** — `/api/solveq` returns `name='v_s'`
+— only the small label beside the answer.
+
+**Why it matters, and it is a real distinction rather than cosmetics.**
+An underscore is optional punctuation in an *answer* name: `i_r1` and
+`ir1` are the same current, `v_s` and `vs` the same voltage drop across a
+short named `s`, and shortening the label there is right. It is **not**
+optional in a *symbolic variable*: `Symbol('v_s') != Symbol('vs')`, and an
+equation on one does not resolve the other. Stripping it where a solution
+is reported for a symbolic variable prints the name of a different
+variable.
+
+Three display sites in `templates/index.html`, none computational:
+
+  * the {{card:Solve}} card's solutions;
+  * the extras, where {{card:Expert Mode}}'s solved unknowns land beside
+    the equivalent tools' own `vth`/`ino`/`zeq`;
+  * the *Unknowns:* hint under the equations, which stripped **every**
+    underscore and so echoed the reader's own typed unknowns back wrong.
+
+{{card:Evaluate}} needed nothing — checked, not assumed: it prints a value
+with no name label at all.
+
+**Removing the strip cannot rename anything.** The tools' own names carry
+no underscore, and an answer name that lands in extras simply reads in its
+long spelling, which means the same answer.
+
+**The documentation had the same gap**, which is probably where the bug
+came from. `16-note-underscores.md` said of a symbolic value *“it costs
+nothing, it changes no answer”* — true, and exactly the sentence a reader
+who has just been told `ir1` and `i_r1` are the same current will
+generalise from. It now names the trap: renaming consistently changes
+nothing but the typesetting; **mixing** the two spellings in one problem
+names two variables where you meant one.
+
 ## #426 — a coupled pair written as impedances — **live, 12 Sep 2026** (solver 0.6.8, cache v204)
 
 `m` names two elements, and in AC a coil is normally written as an
