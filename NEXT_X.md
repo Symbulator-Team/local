@@ -5,6 +5,21 @@ file version 9 never has, so a `git merge v9/main` can never conflict on
 it. `NEXT.md` beside this file is version 9's running list and arrives
 by merge; read it as upstream history, not as a record of X.
 
+## X42 — version 9's #441, solver 0.6.11 (cache v224) — 13 Sep 2026
+
+In AC the powers are `p`, `q` and `s` -- P, Q and S -- under both
+conventions, `ap` an unshown alias of `p`; the cards read *average
+(real) power*, *reactive power* and *complex power*, *effective* on
+voltages and currents under RMS. **The solver moved, so X's site needs
+a pull of *both* clones** -- `/home/symbulatorx/solver` and
+`/home/symbulatorx/symbulator_web` -- and a Reload, no `pip`. Label
+**`0.6.11+x42`**, the one conflict in `solver` the label, kept as X's;
+the editable install refreshed; the usual stamp conflicts in `server`
+and `local` taken from v9 and rebuilt with X's own interpreter;
+`branding.py` `0d5c661c…`; X's pages hash different from version 9's
+and carry `#d9a521`; `sw.js` v224. The X41 pull was never taken, so
+this one pull carries both.
+
 ## X41 — version 9's #438 and #439, solver 0.6.10 (cache v223) — 13 Sep 2026
 
 The `m` line checked and `k=` accepted (#438), the real power under
