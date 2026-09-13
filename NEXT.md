@@ -58,7 +58,52 @@ The sampler's Solve card lines follow it: *Press Solve equations* where
 the default is what the run wants, *Tick* or *Untick* only where it is
 not (13.9's poles in FD leave it off, 14.6's design in FD ticks it).
 
-## #439 — in AC the real power answers to both of its names; re() and im() said out loud — solver **0.6.10** (13 Sep 2026)
+## #441 — the AC powers are `s`, `ap` and `q`; *effective* under RMS — solver **0.6.11** (13 Sep 2026)
+
+**#439 was my assumption, and it is withdrawn.** I had fixed Roberto's
+bug report by putting the average power under `p` and `ap` alike, and
+deployed it; he had wanted the calculator's convention kept and had a
+different design in mind. His words: *"I wish you had asked me. You
+assumed you knew which way I would like to go. In the future, please
+check."* The rule is in memory now: a fix that settles a convention is
+his call; state the options and wait.
+
+**What the calculator does** (read from `decoded/v8_programs.txt` in the
+calculator repo, not from the docs' paraphrase): with RMS off,
+`s = v·conj(i)/2` and `ap = real(s)`, no `p`; with RMS on, `s = v·conj(i)`
+and `p = real(s)`, no `ap`. One name per setting, never both -- which is
+exactly why `pr1 + pe1` came back unevaluated with RMS off, and why the
+card had shown `-pe` on a row whose answer was `ape`: the row's symbol
+was my labelling, and *"the variable named in the result card must be a
+variable that exists. That's what threw me off."*
+
+**What he chose, after a walk through the circuit theory** (the half in
+S = ½VI* under peak phasors comes from cos² averaging to ½; *effective*
+is the textbook word for an RMS voltage or current and not a property
+of a power; Q is an amplitude, not an average, so *ap* beside *q* would
+name the two unevenly): in AC every element reports **`p` = Re(S), `q`
+= Im(S) in var, and `s`** -- P, Q and S as every book writes them --
+under both conventions, RMS changing their values, not their names;
+**`ap` stays as an alias of `p`**, in the answers for the calculator
+habit and never a row. The cards read *average (real) power*, *reactive
+power* and *complex power*, each *consumed by* or *delivered by*, with
+`-pe`, `-qe`, `-se` on a source; and with RMS phasors on, every current
+and voltage row reads *effective current through* and *effective
+voltage drop*, the magnitudes being effective values then. The
+equivalent tool says `pmax` and the load `prl` in every domain. `q`
+joins the answer aliases, the per-kind quantity table, both unit maps
+(var), the third-level export and the sampler's formatter.
+
+Solver **0.6.11**: `analysis._derived` writes `p`, its alias `ap`, and
+`q` in AC; `Result` resolves `qr1`; six tests replace the 0.6.10 ones.
+Six `srv.` labels in thirteen languages; `srv.real power
+consumed/delivered` retired. The docs: the Manual's AC table has three
+power rows, its RMS warning says the labels turn *effective*, its
+answers table gains `qr1`; Lesson 8's version 9 says the three names
+keep whichever way the tick is set; versions 7 and 8 keep the
+calculator's words.
+
+## #439 — in AC the real power answers to both of its names; re() and im() said out loud — solver **0.6.10** (13 Sep 2026) — **withdrawn by #441 the same evening**
 
 Roberto, 13 Sep 2026, on the sampler's 10.8: *"you can evaluate
 `sr1+sr2+sr3+se1+se2`. However, you cannot evaluate
