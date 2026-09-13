@@ -5,6 +5,23 @@ file version 9 never has, so a `git merge v9/main` can never conflict on
 it. `NEXT.md` beside this file is version 9's running list and arrives
 by merge; read it as upstream history, not as a record of X.
 
+## X41 — version 9's #438 and #439, solver 0.6.10 (cache v223) — 13 Sep 2026
+
+The `m` line checked and `k=` accepted (#438), the real power under
+`p` and `ap` alike in AC with `re()`/`im()` said out loud (#439), the
+description whitelist admitting `=`, seven new engine messages and the
+Evaluate card's new row in thirteen languages, and the sampler book's
+late-evening entries. **The solver moved, so X's site needs a pull of
+*both* clones** -- `/home/symbulatorx/solver` and
+`/home/symbulatorx/symbulator_web` -- and a Reload, no `pip`, X's
+solver being an editable checkout. Label **`0.6.10+x41`**: one
+conflict in `solver`, the label, kept as X's; the editable install
+refreshed with `pip install -e . --no-deps`; X's suite **545 passed,
+3 skipped**. The usual four stamp conflicts in `server` and `local`,
+taken from v9 and rebuilt with X's own interpreter; `branding.py`
+`0d5c661c…`; X's pages hash different from version 9's and carry
+`#d9a521`; `sw.js` v223; `i18n.py check` and `check_pf_tool.py` ok.
+
 ## X40 — version 9's #437 (cache v222) — 13 Sep 2026
 
 The *Do you want to limit the results to save time?* tick moved from
