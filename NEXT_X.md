@@ -5,6 +5,17 @@ file version 9 never has, so a `git merge v9/main` can never conflict on
 it. `NEXT.md` beside this file is version 9's running list and arrives
 by merge; read it as upstream history, not as a record of X.
 
+## X40 — version 9's #437 (cache v222) — 13 Sep 2026
+
+The *Do you want to limit the results to save time?* tick moved from
+under the ω field into the Settings box, ids and i18n keys unchanged;
+and the Nilsson & Riedel book's `rounding:` lines under the sampler's
+rules 19 and 24. **The solver did not move**; label **`0.6.9+x34`**,
+no `pip`, one pull of `/home/symbulatorx/symbulator_web` and a Reload.
+Four stamp conflicts taken from v9 and rebuilt with X's own
+interpreter; `branding.py` `0d5c661c…`; X's pages hash different from
+version 9's and carry `#d9a521`; `sw.js` v222; `i18n.py check` ok.
+
 ## X39 — version 9's Example 5.5 note (cache v221) — 13 Sep 2026
 
 One `note:` line in `examples/Nilsson_Riedel.cir`, Example 5.5's part
