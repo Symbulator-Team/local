@@ -58,6 +58,72 @@ The sampler's Solve card lines follow it: *Press Solve equations* where
 the default is what the run wants, *Tick* or *Untick* only where it is
 not (13.9's poles in FD leave it off, 14.6's design in FD ticks it).
 
+## #439 — in AC the real power answers to both of its names; re() and im() said out loud — solver **0.6.10** (13 Sep 2026)
+
+Roberto, 13 Sep 2026, on the sampler's 10.8: *"you can evaluate
+`sr1+sr2+sr3+se1+se2`. However, you cannot evaluate
+`pr1+pr2+pr3+pe1+pe2`."* Right: with RMS phasors off the engine put
+the real power under `ap_` alone, the calculator's naming (`ap` with
+peak phasors, `p` with RMS ones, Lesson 8 says so), so `pr1` was an
+unknown symbol and Evaluate handed the expression back unevaluated.
+
+**Fix, in `analysis._derived`:** in AC the real part of `s_<name>` goes
+into `values` under both names, `p_` and `ap_`, whatever the
+convention -- for `e`, `j`, `r` and the op-amp alike. The card shows it
+once, as the `p` row (the `ap` key is skipped when `p` is present), and
+the third-level export to the Numerical Solver writes it once for the
+same reason. `aprl` and the rest are untouched. Three tests in
+`test_ac_power_names.py`, one of them Roberto's balance summing to 0
+with RMS off; suite **546 passed, 2 skipped**; `check_third_level_export`
+clean; Lessons 7, 8, 9 and the sampler through the real app.
+
+**And the second ask:** *"add in the Evaluation space the ability to
+extract the real and imaginary part of an expression."* `re()` and
+`im()` were already in the value namespace and already worked in the
+card; nothing said so. Now the card's *Useful SymPy functions* table
+has a row for them (with `abs` and `conj`), in thirteen languages; the
+namespace also takes `Re`, `Im`, `real`, `imag` and `conj`; and the
+Manual's answers and AC chapters and Lesson 8 say where the reactive
+power is: `im(se)`.
+
+## #438 — the m line checked, and `k=` accepted — solver **0.6.10** (13 Sep 2026)
+
+Roberto, 13 Sep 2026, after 9.15 had spent a paragraph turning the
+book's *k* = 0.5 into 3 H by hand: *"two changes to the solver, related
+to coupled inductors"* — a sanity check on the `m` line, and the
+coupling given as its factor.
+
+**The check** (`_validate_couplings` in `elements.py`, at parse time,
+codes 222–228). Both named elements must exist and be of one kind —
+two inductors in henries, or two coils written as impedances in ohms —
+never one of each: the Course had carried a warning that the mixed
+form *will not be refused and it will not be right*, and now it is
+refused. A numeric value on either coil or on the coupling must be
+real and positive in henries, or positive imaginary in ohms with no
+resistive or capacitive part; a symbol passes. With everything numeric
+the coupling may not exceed sqrt(L1·L2), a coupling factor of 1
+(exactly 1 is allowed; a coupling of exactly 0 stays what it always
+was, no coupling). And a pair written in ohms is an AC description:
+in DC, TR and FD it is refused with the reason, where TR and FD used
+to drop the coupling silently, `_stamp_r` coupling in AC only. The
+negative-M and k ≤ 1 edges were my recommendation, taken as such.
+
+**The factor.** `m,l1,l2,k=0.5` — the letter case-insensitive, spaces
+round the `=` allowed — is rewritten at parse time to `k*sqrt(L1*L2)`
+in henries and to `I*k*sqrt(-Z1*Z2)` in ohms (the positive-imaginary
+root, which is what the check demands), so nothing downstream ever
+sees k; a symbolic k gives a symbolic coupling, a numeric k must lie
+in (0, 1]. In echo mode (`expand_si=False`) the typed `k=0.5` is kept,
+so a saved file round-trips as written. 24 new tests in
+`test_coupling_checks.py`; the suite at **543 passed, 2 skipped**.
+
+**On the app side** the description whitelist admits `=` (message 803
+lists it, in thirteen languages), and the page's table of engine
+messages carries 222–228 with their twelve translations. The Manual's
+coupling chapter, its grammar and reference tables, Lesson 10 and the
+solver README say the new form and the checks; the sampler's 9.15
+reads `m,l1,l2,k=0.5` and its last line of arithmetic is gone.
+
 ## #437 — the *limit the results* tick lives in Settings — **live on the offline pair, 13 Sep 2026 (cache v222); both PythonAnywhere accounts want a pull**
 
 Roberto, 13 Sep 2026: *"change in the app the location of the 'Do you
