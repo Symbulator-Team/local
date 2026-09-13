@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Symbulator X Local Version</title>
+<title>Symbulator 9 Local Version</title>
 <meta name="description" content="Symbulator: symbolic simulation of linear electrical circuits (DC, AC, Laplace, transient), created by Roberto Perez-Franco. Powered by Python and SymPy.">
 <script>
 // Applied as early as possible (before the stylesheet is even parsed) so a
@@ -2220,7 +2220,7 @@ window.SYMB_I18N_CODES = ["bn","de","eo","es","fr","hi","id","ja","ko","pt","uk"
         <!-- The β is temporary (Roberto, 28 Aug 2026): version 9 is in
              beta, and the numeral says so until it is not. Banner
              wordmark only -- nowhere else. -->
-        <h1 class="brand-name notranslate">Symbulator <span class="tm" style="color: #d9a521">X</span></h1>
+        <h1 class="brand-name notranslate">Symbulator <span class="tm">9<span class="beta">β</span></span></h1>
         <!-- #228: the subtitle. Empty brand_sub means version 9, whose
              subtitle is a translated UI string and must stay one; a fork
              sets brand_sub and gets its own untranslated tagline. Both
@@ -2234,7 +2234,7 @@ window.SYMB_I18N_CODES = ["bn","de","eo","es","fr","hi","id","ja","ko","pt","uk"
              stray expression. It now bans Jinja statements and comments
              too, which is why this note cannot spell either of them
              out. -->
-        <p class="brand-sub notranslate">an experimental fork of Symbulator 9 — testing the limits of symbolic simulation</p>
+        <p class="brand-sub" data-i18n="the-best-portable-symbolic.4e2c">the best portable symbolic simulator of linear circuits</p>
             </div>
     </div>
     </div>
@@ -2814,18 +2814,6 @@ units: yes</pre>
       </div>
     </div>
 
-    <div class="row">
-      <div id="varsField">
-        <label class="checkline"><input type="checkbox" id="limitVars"><span data-i18n="do-you-want-to.c926">Do you
-          want to limit the results to save time?</span></label>
-        <div id="varsSubfield" style="display:none;margin-top:.5rem">
-          <label for="vars" data-i18n="what-results-are-you.9954">What results are you after? List the variables here:
-            <span class="hint">e.g. v2, il1</span></label>
-          <input type="text" id="vars" placeholder="v2, il1" data-i18n-placeholder="v-il.3c64">
-        </div>
-      </div>
-    </div>
-
     <details id="settingsBox" style="margin-top:.9rem">
       <summary data-i18n="settings.c7f7">Settings</summary>
 
@@ -2911,6 +2899,22 @@ units: yes</pre>
           <label class="checkline" id="rmsLine"><input type="checkbox" id="useRms"><span data-i18n="rms-phasors-off-means.e4c8">RMS
             phasors <span class="hint">— off means peak amplitude (the ÷2 convention);
             affects AC power only</span></span></label>
+        </div>
+      </div>
+
+      <!-- The TR-only "limit the results" tick lives in Settings since
+           13 Sep 2026 (Roberto): it is a setting, not an input. The row
+           hides outside TR, as it always did (#varsField in the CSS and
+           syncTool()); its ids and i18n keys are unchanged. -->
+      <div class="row">
+        <div id="varsField">
+          <label class="checkline"><input type="checkbox" id="limitVars"><span data-i18n="do-you-want-to.c926">Do you
+            want to limit the results to save time?</span></label>
+          <div id="varsSubfield" style="display:none;margin-top:.5rem">
+            <label for="vars" data-i18n="what-results-are-you.9954">What results are you after? List the variables here:
+              <span class="hint">e.g. v2, il1</span></label>
+            <input type="text" id="vars" placeholder="v2, il1" data-i18n-placeholder="v-il.3c64">
+          </div>
         </div>
       </div>
     </details>
@@ -3602,7 +3606,7 @@ units: yes</pre>
        server's /healthz reads it with _BUILD_RE, both keyed on the
        word Release, and each expects it exactly once in this file. -->
   <span class="notranslate" style="white-space:nowrap">Symbulator by Roberto Perez-Franco (1999–2026)</span>
-  <span class="notranslate" style="white-space:nowrap">· Release 2026-09-12 22:56 UTC</span>
+  <span class="notranslate" style="white-space:nowrap">· Release 2026-09-13 01:19 UTC</span>
 </footer>
 
 <script>
