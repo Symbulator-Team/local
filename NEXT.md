@@ -58,6 +58,21 @@ The sampler's Solve card lines follow it: *Press Solve equations* where
 the default is what the run wants, *Tick* or *Untick* only where it is
 not (13.9's poles in FD leave it off, 14.6's design in FD ticks it).
 
+## #437 — the *limit the results* tick lives in Settings — **live on the offline pair, 13 Sep 2026 (cache v222); both PythonAnywhere accounts want a pull**
+
+Roberto, 13 Sep 2026: *"change in the app the location of the 'Do you
+want to limit the results to save time?' checkbox so that it is inside
+the settings."* The row moved verbatim from under the ω field into the
+{{card:Settings}} box, last, after the RMS row -- it is a setting, not
+an input. Its ids (`varsField`, `limitVars`, `varsSubfield`, `vars`)
+and its three i18n keys are unchanged, so the CSS rule that hides it
+outside TR, `syncTool()`, the entry loader, the export field list and
+the twelve dictionaries all needed nothing; `i18n.py check` ok, the
+page rendered through Flask with the tick inside the Settings element
+and once on the page, `/eqsheet/` and `/healthz` answering. The three
+docs passages that said *under the analysis menus* (Lesson 6 twice,
+the *Limiting the results* note) say *in Settings*.
+
 ## #434 — a source's card reads the power it delivers — **live everywhere, 13 Sep 2026** (cache v220 after the three rounds below; `symbulator.pythonanywhere.com` on build `2026-09-12 21:36 UTC` after Roberto's pull, proved by driving `/api/solve` on the live server: 3.11's source reads *power delivered* 20 W, the Manual's 3-4-5 source *average power delivered* 0.6 W and *power factor* 0.6000 lagging — both labels since reworded, see the rounds below)
 
 Roberto, 13 Sep 2026: *"in the result cards for sources of both types,
