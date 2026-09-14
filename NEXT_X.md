@@ -5,6 +5,22 @@ file version 9 never has, so a `git merge v9/main` can never conflict on
 it. `NEXT.md` beside this file is version 9's running list and arrives
 by merge; read it as upstream history, not as a record of X.
 
+## X44 — version 9's #446–#448, solver 0.6.12 (cache v228) — 14 Sep 2026
+
+A coupling given as *k* captioned as *k* in the drawing (#446, solver
+0.6.12), Lesson 10's *k* example, NR9's Assessment Problem 9.14, in the
+example book (#447), and the version 9 docs' capitals (#448, docs only).
+**The solver moved, so X's site needs a pull of *both* clones** --
+`/home/symbulatorx/solver` and `/home/symbulatorx/symbulator_web` -- and a
+Reload, no `pip`, X's solver being an editable checkout. Label
+**`0.6.12+x44`**, the one conflict in `solver` the label, kept as X's; the
+editable install refreshed with `pip install -e . --no-deps` before the
+suite, **549 passed and 3 skipped**. The usual stamp conflicts in `server`
+and `local` taken from v9 and rebuilt with X's own interpreter;
+`branding.py` `0d5c661c…`; X's `index.html` `cc8bf39f…` against version
+9's `b9ca7a6e…` and `eqsheet.html` `f500f5b8…` against `99cb18b1…`, X's
+two carrying `#d9a521`; `sw.js` v228.
+
 ## X43 — version 9's #442–#445, the pz mini-tool (cache v226) — 14 Sep 2026
 
 The `pz` mini-tool, poles and zeros of a transfer function (#445), and the

@@ -58,6 +58,26 @@ The sampler's Solve card lines follow it: *Press Solve equations* where
 the default is what the run wants, *Tick* or *Untick* only where it is
 not (13.9's poles in FD leave it off, 14.6's design in FD ticks it).
 
+## #446 — a coupling given as k is captioned as k — solver **0.6.12** (14 Sep 2026, cache v227)
+
+Drawing NR12's Problem 18.36 for the Course showed the schematic caption
+*M = k=0.65 (couples L1 and L2)*. The drawer parses in echo mode
+(`expand_si=False`), where a typed `k=0.65` is the element's value and
+`raw_fields` is empty, and passed the whole field through as if it were
+an inductance. Roberto: *"When a k is given, the M= should be dropped."*
+The caption now reads *k = 0.65 (couples L1 and L2)*, and a coupling given as
+an inductance keeps *M = ...*. The first attempt read `raw_fields` and
+changed nothing -- the test caught it. `test_coupling_factor_is_captioned_as_k`
+fails on the old drawer and passes on the new; suite **550 passed, 2
+skipped**; `review_schematics.py` `failed=0 with_issues=0` over 407.
+Drawing only, no answer changes. The monograph's exemplars carry no `k=`,
+so Appendix B is unmoved. **0.6.12 is on PyPI** (wheel `179e5aa5…`,
+295,537 b), what PyPI records, what it serves, the vendored copy and the
+install host's copy all hashed identical, and the wheel's `schematic.py`
+checked for the fix rather than its version number. `requirements.txt`
+at `>=0.6.12`, so **version 9's pull needs `pip install --upgrade
+symbulator`**. Cache v227 carried it; v228 followed for #447's entry.
+
 ## #445 — the `pz` mini-tool: poles and zeros (14 Sep 2026, cache v226)
 
 Roberto: *"Please create a Find Poles & Zeros minitool and use it in
