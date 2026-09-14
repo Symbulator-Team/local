@@ -58,6 +58,72 @@ The sampler's Solve card lines follow it: *Press Solve equations* where
 the default is what the run wants, *Tick* or *Untick* only where it is
 not (13.9's poles in FD leave it off, 14.6's design in FD ticks it).
 
+## #450 — a short named `s`, `limit()` in Evaluate, and `r20b` — solver **0.6.13** (14 Sep 2026, cache v229; live on learn, install and the ZIP; **PyPI upload pending**)
+
+Roberto, on three of the engine findings the Alexander & Sadiku sampler
+reported (#449): *"Can you fix issues 1, 2 and 4? 3 is not an issue. I'm
+parsimonious with the answers in TR because they take time."* The third
+was that TR results carry no element voltage drops, which is by design.
+
+**1. An element named `s` is accepted.** Its current is `is`, a Python
+keyword, and `banned_element_names` refused the name. The ban was
+written on 24 Aug 2026; the solver learned to read a keyword as a plain
+name four days later (0.5.19, `si_prefix._shield_keywords`), and the ban
+was never revisited. It is now lifted for every keyword the parser
+shields, which empties both ban lists (`s`, and the absurd `eturn`,
+whose resistance seen would be `return`). Lifting it exposed the one
+parse the shield had never reached: `_parse_with_rearrangers`, which is
+how Evaluate reads its box, refused `is` as *invalid syntax*. It shields
+and unshields now as `safe_sympify` does. Driven through every card with
+`s,a,0`: the solve, Evaluate (`is`, `IS`, `2*is + 1`, `is` at `V = 10`),
+the Solve card and Expert Mode on `is = 5`, By-Hand mesh and nodal, TR,
+AC and the Thévenin tool. **Lesson 4's HK5 Figure 2-29 is now written as
+the book writes it**, `e,3,0,1.5*is` with `s,2,1`, in the version 9
+field and in `Lesson_04b.cir`, and the sentence explaining the old `s1`
+is gone; `req` is still 0.6000 Ω.
+
+**2. A limit.** `limit(expression, variable, point)` in Evaluate, the
+answers substituted first as for `s2t` (sympify would take the limit of
+the bare symbol). And a Conditions line at infinity is a limit rather
+than a substitution: `s = oo` had printed NaN wherever the product did
+not cancel before substitution (AS7's Practice Problem 16.6), and a
+finite line whose substitution is undefined, such as `sin(x)/x` at
+`x = 0`, now takes the limit too. `t = oo` needed one more change: SymPy
+evaluates `Eq(t, oo)` to False, `t` being a real symbol, so the condition
+was refused as neither a substitution nor a comparison. `_equality` keeps
+an equality against infinity unevaluated and changes nothing else.
+`1/x` at `x = 0` still reads ∞, and `i_l` at `t = 2` still 3.927. The
+Manual's answers page and a new *Limits* section on its frequency page
+say so, and the sampler's 14.10, P14.10, 16.6 and P16.6 read their
+limits with `limit()` (P16.6's workaround paragraph is gone).
+
+**4. `r20b` is accepted -- the solver's half, 0.6.13.**
+`_IMPLICIT_NUM`, the rule that reads `2ir3` as `2*ir3`, looked behind the
+number for a letter only, so in `r20b` its match restarted at the `0`
+and the element was refused as `r20*b`. The lookbehind refuses a digit
+and a decimal point too. `r20a` had only escaped because `20a` also
+reads as twenty atto. Test `test_two_digits_inside_a_name_are_not_a_multiplication`,
+proved red against the old rule.
+
+Guard: `tools/check_names_and_limits.py`, twenty readings through the real
+app (`_validate` first, as `app.py` and the bridge do, since the ban lives
+there and not in `solve_ui`), and `--prove-red` restores each of the six
+old behaviours in turn and sees it fail. It was not red for the ban until
+it validated -- the first version called `solve_ui` alone and passed
+against the old ban. Gates: solver **551 passed, 2 skipped**; the pf, pz,
+Solve-conditions, third-level, By-Hand rounding, example-plot and
+export-field guards all clean; `verify_lesson` over every example book
+(see the note below this item's train); `build.py --check` clean.
+
+**Shipped 14 Sep 2026 at Roberto's word** (*"build, commit and publish everything"*): the offline pair at cache **v229** (ZIP **32,039,164 b**; `index.html`, `sw.js`, `symbulator_ui.py`, both changed books and the wheel hashed live against the repo, identical), `learn` web only (the sampler, Lesson 4 and the Manual fetched live), `verify_bridge.py` 469 cases and 0 disagreements, and every example book through the real app with no failure but Bo2's Example 3.11. **The PyPI upload was refused by the session's permission classifier** and waits on Roberto: the wheel (`2bec4f76be82…`) is built, `twine check` passed, and the same file is already vendored and live on install, so the upload must be that file. Until it is on PyPI, version 9's account cannot take its pull (`requirements.txt` pins `>=0.6.13`). The planned train was: PyPI 0.6.13, the wheel rebuilt into
+`repos/local/vendor/` and pinned in its three places, a cache bump, the
+offline pair, `learn` for Lesson 4, the Manual and the sampler (web only),
+and on version 9's account a pull with `pip install --upgrade symbulator`
+in the activated virtualenv -- `requirements.txt` is at `>=0.6.13`. The
+AS7 sampler (#449) rides the same train. X takes it at its next merge.
+
+## #449 — claimed by the docs tree, 14 Sep 2026: **the Alexander & Sadiku sampler**. The app side is one new example book, `repos/server/examples/Alexander_Sadiku.cir` (50 entries, generated by `Documentation/tools/as7`), and the `?lesson=as7` alias in `templates/index.html`'s `openFromUrl()`, paired with `NAMED_BOOKS` in `Documentation/tools/app_links.py`. Built, not deployed. Write-up in `Documentation/NEXT_DOCS.md`.
+
 ## #446 — a coupling given as k is captioned as k — solver **0.6.12** (14 Sep 2026, cache v227)
 
 Drawing NR12's Problem 18.36 for the Course showed the schematic caption
