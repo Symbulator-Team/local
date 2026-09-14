@@ -5,6 +5,23 @@ file version 9 never has, so a `git merge v9/main` can never conflict on
 it. `NEXT.md` beside this file is version 9's running list and arrives
 by merge; read it as upstream history, not as a record of X.
 
+## X45 — version 9's #449 and #450, solver 0.6.13 (cache v229) — 14 Sep 2026
+
+The Alexander & Sadiku sampler's example book (#449), and #450: an element
+named `s` accepted on every card, `limit()` in Evaluate with a Conditions
+line at infinity read as a limit, and `r20b` parsed (solver 0.6.13).
+**The solver moved, so X's site needs a pull of *both* clones** --
+`/home/symbulatorx/solver` and `/home/symbulatorx/symbulator_web` -- and a
+Reload, no `pip`, X's solver being an editable checkout. Label
+**`0.6.13+x45`**, the one conflict in `solver` the label, kept as X's; the
+editable install refreshed with `pip install -e . --no-deps`; suite **550
+passed and 3 skipped**, and `tools/check_names_and_limits.py` clean on X's
+tree. The usual stamp conflicts in `server` and `local` taken from v9 and
+rebuilt with X's own interpreter; `branding.py` `0d5c661c…`; X's
+`index.html` `c9e37530…` against version 9's `2b66e9d7…` and
+`eqsheet.html` `88f671e6…` against `e54af13b…`, X's two carrying
+`#d9a521`; `sw.js` v229.
+
 ## X44 — version 9's #446–#448, solver 0.6.12 (cache v228) — 14 Sep 2026
 
 A coupling given as *k* captioned as *k* in the drawing (#446, solver
