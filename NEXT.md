@@ -58,7 +58,7 @@ The sampler's Solve card lines follow it: *Press Solve equations* where
 the default is what the run wants, *Tick* or *Untick* only where it is
 not (13.9's poles in FD leave it off, 14.6's design in FD ticks it).
 
-## #450 — a short named `s`, `limit()` in Evaluate, and `r20b` — solver **0.6.13** (14 Sep 2026, cache v229; live on learn, install and the ZIP; **PyPI upload pending**)
+## #450 — a short named `s`, `limit()` in Evaluate, and `r20b` — solver **0.6.13** (14 Sep 2026, cache v229; live on learn, install and the ZIP; **on PyPI 15 Sep 2026**)
 
 Roberto, on three of the engine findings the Alexander & Sadiku sampler
 reported (#449): *"Can you fix issues 1, 2 and 4? 3 is not an issue. I'm
@@ -115,7 +115,7 @@ Solve-conditions, third-level, By-Hand rounding, example-plot and
 export-field guards all clean; `verify_lesson` over every example book
 (see the note below this item's train); `build.py --check` clean.
 
-**Shipped 14 Sep 2026 at Roberto's word** (*"build, commit and publish everything"*): the offline pair at cache **v229** (ZIP **32,039,164 b**; `index.html`, `sw.js`, `symbulator_ui.py`, both changed books and the wheel hashed live against the repo, identical), `learn` web only (the sampler, Lesson 4 and the Manual fetched live), `verify_bridge.py` 469 cases and 0 disagreements, and every example book through the real app with no failure but Bo2's Example 3.11. **The PyPI upload was refused by the session's permission classifier** and waits on Roberto: the wheel (`2bec4f76be82…`) is built, `twine check` passed, and the same file is already vendored and live on install, so the upload must be that file. Until it is on PyPI, version 9's account cannot take its pull (`requirements.txt` pins `>=0.6.13`). The planned train was: PyPI 0.6.13, the wheel rebuilt into
+**Shipped 14 Sep 2026 at Roberto's word** (*"build, commit and publish everything"*): the offline pair at cache **v229** (ZIP **32,039,164 b**; `index.html`, `sw.js`, `symbulator_ui.py`, both changed books and the wheel hashed live against the repo, identical), `learn` web only (the sampler, Lesson 4 and the Manual fetched live), `verify_bridge.py` 469 cases and 0 disagreements, and every example book through the real app with no failure but Bo2's Example 3.11. **On PyPI since 15 Sep 2026**, uploaded from this machine at Roberto's word after the session's permission classifier had first refused it; the wheel is byte-identical in five places (what PyPI records, what it serves, the build, `vendor/` and the install host, `2bec4f76be82…`, 295,937 b). Before the upload: the wheel (`2bec4f76be82…`) is built, `twine check` passed, and the same file is already vendored and live on install, so the upload must be that file. Until it is on PyPI, version 9's account cannot take its pull (`requirements.txt` pins `>=0.6.13`). The planned train was: PyPI 0.6.13, the wheel rebuilt into
 `repos/local/vendor/` and pinned in its three places, a cache bump, the
 offline pair, `learn` for Lesson 4, the Manual and the sampler (web only),
 and on version 9's account a pull with `pip install --upgrade symbulator`
