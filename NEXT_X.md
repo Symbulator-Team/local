@@ -5,6 +5,20 @@ file version 9 never has, so a `git merge v9/main` can never conflict on
 it. `NEXT.md` beside this file is version 9's running list and arrives
 by merge; read it as upstream history, not as a record of X.
 
+## X43 — version 9's #442–#445, the pz mini-tool (cache v226) — 14 Sep 2026
+
+The `pz` mini-tool, poles and zeros of a transfer function (#445), and the
+sampler book's entries after Roberto's review round (#442–#444). **The
+solver did not move** (the `solver` merge came back *Already up to date*),
+so the label stays **`0.6.11+x42`**, there is no `pip`, and X's site needs
+a pull of `/home/symbulatorx/symbulator_web` **alone** and a Reload. Two
+conflicts per repo, all the build stamp, taken from v9 and rebuilt with X's
+own interpreter; `branding.py` `0d5c661c…` before and after; X's
+`index.html` `370e3a7a…` against version 9's `47416329…` and its
+`eqsheet.html` `fb3ad334…` against `e8db507b…`, X's two carrying `#d9a521`
+and version 9's neither; `sw.js` v226. `check_pz_tool.py` and
+`i18n.py check` clean on X's tree with X's interpreter.
+
 ## X42 — version 9's #441, solver 0.6.11 (cache v224) — 13 Sep 2026
 
 In AC the powers are `p`, `q` and `s` -- P, Q and S -- under both
