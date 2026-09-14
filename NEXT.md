@@ -58,6 +58,35 @@ The sampler's Solve card lines follow it: *Press Solve equations* where
 the default is what the run wants, *Tick* or *Untick* only where it is
 not (13.9's poles in FD leave it off, 14.6's design in FD ticks it).
 
+## #445 — the `pz` mini-tool: poles and zeros (14 Sep 2026, cache v226)
+
+Roberto: *"Please create a Find Poles & Zeros minitool and use it in
+13.9."* The fourth choice in the Mini-Tools card, *pz — poles and
+zeros*. It takes one value, a transfer function such as `v2/vg` or any
+ratio of polynomials in s, resolved against the answers like the other
+tools; cancels the ratio; and answers with two rows, the roots of the
+denominator and the roots of the numerator, at the Rounding setting's
+digits (real and imaginary parts rounded in decimal, #318). A repeated
+root is written once with its multiplicity, `-4 ×2`; a symbolic circuit
+gives symbolic roots. Two refusals by code: **857** not a ratio of
+polynomials in s (`exp(-s)`, `sqrt(s)`), **858** no s at all. Before it,
+13.9 copied its denominator and numerator out by hand into the Solve
+card and solved each, which is two runs and a transcription that can go
+wrong; a shared factor would also have come back as a pole and a zero
+that are not there.
+
+Written in `symbulator_ui.py` (`_pz_of`), so no solver release and no
+`pip`; the offline bridge's `mini_tool` is generic and needed nothing,
+proved by driving the live install host. Four keys in thirteen
+dictionaries (the menu label, the hint, 857, 858), `i18n.py check` ok.
+Guard `tools/check_pz_tool.py`: 13.9's poles and zero through the real
+app, cancellation, multiplicity, symbolic roots, the Rounding setting and
+the three refusals, proved red by swapping numerator and denominator.
+The docs side is #442–#445 in `Documentation/NEXT_DOCS.md`; #442–#444
+changed the sampler book's entries too (rounding lines, 10.12's
+transformer, 11.1's phasors), which is why both PythonAnywhere accounts
+want a pull.
+
 ## #441 — the AC powers are `s`, `ap` and `q`; *effective* under RMS — solver **0.6.11** (13 Sep 2026)
 
 **#439 was my assumption, and it is withdrawn.** I had fixed Roberto's
