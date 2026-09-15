@@ -58,22 +58,48 @@ The sampler's Solve card lines follow it: *Press Solve equations* where
 the default is what the run wants, *Tick* or *Untick* only where it is
 not (13.9's poles in FD leave it off, 14.6's design in FD ticks it).
 
-## #459 — mesh-current arrows at the middle of their loops (open, 15 Sep 2026)
+## #459 — mesh-current arrows at the middle of their loops — solver **0.6.15** (15 Sep 2026, cache v232)
 
 Roberto, on AS7's Practice Problem 13.2 in the By-Hand card: the left mesh's
-arrow sat up by the two top resistors instead of in the middle of its loop.
-`schematic.py` centres an arrow on the mean of its elements' midpoints, and a
-loop closed by bare wire has no element on that side, so the mean leans away
-from it. Tried the same day and **reverted**: centring on the loop's extent
-fixed that drawing and NR12's 3.11 but, over 210 multi-mesh drawings from the
-example books, put arrows onto symbols in narrow meshes (HK5's Figure 1-24b,
-Bo2's Example 6.1, RM3's Figure 7-16), even with the old mean as a fallback.
-The proper fix finds the loop's actual outline, wires included, from the
-layout, and places the arrow at the point inside it farthest from any ink.
-A side effect worth keeping: the band-tightening pass (`_tighten_band`)
-measures the arrows too, so a badly placed arrow also made the whole drawing
-taller than the plain one. Gallery tooling from the attempt: render every
-entry's mesh overlay through `byhand_ui`, rasterise with headless Chrome.
+arrow sat up by the two top resistors. `_byhand_marks` centred an arrow on the
+mean of its elements' midpoints, which leans away from any side of a loop that
+is bare wire. Three designs, measured over the **208 multi-mesh drawings** of
+the example books, each rendered through `byhand_ui` and rasterised with
+headless Chrome before and after:
+
+1. **The middle of the loop's extent** fixed that drawing and put arrows on
+   symbols in narrow meshes (HK5's Figure 1-24b, Bo2's Example 6.1). Reverted.
+2. **The window of the drawing the loop's elements border** put two arrows in
+   one window. A by-hand mesh comes from a *cycle basis*, not the planar
+   windows: RM3's Figure 7-16 walks R2, R3 and R1, and AS7's P10.13's second
+   loop is the whole outer boundary.
+3. **Shipped: the loop's own path.** `_mesh_spot` lays every wire and element
+   axis on a 4px grid, traces the walk -- its elements, and between each and
+   the next the shortest run along the lines -- floods the outside from the
+   grid's edge, and puts the arrow at the cell inside farthest from every line,
+   symbol, label and earlier arrow (ties to the inside's centre). The circle
+   is sized to that room; labels are left out of the measure only when they
+   leave no room at all, since a smaller circle beside them read better than a
+   larger one on top (Bo2's 6.1, AS7's P10.6).
+
+**Speed.** Run on every trial render the search made a By-Hand drawing take
+about 2 s. It now runs once: `_final` settles the layout with `_MESH_QUICK`
+set (the old quick placement, so every drawing keeps its size and layout, which
+a version that dropped the marks from the band measure did not -- supermesh
+boxes came out squashed), then draws the chosen layout once with the search;
+`mesh_turning` skips it (`_MESH_SENSE_ONLY`), and results are memoised on the
+geometry. Measured per drawing, warm: 0.45 s and 0.28-0.35 s against 0.44 s and
+0.25 s before.
+
+**Unchanged by construction:** a drawing without marks is byte-identical
+(hashed); layouts of marked drawings are identical (viewBoxes compared against
+the committed code, only the arrow paths and the supermesh box drawn round them
+differ). Gates: 557 tests (two new, `test_a_mesh_arrow_sits_in_the_middle_of_
+its_loop` proved red at 34.4px on the old code), `check_mesh_flip` 311 systems
+0 problems (315 before the four FD entries moved to braces), `review_schematics`
+464 drawings `failed=0 with_issues=0`, `verify_bridge` 474 cases 0
+disagreements. PyPI's record and download hashed against the build (`cbb4aa88…`),
+the vendored copy and the install host. X48 merged.
 
 ## #458 — Find equivalent refuses a bracketed time value in FD (open, 15 Sep 2026)
 
