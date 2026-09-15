@@ -126,7 +126,7 @@ its_loop` proved red at 34.4px on the old code), `check_mesh_flip` 311 systems
 disagreements. PyPI's record and download hashed against the build (`cbb4aa88…`),
 the vendored copy and the install host. X48 merged.
 
-## #458 — Find equivalent reads a bracketed time value in FD — solver **0.6.16** (16 Sep 2026; built, deploy held)
+## #458 — Find equivalent reads a bracketed time value in FD — solver **0.6.16** (16 Sep 2026, cache v234; **live**)
 
 `e,1,0,{480u(t)}:r1,1,2,20:l,2,0,0.002:r2,2,a,60` solved in FD, and the same
 description through *Thévenin / Norton* was refused: *"The value
@@ -152,9 +152,11 @@ tests in `test_equiv.py`, red on the old `equiv.py`. Solver suite 560 passed,
 clean. NR12's Example 13.6 moved to `{480u(t)}` under the samplers' rule 33;
 card truth 36 panels, 0 disagreeing; `verify_lesson Nilsson_Riedel` 0 problems.
 
-**Held for Roberto's go:** the offline pair at cache **v234** with 0.6.16
-bundled (built, not zipped or deployed), `requirements.txt` at `>=0.6.16`,
-learn for 13.6's text, the commits in server, local and Documentation, and X.
+**Shipped at Roberto's "Punch it", 16 Sep 2026:** the offline pair at cache
+**v234** with 0.6.16 bundled (ZIP 32,049,502 b; staged site proved the ZIP's
+build; install and the published ZIP hashed live), `requirements.txt` at
+`>=0.6.16`, learn rebuilt with the PDFs (13.6's page and the NR12 sampler PDF
+hashed live, 7/8 byte-identical), X50 (`0.6.16+x50`, 559 passed) pushed.
 
 ## #457 — claimed by the docs tree, 15 Sep 2026: **AS7 figure crops and two printed widths**; the app's example pictures point at learn and moved with it, nothing in this tree changed. Write-up in `Documentation/NEXT_DOCS.md`.
 
