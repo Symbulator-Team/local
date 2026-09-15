@@ -18,6 +18,16 @@ against version 9's `0634d13f…` and `eqsheet.html` `c5f39d16…` against
 `ea6944f8…`, X's two carrying `#d9a521`; `sw.js` v233. No Python changed, so
 the suite was not re-run. Pushed.
 
+## X50 — version 9's #458, solver 0.6.16 (cache v234) — 16 Sep 2026
+
+Find equivalent and the package's th/er/port read `{...}` time values in FD.
+**The solver moved, so X's site wants a pull of *both* clones** and a Reload,
+no `pip`. Label **`0.6.16+x50`**; the three usual conflicts; editable install
+refreshed; suite **559 passed, 3 skipped**; `check_fd_braces_tools` clean on
+X's tree; `branding.py` `0d5c661c…`; X's `index.html` `e04875d0…` against
+version 9's `93aae0f4…`, `eqsheet.html` `902c4167…` against `0777a1c2…`, X's
+two carrying `#d9a521`. Pushed.
+
 ## X48 — version 9's #458-#460, solver 0.6.15 (cache v232) — 15 Sep 2026
 
 The mesh arrows placed in the middle of their loops (#459) and the sampler
