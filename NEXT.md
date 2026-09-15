@@ -126,17 +126,35 @@ its_loop` proved red at 34.4px on the old code), `check_mesh_flip` 311 systems
 disagreements. PyPI's record and download hashed against the build (`cbb4aa88…`),
 the vendored copy and the install host. X48 merged.
 
-## #458 — Find equivalent refuses a bracketed time value in FD (open, 15 Sep 2026)
+## #458 — Find equivalent reads a bracketed time value in FD — solver **0.6.16** (16 Sep 2026; built, deploy held)
 
-`e,1,0,{480u(t)}:r1,1,2,20:l,2,0,0.002:r2,2,a,60` solves in FD, and the same
-description with *Thévenin / Norton* at **a** and **0** is refused: *"The value
-'{480u(t)}' contains a set, which is not arithmetic."* The tool path stamps the
-circuit without first turning the curly-bracket shorthand into `t2s(...)`, so
-`engine._value` reaches `safe_sympify` with the braces still on. Found moving
-NR12's 13.6 to the shorthand under the samplers' rule 33; that entry keeps
-`480/s` until this is fixed. Likely one call to `expand_time_domain_braces` on
-the th/er/port path in `symbulator_ui.py` (no solver release) -- to confirm,
-and to check `er` and `port` the same way.
+`e,1,0,{480u(t)}:r1,1,2,20:l,2,0,0.002:r2,2,a,60` solved in FD, and the same
+description through *Thévenin / Norton* was refused: *"The value
+'{480u(t)}' contains a set, which is not arithmetic."* `fd()` expands the
+curly-bracket shorthand for `t2s(...)`; `th()`, `er()` and `port()` run their
+own solves and never did. Fixed on both sides, at Roberto's word:
+
+- **The app** (`symbulator_ui.solve_ui`, the Find equivalent branch): the
+  description and Expert Mode's equations and conditions go through
+  `_tool_desc` -> `_unbrace_for`, so FD expands them and any other analysis
+  refuses brackets with the message that says why. The offline bridge calls
+  the same `solve_ui`.
+- **The package** (`equiv._fd_inputs`, called first by `th`, `er` and
+  `port`): the same expansion, so the Python API matches `fd()`. Released as
+  **0.6.16**, wheel `2127774f706d…`, PyPI's record and download hashed
+  against the build.
+
+Guards: `tools/check_fd_braces_tools.py` (hosted and bridge; th, er, port z
+and h, a condition, `{480}` equal to `{480u(t)}` per Roberto, DC still
+refusing), 14 failures before and proved red by `--prove-red`; three package
+tests in `test_equiv.py`, red on the old `equiv.py`. Solver suite 560 passed,
+2 skipped; `verify_bridge` 474 cases, 0 disagreements; the app's other guards
+clean. NR12's Example 13.6 moved to `{480u(t)}` under the samplers' rule 33;
+card truth 36 panels, 0 disagreeing; `verify_lesson Nilsson_Riedel` 0 problems.
+
+**Held for Roberto's go:** the offline pair at cache **v234** with 0.6.16
+bundled (built, not zipped or deployed), `requirements.txt` at `>=0.6.16`,
+learn for 13.6's text, the commits in server, local and Documentation, and X.
 
 ## #457 — claimed by the docs tree, 15 Sep 2026: **AS7 figure crops and two printed widths**; the app's example pictures point at learn and moved with it, nothing in this tree changed. Write-up in `Documentation/NEXT_DOCS.md`.
 
