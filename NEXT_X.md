@@ -5,6 +5,17 @@ file version 9 never has, so a `git merge v9/main` can never conflict on
 it. `NEXT.md` beside this file is version 9's running list and arrives
 by merge; read it as upstream history, not as a record of X.
 
+## X48 — version 9's #458-#460, solver 0.6.15 (cache v232) — 15 Sep 2026
+
+The mesh arrows placed in the middle of their loops (#459) and the sampler
+round (#460). **The solver moved, so X's site wants a pull of *both* clones**
+and a Reload, no `pip`. Label **`0.6.15+x48`**; the usual three conflicts
+(label kept as X's, stamps taken from v9 and rebuilt with X's interpreter);
+editable install refreshed; suite **556 passed, 3 skipped**; `branding.py`
+`0d5c661c…`; X's `index.html` `2979ea88…` against version 9's `76c4c4ea…`,
+`eqsheet.html` `560d7531…` against `03e8f340…`, X's two carrying `#d9a521`.
+Pushed.
+
 ## X47 — version 9's #455, the lettered sampler notes (cache v231) — 15 Sep 2026
 
 Version 9's #455 changed only the questions in two example books, lettered
