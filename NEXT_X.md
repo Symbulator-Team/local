@@ -5,6 +5,18 @@ file version 9 never has, so a `git merge v9/main` can never conflict on
 it. `NEXT.md` beside this file is version 9's running list and arrives
 by merge; read it as upstream history, not as a record of X.
 
+## X47 — version 9's #455, the lettered sampler notes (cache v231) — 15 Sep 2026
+
+Version 9's #455 changed only the questions in two example books, lettered
+under rule 31 of the samplers, and bumped the cache. **The solver did not
+move** (label stays `0.6.14+x46`), so X's site wants a pull of
+`/home/symbulatorx/symbulator_web` alone and a Reload, no `pip` -- on top
+of X46's pull of both clones if that is still untaken. The usual stamp
+conflicts in `server` and `local`, taken from v9 and rebuilt with X's own
+interpreter; `branding.py` `0d5c661c…`; X's `index.html` `1c493035…`
+against version 9's `5c4fa278…` and `eqsheet.html` `7a59b67a…` against
+`0ac78364…`, X's two carrying `#d9a521`; `sw.js` v231. Pushed.
+
 ## X46 — version 9's #451-#454, solver 0.6.14 (cache v230) — 15 Sep 2026
 
 Mesh currents clockwise by default with a flip on the By-Hand card and its
