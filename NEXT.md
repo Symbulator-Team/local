@@ -58,6 +58,8 @@ The sampler's Solve card lines follow it: *Press Solve equations* where
 the default is what the run wants, *Tick* or *Untick* only where it is
 not (13.9's poles in FD leave it off, 14.6's design in FD ticks it).
 
+## #456 — claimed by the docs tree, 15 Sep 2026: **the Samplers, a fourth book on learn with a PDF per textbook**; the Course PDF drops them. Nothing in this tree moves. Write-up in `Documentation/NEXT_DOCS.md`.
+
 ## #455 — claimed by the docs tree, 15 Sep 2026: **lettered questions and lettered answers in both samplers** (rule 31). Only the two `.cir` books' notes move in this tree. Write-up in `Documentation/NEXT_DOCS.md`.
 
 ## #453 — a riser no longer climbs through a lifted body — solver **0.6.14** (15 Sep 2026, cache v230)
