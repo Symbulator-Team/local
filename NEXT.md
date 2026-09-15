@@ -58,6 +58,85 @@ The sampler's Solve card lines follow it: *Press Solve equations* where
 the default is what the run wants, *Tick* or *Untick* only where it is
 not (13.9's poles in FD leave it off, 14.6's design in FD ticks it).
 
+## #453 — a riser no longer climbs through a lifted body — solver **0.6.14** (15 Sep 2026, cache v230)
+
+Roberto, on the harness finding #451 reported: *"The finding about the
+wire through a symbol. Can you diagnose the cause and fix it?"* AS7's
+Example 10.4 has its nodes in a row, l t c r. `r8` joins l to c, so it is
+lifted over t; `r6` joins t to r and is lifted higher still, and its riser
+climbs from t. `_render_once` drew every lifted body centred on its span,
+and the centre of l-c is t's column -- so the riser ran through the 8 ohm
+symbol and its two labels sat on it. The crossing itself is the node
+order's and stays; the body did not have to be on it.
+
+`_clear_of_risers` moves a lifted two-terminal body into the widest
+stretch of its span between the risers of branches lifted higher, when
+one of those risers passes through where the centred body would be and
+the stretch still holds the body with a lead each side. Two things were
+learned on the way, each from a picture rather than the code:
+
+* A body ending exactly on a riser put a **junction dot** on the crossing
+  -- a wire ending on a line reads as a T, and every T is ringed -- which
+  claimed a connection that is not there. The body stops `CROSS_CLEAR`
+  short of a riser, and the plain wire beyond runs through it as a hop.
+* The first rule moved a body whenever any riser was anywhere in its span,
+  which moved **eight** drawings, among them Bo2's Example 3.3 -- the
+  anchor of Roberto's schematic brief -- and two of the monograph's
+  exemplars, where the riser only ever hopped a lead. Narrowed to a riser
+  through the body, and shorts (no body) excluded: **one drawing of 459
+  moves, 10.4**, measured by hashing every drawing before and after. No
+  monograph exemplar moves, so Appendix B is not stale.
+
+`review_schematics.py` **`failed=0 with_issues=0`** over 459 (was 1).
+Test `test_a_riser_does_not_climb_through_a_lifted_body`, which reads the
+canvas for any vertical wire inside a horizontal body, proved red with the
+old centring. Suite **555 passed, 2 skipped**. Rides #451's train.
+
+## #451 — mesh currents clockwise by default, and a flip — solver **0.6.14** (15 Sep 2026, cache v230)
+
+Roberto asked whether the By-Hand card could reverse its mesh currents on
+request, and on hearing the options: *"Set clockwise as default and offer
+the flip option."* The card's meshes were oriented only relative to one
+another -- the first followed its first branch -- so whichever way that
+landed on the page was an accident of the description.
+
+**What it does now.** `byhand_ui` reads which way each mesh turns in the
+drawing the card shows (`schematic.mesh_turning`) and reverses the ones
+turning counterclockwise (`byhand.reverse_meshes`: every written line and
+bridge line takes `Ik -> -Ik`, the loop is walked backwards, and a line
+left leading with a minus sign is written with both sides negated). A new
+tick on the card, **Flip the mesh currents**, shown while a mesh system is
+on screen, asks again with `flip` and reverses the ones turning
+clockwise. The system is the same system; only the mesh currents change
+sign. AS7's Example 3.7 now reads the book's -7.5, -2.5, 3.929 and
+2.143 A by default, and its supermesh line is the book's own equation
+doubled. The label is in all thirteen dictionaries.
+
+**A bug it found.** `_orient` turned a mesh by negating its signs and
+kept its order, but the drawing reads an arrow's sense from the order, so
+a turned mesh was written one way and drawn the other -- 3.7's second
+mesh was drawn clockwise and written counterclockwise. It is walked
+backwards now. And the drawing read the sense from element midpoints,
+which give a loop of two parallel elements no area; it reads each
+element's ends along the walk.
+
+Guards: three solver tests in `test_byhand.py`, each proved red on the old
+code; `tools/check_mesh_flip.py`, which runs every built-in example's mesh
+system through the real app both ways and reads the turning back off the
+drawing -- **310 systems, 0 with a problem**, and 310 of 310 failing with
+the reversal disabled. Suite **554 passed, 2 skipped**; `check_byhand.py`
+202 mesh and 268 nodal systems all agree; the By-Hand rounding, names and
+limits guards clean; i18n ok; the page driven on the dev server (3.7,
+both directions, the method staying on mesh through a flip).
+`review_schematics.py` `failed=0 with_issues=1`: AS7's Example 10.4,
+two labels on a wire and a wire through a body, from #449's book and
+untouched by this item, since the plain drawing did not change.
+
+The docs moved with it (Lesson 1's By-Hand paragraph, the Manual's
+toolbox). **Shipped 15 Sep 2026 at Roberto's *"Punch it"***, with #452-#454: 0.6.14 on PyPI (wheel `c75a6518b190…`, 299,615 b, what PyPI records and serves hashed against the build), `build_local.py`'s offline rewrite of the By-Hand fetch taught to carry `flip`, and the train as planned. The planned train was: PyPI 0.6.14 (`requirements.txt`
+is already at `>=0.6.14`), the wheel vendored and pinned, a cache bump,
+the offline pair, `learn`, version 9's pull with `pip`, X's merge.
+
 ## #450 — a short named `s`, `limit()` in Evaluate, and `r20b` — solver **0.6.13** (14 Sep 2026, cache v229; **live everywhere 15 Sep 2026**)
 
 Roberto, on three of the engine findings the Alexander & Sadiku sampler

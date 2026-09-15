@@ -43,7 +43,7 @@ window.MathJax = { tex: { inlineMath: [['\\(', '\\)']] }, svg: { fontCache: 'glo
 //
 // The <script> written below is parser-blocking on purpose: see
 // pack_block() in tools/i18n.py for why it cannot be a fetch.
-window.SYMB_I18N_V = "308cd2a9c3";
+window.SYMB_I18N_V = "a3ab834cf1";
 // Rewritten to a relative path by build_local.py: the offline page
 // sits at the root of its own folder, and the server serves the
 // app at / and the Numerical Solver at /eqsheet/, so only a
@@ -3375,6 +3375,14 @@ units: yes</pre>
           </select>
         </div>
       </div>
+      <!-- #451 (Roberto, 15 Sep 2026): mesh currents turn clockwise, as
+           textbooks draw them, and this turns them all the other way --
+           the arrows in the drawing and the sign of every mesh current.
+           Shown only while a mesh system is on screen; ticking it asks
+           the server again, since the system is rewritten there. -->
+      <div class="row" id="byhandFlipRow" hidden>
+        <label class="checkline"><input type="checkbox" id="byhandFlip"><span data-i18n="flip-the-mesh-currents.8269">Flip the mesh currents</span></label>
+      </div>
       <div class="run-row">
         <button id="byhandBtn" data-i18n="write-the-equations.ddb4">Write the equations</button>
         <span id="byhandStatus"></span>
@@ -3614,7 +3622,7 @@ units: yes</pre>
        server's /healthz reads it with _BUILD_RE, both keyed on the
        word Release, and each expects it exactly once in this file. -->
   <span class="notranslate" style="white-space:nowrap">Symbulator by Roberto Perez-Franco (1999–2026)</span>
-  <span class="notranslate" style="white-space:nowrap">· Release 2026-09-14 13:17 UTC</span>
+  <span class="notranslate" style="white-space:nowrap">· Release 2026-09-15 00:41 UTC</span>
 </footer>
 
 <script>
@@ -4849,7 +4857,7 @@ const pyReady = (async () => {
     // Plot card fails at the point of use with a raw "No module named
     // 'numpy'" -- the two plot examples in the supplied set among them.
     await pyodide.loadPackage(['sympy', 'numpy']);
-    await pyodide.loadPackage('vendor/symbulator-0.6.13-py3-none-any.whl');
+    await pyodide.loadPackage('vendor/symbulator-0.6.14-py3-none-any.whl');
     // symbulator_ui.py and circuitbook.py are shared verbatim with the
     // server build; bridge.py is this build's own glue module.
     for (const f of ['symbulator_ui.py', 'circuitbook.py', 'bridge.py']) {
@@ -6536,8 +6544,17 @@ function syncByHandCard() {
       + '</div></div>';
     $('byhandStatus').textContent = '';
     $('byhandMethodRow').hidden = true;
+    $('byhandFlipRow').hidden = true;
     lastByHand = null;
   }
+}
+
+//: #451: the flip is offered while a mesh system is the one shown.
+function syncByHandFlip() {
+  const row = $('byhandFlipRow');
+  if (!row) return;
+  const mesh = lastByHand && lastByHand.methods && lastByHand.methods.mesh;
+  row.hidden = !(mesh && mesh.supported && $('byhandMethod').value === 'mesh');
 }
 
 function byhandVerdict(data) {
@@ -6745,14 +6762,17 @@ function renderByHand(data, method) {
   if (mjReady) MathJax.typesetPromise([out]);
 }
 
-async function runByHand() {
+async function runByHand(keepMethod) {
   if (!last || last.tool !== 'solve') return;
+  // A click hands the listener its event; only a string is a method.
+  if (typeof keepMethod !== 'string') keepMethod = null;
   const btn = $('byhandBtn'), out = $('byhandOut');
   btn.disabled = true;
   $('byhandStatus').textContent = '';
   // Hidden while the run is in flight: what it would offer is not known
   // until the answer comes back.
   $('byhandMethodRow').hidden = true;
+  $('byhandFlipRow').hidden = true;
   lastByHand = null;
   out.innerHTML = '<div class="lcd"><div class="placeholder">'
     + t('js.bh.busy', 'writing the equations…') + '</div></div>';
@@ -6761,7 +6781,8 @@ async function runByHand() {
       desc: last.desc_used, domain: last.domain || 'dc',
       omega: $('omega').value,
       ...roundingState(), si: $('siUnits').checked,
-      units: $('showUnits').checked });
+      units: $('showUnits').checked,
+      flip: $('byhandFlip').checked });
     if (!data.ok) {
       out.innerHTML = '';
       const div = document.createElement('div');
@@ -6775,8 +6796,9 @@ async function runByHand() {
     // are level -- and offer the picker only when there is a choice.
     lastByHand = data;
     byhandLabelMethods(data);
-    $('byhandMethod').value = data.default || 'nodal';
+    $('byhandMethod').value = keepMethod || data.default || 'nodal';
     $('byhandMethodRow').hidden = !data.both;
+    syncByHandFlip();
     renderByHand(data, $('byhandMethod').value);
     $('byhandStatus').textContent = data.elapsed ? data.elapsed + ' s' : '';
   } catch (e) {
@@ -6800,6 +6822,13 @@ document.addEventListener('DOMContentLoaded', () => {
   const pick = $('byhandMethod');
   if (pick) pick.addEventListener('change', () => {
     if (lastByHand) renderByHand(lastByHand, pick.value);
+    syncByHandFlip();
+  });
+  // #451: the flip rewrites the system, so it is asked for again, and the
+  // mesh method stays the one on screen.
+  const flip = $('byhandFlip');
+  if (flip) flip.addEventListener('change', () => {
+    if (lastByHand) runByHand('mesh');
   });
   syncByHandCard();
 });
