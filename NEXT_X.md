@@ -5,6 +5,19 @@ file version 9 never has, so a `git merge v9/main` can never conflict on
 it. `NEXT.md` beside this file is version 9's running list and arrives
 by merge; read it as upstream history, not as a record of X.
 
+## X49 — version 9's #461, the collaboration dated *August and September 2026* (cache v233) — 15 Sep 2026
+
+The About card's paragraph and its twelve translations. **The solver did not
+move** (the `solver` merge came back *Already up to date*; label stays
+`0.6.15+x48`), so X's site wants a pull of `/home/symbulatorx/symbulator_web`
+alone and a Reload, no `pip` -- on top of X48's pull of both clones if that
+is still untaken. The usual stamp conflicts in `server` and `local`, taken
+from v9 and rebuilt with X's own interpreter; `i18n.py check` ok;
+`branding.py` `0d5c661c…` before and after; X's `index.html` `085c203a…`
+against version 9's `0634d13f…` and `eqsheet.html` `c5f39d16…` against
+`ea6944f8…`, X's two carrying `#d9a521`; `sw.js` v233. No Python changed, so
+the suite was not re-run. Pushed.
+
 ## X48 — version 9's #458-#460, solver 0.6.15 (cache v232) — 15 Sep 2026
 
 The mesh arrows placed in the middle of their loops (#459) and the sampler
