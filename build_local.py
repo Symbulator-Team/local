@@ -87,7 +87,7 @@ I18N_OUT = HERE / "i18n"
 SW_I18N_BEGIN = "  // ==== BEGIN i18n ==== written by build_local.py; do not edit"
 SW_I18N_END = "  // ==== END i18n ===="
 
-WHEEL = "symbulator-0.6.13-py3-none-any.whl"
+WHEEL = "symbulator-0.6.14-py3-none-any.whl"
 
 # The Numerical Solver's one expensive dependency (#208). eqsheet.py
 # calls scipy.optimize.root for a square system and least_squares for a
@@ -1530,14 +1530,16 @@ def build() -> str:
                              omega: $('omega').value,
                              ...roundingState(),
                              si: $('siUnits').checked,
-                             units: $('showUnits').checked })
+                             units: $('showUnits').checked,
+                             flip: $('byhandFlip').checked })
     });
     const data = await r.json();""",
         """    const data = await py('byhand', {
       desc: last.desc_used, domain: last.domain || 'dc',
       omega: $('omega').value,
       ...roundingState(), si: $('siUnits').checked,
-      units: $('showUnits').checked });""",
+      units: $('showUnits').checked,
+      flip: $('byhandFlip').checked });""",
         label="by-hand fetch",
     )
 
