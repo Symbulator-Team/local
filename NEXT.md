@@ -58,6 +58,31 @@ The sampler's Solve card lines follow it: *Press Solve equations* where
 the default is what the run wants, *Tick* or *Untick* only where it is
 not (13.9's poles in FD leave it off, 14.6's design in FD ticks it).
 
+## #461 — the collaboration dated *August and September 2026* — **live on install and the ZIP, 15 Sep 2026** (cache v233)
+
+Roberto, 15 Sep 2026: *"In the Symbulator app, and anywhere else it is
+mentioned, change the reference of 'August 2026' to 'August and September
+2026'."* The one reference is the app's *About Symbulator 9* paragraph,
+*"during an intense collaboration in August and September 2026"*. The
+English change re-keys the unit (`this-port-of-symbulator.5ea6` →
+`.4422`), so all twelve translations were carried to the new key with the
+month phrase changed in each (*im August und September 2026*, *en août et
+septembre 2026*, *2026年8月から9月にかけての*, …); `tools/i18n.py check`
+ok. No solver change, no `pip`.
+
+**Left alone on purpose**, each being the date of one event rather than of
+the collaboration: the Course credits' *"In August 2026, I shared an early
+version of Symbulator 9 with Antony"* (`Documentation/src/99-credits.md`),
+the design tokens' sampling dates, the monograph's record-recovery date and
+the archive catalog's assembly date.
+
+Verified: the 64 staged install files hash-identical to the ZIP's copies
+before either went up; both deploys hash-verified; the live `index.html`
+and `i18n/ja.js` fetched and read for the new wording. ZIP 32,048,324 b.
+**`symbulator.pythonanywhere.com` wants a pull and a Reload** — no `pip` of
+its own, but it rides the same pull as #459, which does want
+`pip install --upgrade symbulator` for 0.6.15; X takes it at its next merge.
+
 ## #459 — mesh-current arrows at the middle of their loops — solver **0.6.15** (15 Sep 2026, cache v232)
 
 Roberto, on AS7's Practice Problem 13.2 in the By-Hand card: the left mesh's
