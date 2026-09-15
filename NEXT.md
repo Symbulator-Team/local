@@ -58,6 +58,39 @@ The sampler's Solve card lines follow it: *Press Solve equations* where
 the default is what the run wants, *Tick* or *Untick* only where it is
 not (13.9's poles in FD leave it off, 14.6's design in FD ticks it).
 
+## #459 — mesh-current arrows at the middle of their loops (open, 15 Sep 2026)
+
+Roberto, on AS7's Practice Problem 13.2 in the By-Hand card: the left mesh's
+arrow sat up by the two top resistors instead of in the middle of its loop.
+`schematic.py` centres an arrow on the mean of its elements' midpoints, and a
+loop closed by bare wire has no element on that side, so the mean leans away
+from it. Tried the same day and **reverted**: centring on the loop's extent
+fixed that drawing and NR12's 3.11 but, over 210 multi-mesh drawings from the
+example books, put arrows onto symbols in narrow meshes (HK5's Figure 1-24b,
+Bo2's Example 6.1, RM3's Figure 7-16), even with the old mean as a fallback.
+The proper fix finds the loop's actual outline, wires included, from the
+layout, and places the arrow at the point inside it farthest from any ink.
+A side effect worth keeping: the band-tightening pass (`_tighten_band`)
+measures the arrows too, so a badly placed arrow also made the whole drawing
+taller than the plain one. Gallery tooling from the attempt: render every
+entry's mesh overlay through `byhand_ui`, rasterise with headless Chrome.
+
+## #458 — Find equivalent refuses a bracketed time value in FD (open, 15 Sep 2026)
+
+`e,1,0,{480u(t)}:r1,1,2,20:l,2,0,0.002:r2,2,a,60` solves in FD, and the same
+description with *Thévenin / Norton* at **a** and **0** is refused: *"The value
+'{480u(t)}' contains a set, which is not arithmetic."* The tool path stamps the
+circuit without first turning the curly-bracket shorthand into `t2s(...)`, so
+`engine._value` reaches `safe_sympify` with the braces still on. Found moving
+NR12's 13.6 to the shorthand under the samplers' rule 33; that entry keeps
+`480/s` until this is fixed. Likely one call to `expand_time_domain_braces` on
+the th/er/port path in `symbulator_ui.py` (no solver release) -- to confirm,
+and to check `er` and `port` the same way.
+
+## #457 — claimed by the docs tree, 15 Sep 2026: **AS7 figure crops and two printed widths**; the app's example pictures point at learn and moved with it, nothing in this tree changed. Write-up in `Documentation/NEXT_DOCS.md`.
+
+## #456 — claimed by the docs tree, 15 Sep 2026: **the Samplers, a fourth book on learn with a PDF per textbook**; the Course PDF drops them. Nothing in this tree moves. Write-up in `Documentation/NEXT_DOCS.md`.
+
 ## #455 — claimed by the docs tree, 15 Sep 2026: **lettered questions and lettered answers in both samplers** (rule 31). Only the two `.cir` books' notes move in this tree. Write-up in `Documentation/NEXT_DOCS.md`.
 
 ## #453 — a riser no longer climbs through a lifted body — solver **0.6.14** (15 Sep 2026, cache v230)
