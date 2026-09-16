@@ -58,6 +58,8 @@ The sampler's Solve card lines follow it: *Press Solve equations* where
 the default is what the run wants, *Tick* or *Untick* only where it is
 not (13.9's poles in FD leave it off, 14.6's design in FD ticks it).
 
+## #464 — claimed by the docs tree, 16 Sep 2026: **The Golden Dozen**, a PDF of thirteen solved examples at `learn.symbulator.com/dozen.pdf`, linked from the landing page. No app change. Write-up in `Documentation/NEXT_DOCS.md`.
+
 ## #461 — the collaboration dated *August and September 2026* — **live on install and the ZIP, 15 Sep 2026** (cache v233)
 
 Roberto, 15 Sep 2026: *"In the Symbulator app, and anywhere else it is
@@ -7388,6 +7390,19 @@ is the lockup shared by all five sites, so converting its two physical
 rules trips `build_local.py`'s `check_banner()` and `build.py --check`.
 An RTL pass therefore turns a two-site deploy into a five-site one, for a
 change that alters nothing visible on the landing page or on learn.
+
+**Hebrew joined the item on 16 Sep 2026**, when Roberto asked for an
+estimate with it added, and then saved the question for later. Measured
+that day: 786 keys and about 58,000 characters per dictionary, about 26
+left/right CSS rules across `index.html`, `eqsheet.html` and `banner.css`.
+The estimate given: the RTL layout pass is about one working session,
+the three dictionaries about half a session together, and a check round
+plus a five-site deploy after that. Hebrew adds 10–15% on top of Arabic
+and Urdu: it has a native technical vocabulary (מתח, זרם, הספק, נגד,
+קבל, סליל), no font question and Western digits. The suggested first
+slice was RTL plus Hebrew alone, which ends in something reviewable.
+Hebrew is a choice rather than reach (about 9 million speakers), so if it
+is added the reason goes on record the way #206 records Ukrainian's.
 
 **Urdu rides with Arabic and never alone**: same script, same direction,
 so it is nearly free afterwards and expensive before. It prefers
