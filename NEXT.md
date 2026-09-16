@@ -58,7 +58,7 @@ The sampler's Solve card lines follow it: *Press Solve equations* where
 the default is what the run wants, *Tick* or *Untick* only where it is
 not (13.9's poles in FD leave it off, 14.6's design in FD ticks it).
 
-## #464 — claimed by the docs tree, 16 Sep 2026: **The Golden Dozen**, a PDF of thirteen solved examples at `learn.symbulator.com/dozen.pdf`, linked from the landing page. No app change. Write-up in `Documentation/NEXT_DOCS.md`.
+## #464 — claimed by the docs tree, 16 Sep 2026: **The Golden Dozen**, a PDF of thirteen solved examples at `learn.symbulator.com/dozen.pdf`, linked from the landing page. Write-up in `Documentation/NEXT_DOCS.md`. **One app change rode with it, live on install and the ZIP at cache v235 the same night:** the app keeps 80 characters of an entry title (`circuitbook.MAX_NAME_LEN`), and two `Lesson_10.cir` titles were 82 long, so the picker showed *"…(DC, t <"*. *"switch and coupled"* became *"switch, coupled"* (79), with the lesson's heading and `::: applink` lines renamed to match. No title in any book is over 80 now. Both PythonAnywhere accounts want a pull and a Reload, no `pip`.
 
 ## #461 — the collaboration dated *August and September 2026* — **live on install and the ZIP, 15 Sep 2026** (cache v233)
 
