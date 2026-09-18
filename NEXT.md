@@ -58,6 +58,40 @@ The sampler's Solve card lines follow it: *Press Solve equations* where
 the default is what the run wants, *Tick* or *Untick* only where it is
 not (13.9's poles in FD leave it off, 14.6's design in FD ticks it).
 
+## #465 — Alexander & Sadiku listed below Nilsson & Riedel in Built-in Examples — **live on install and the ZIP, 19 Sep 2026** (cache v236)
+
+Roberto's ask: the Alexander & Sadiku book led the Built-in Examples
+menu, because the menu is filename order and `A` sorts first. It now
+sits directly below Nilsson & Riedel, the two textbook books together,
+with the Showcase and the Monograph still closing the list.
+
+**The file was not renamed.** `Alexander_Sadiku.cir` is named by
+`?lesson=as7` in the template, by `NAMED_BOOKS` in the docs'
+`tools/app_links.py`, by `tools/as7/book.py` and by the Baker's Dozen
+runs; a rename would have moved all of them for the sake of a sort.
+Instead `circuitbook.py` gained `book_sort_key` and a one-entry table,
+`_BOOK_FOLLOWS = {"Alexander_Sadiku.cir": "Nilsson_Riedel.cir"}`:
+filename order, bar a book named there, which follows the book it
+names. **Both menus sort by it** — `app.py`'s `_example_files()` and
+`build_local.py`'s `example_manifest()` — and `circuitbook.py` is a
+shared module, so the hosted and the offline picker cannot disagree.
+Moving a book again is one entry in that table. No entry index moved,
+so no tutorial link did.
+
+Gates: Flask renders `/`, `/eqsheet/`, `/healthz` and `/api/examples`
+(the last four names read back in the new order); `i18n.py check` ok;
+`verify_bridge.py` 474 cases, 0 disagreements. Deployed: install
+hash-verified by the deploy, the live `examples.json` and `sw.js` v236
+read back by fetching; the ZIP is **32,049,721 b**, and **the deploy
+script's own verification of it failed twice with `IncompleteRead`**
+(the HTTPS download dropping part-way, 18 MB and then 30 MB of 32),
+while its server-side checksum reported the upload identical. Settled
+by `curl.exe --retry 8 -C -`, which resumes: the live ZIP hashes
+`19706914…`, identical to the build. No solver change, no `pip`.
+**Both PythonAnywhere accounts want a pull and a Reload**, the same
+pull #464 is still waiting on (both were on the 15 Sep builds when
+fetched); X takes this at its next merge.
+
 ## #464 — claimed by the docs tree, 16 Sep 2026: **A Baker's Dozen**, a PDF of thirteen solved examples at `learn.symbulator.com/dozen.pdf`, linked from the landing page. Write-up in `Documentation/NEXT_DOCS.md`. **One app change rode with it, live on install and the ZIP at cache v235 the same night:** the app keeps 80 characters of an entry title (`circuitbook.MAX_NAME_LEN`), and two `Lesson_10.cir` titles were 82 long, so the picker showed *"…(DC, t <"*. *"switch and coupled"* became *"switch, coupled"* (79), with the lesson's heading and `::: applink` lines renamed to match. No title in any book is over 80 now. Both PythonAnywhere accounts want a pull and a Reload, no `pip`.
 
 ## #461 — the collaboration dated *August and September 2026* — **live on install and the ZIP, 15 Sep 2026** (cache v233)
