@@ -58,6 +58,42 @@ The sampler's Solve card lines follow it: *Press Solve equations* where
 the default is what the run wants, *Tick* or *Untick* only where it is
 not (13.9's poles in FD leave it off, 14.6's design in FD ticks it).
 
+## #465 — Alexander & Sadiku listed below Nilsson & Riedel in Built-in Examples — **live on install and the ZIP, 19 Sep 2026** (cache v236)
+
+Roberto's ask: the Alexander & Sadiku book led the Built-in Examples
+menu, because the menu is filename order and `A` sorts first. It now
+sits directly below Nilsson & Riedel, the two textbook books together,
+with the Showcase and the Monograph still closing the list.
+
+**The file was not renamed.** `Alexander_Sadiku.cir` is named by
+`?lesson=as7` in the template, by `NAMED_BOOKS` in the docs'
+`tools/app_links.py`, by `tools/as7/book.py` and by the Baker's Dozen
+runs; a rename would have moved all of them for the sake of a sort.
+Instead `circuitbook.py` gained `book_sort_key` and a one-entry table,
+`_BOOK_FOLLOWS = {"Alexander_Sadiku.cir": "Nilsson_Riedel.cir"}`:
+filename order, bar a book named there, which follows the book it
+names. **Both menus sort by it** — `app.py`'s `_example_files()` and
+`build_local.py`'s `example_manifest()` — and `circuitbook.py` is a
+shared module, so the hosted and the offline picker cannot disagree.
+Moving a book again is one entry in that table. No entry index moved,
+so no tutorial link did.
+
+Gates: Flask renders `/`, `/eqsheet/`, `/healthz` and `/api/examples`
+(the last four names read back in the new order); `i18n.py check` ok;
+`verify_bridge.py` 474 cases, 0 disagreements. Deployed: install
+hash-verified by the deploy, the live `examples.json` and `sw.js` v236
+read back by fetching; the ZIP is **32,049,721 b**, and **the deploy
+script's own verification of it failed twice with `IncompleteRead`**
+(the HTTPS download dropping part-way, 18 MB and then 30 MB of 32),
+while its server-side checksum reported the upload identical. Settled
+by `curl.exe --retry 8 -C -`, which resumes: the live ZIP hashes
+`19706914…`, identical to the build. No solver change, no `pip`.
+**Both PythonAnywhere accounts want a pull and a Reload**, the same
+pull #464 is still waiting on (both were on the 15 Sep builds when
+fetched); X takes this at its next merge.
+
+## #464 — claimed by the docs tree, 16 Sep 2026: **A Baker's Dozen**, a PDF of thirteen solved examples at `learn.symbulator.com/dozen.pdf`, linked from the landing page. Write-up in `Documentation/NEXT_DOCS.md`. **One app change rode with it, live on install and the ZIP at cache v235 the same night:** the app keeps 80 characters of an entry title (`circuitbook.MAX_NAME_LEN`), and two `Lesson_10.cir` titles were 82 long, so the picker showed *"…(DC, t <"*. *"switch and coupled"* became *"switch, coupled"* (79), with the lesson's heading and `::: applink` lines renamed to match. No title in any book is over 80 now. Both PythonAnywhere accounts want a pull and a Reload, no `pip`.
+
 ## #461 — the collaboration dated *August and September 2026* — **live on install and the ZIP, 15 Sep 2026** (cache v233)
 
 Roberto, 15 Sep 2026: *"In the Symbulator app, and anywhere else it is
@@ -126,7 +162,7 @@ its_loop` proved red at 34.4px on the old code), `check_mesh_flip` 311 systems
 disagreements. PyPI's record and download hashed against the build (`cbb4aa88…`),
 the vendored copy and the install host. X48 merged.
 
-## #458 — Find equivalent reads a bracketed time value in FD — solver **0.6.16** (16 Sep 2026; built, deploy held)
+## #458 — Find equivalent reads a bracketed time value in FD — solver **0.6.16** (16 Sep 2026, cache v234; **live**)
 
 `e,1,0,{480u(t)}:r1,1,2,20:l,2,0,0.002:r2,2,a,60` solved in FD, and the same
 description through *Thévenin / Norton* was refused: *"The value
@@ -152,9 +188,11 @@ tests in `test_equiv.py`, red on the old `equiv.py`. Solver suite 560 passed,
 clean. NR12's Example 13.6 moved to `{480u(t)}` under the samplers' rule 33;
 card truth 36 panels, 0 disagreeing; `verify_lesson Nilsson_Riedel` 0 problems.
 
-**Held for Roberto's go:** the offline pair at cache **v234** with 0.6.16
-bundled (built, not zipped or deployed), `requirements.txt` at `>=0.6.16`,
-learn for 13.6's text, the commits in server, local and Documentation, and X.
+**Shipped at Roberto's "Punch it", 16 Sep 2026:** the offline pair at cache
+**v234** with 0.6.16 bundled (ZIP 32,049,502 b; staged site proved the ZIP's
+build; install and the published ZIP hashed live), `requirements.txt` at
+`>=0.6.16`, learn rebuilt with the PDFs (13.6's page and the NR12 sampler PDF
+hashed live, 7/8 byte-identical), X50 (`0.6.16+x50`, 559 passed) pushed.
 
 ## #457 — claimed by the docs tree, 15 Sep 2026: **AS7 figure crops and two printed widths**; the app's example pictures point at learn and moved with it, nothing in this tree changed. Write-up in `Documentation/NEXT_DOCS.md`.
 
@@ -7386,6 +7424,19 @@ is the lockup shared by all five sites, so converting its two physical
 rules trips `build_local.py`'s `check_banner()` and `build.py --check`.
 An RTL pass therefore turns a two-site deploy into a five-site one, for a
 change that alters nothing visible on the landing page or on learn.
+
+**Hebrew joined the item on 16 Sep 2026**, when Roberto asked for an
+estimate with it added, and then saved the question for later. Measured
+that day: 786 keys and about 58,000 characters per dictionary, about 26
+left/right CSS rules across `index.html`, `eqsheet.html` and `banner.css`.
+The estimate given: the RTL layout pass is about one working session,
+the three dictionaries about half a session together, and a check round
+plus a five-site deploy after that. Hebrew adds 10–15% on top of Arabic
+and Urdu: it has a native technical vocabulary (מתח, זרם, הספק, נגד,
+קבל, סליל), no font question and Western digits. The suggested first
+slice was RTL plus Hebrew alone, which ends in something reviewable.
+Hebrew is a choice rather than reach (about 9 million speakers), so if it
+is added the reason goes on record the way #206 records Ukrainian's.
 
 **Urdu rides with Arabic and never alone**: same script, same direction,
 so it is nearly free afterwards and expensive before. It prefers

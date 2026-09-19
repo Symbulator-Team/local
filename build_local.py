@@ -473,7 +473,8 @@ def example_manifest() -> str:
     import circuitbook                                        # noqa: E402
 
     files = []
-    for path in sorted(EXAMPLES_SRC.glob("*.cir")):
+    for path in sorted(EXAMPLES_SRC.glob("*.cir"),
+                       key=lambda p: circuitbook.book_sort_key(p.name)):
         _circuits, _warnings, title = circuitbook.parse_book(
             path.read_text(encoding="utf-8"))
         files.append({"name": path.name, "title": title or path.name})
