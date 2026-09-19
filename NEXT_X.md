@@ -5,6 +5,26 @@ file version 9 never has, so a `git merge v9/main` can never conflict on
 it. `NEXT.md` beside this file is version 9's running list and arrives
 by merge; read it as upstream history, not as a record of X.
 
+## X51 — version 9's #464 and #465 (cache v236) — 19 Sep 2026
+
+#464's two shortened `Lesson_10.cir` titles and #465's menu order:
+Alexander & Sadiku listed below Nilsson & Riedel, by
+`circuitbook.book_sort_key`. **The solver did not move** (the `solver`
+merge came back *Already up to date*; label stays `0.6.16+x50`), so X's
+site wants a pull of `/home/symbulatorx/symbulator_web` alone and a Reload,
+no `pip`. The usual stamp conflicts, two in `server`'s templates and two in
+`local`'s pages, taken from v9 and rebuilt with X's own interpreter;
+`branding.py` `0d5c661c…` before and after; X's `index.html` `ce35b641…`
+against version 9's `960ae9e8…` and `eqsheet.html` `5ce56f0a…` against
+`87614417…`, X's two carrying `#d9a521` and the fork's subtitle; Flask
+renders `/`, `/eqsheet/` and `/healthz`, and `/api/examples` ends Nilsson &
+Riedel, Alexander & Sadiku, Showcase, Monograph. The suite was not re-run:
+the only Python that changed is a sort key. Pushed.
+
+**How this one came about:** X's pull was handed to Roberto with #465 before
+X had been merged, so it succeeded and changed nothing. Merge X before
+handing its pull over.
+
 ## X49 — version 9's #461, the collaboration dated *August and September 2026* (cache v233) — 15 Sep 2026
 
 The About card's paragraph and its twelve translations. **The solver did not
