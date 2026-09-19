@@ -58,6 +58,76 @@ The sampler's Solve card lines follow it: *Press Solve equations* where
 the default is what the run wants, *Tick* or *Untick* only where it is
 not (13.9's poles in FD leave it off, 14.6's design in FD ticks it).
 
+## #466 — the problem sets as executed Jupyter notebooks — **in progress, 19 Sep 2026; nothing released or deployed**
+
+Roberto: *"I think we can now create the Jupyter notebook versions of all
+the problem sets, from the course, the manual, the samplers from the book,
+the baker's dozen and the monograph."* His rulings the same day: one
+notebook per built-in book; helpers in the package for what the app's
+Evaluate and Solve cards do, so a notebook reads like the app; the
+notebooks in the solver repo's `notebooks/books/`, served from learn beside
+`monograph.ipynb`.
+
+**Stage 1, done: the generator and its check.** Both in
+`repos/solver/notebooks/`.
+
+* `build_books.py <Book>… | --all` turns a `.cir` book into an executed
+  notebook. Nothing is retyped: each entry is read from
+  `repos/server/examples/`, as `build_monograph.py` does, and becomes its
+  note and picture, the circuit drawn, and the run as the package call a
+  person would type — `dc`, `ac`, `fd`, `tr`, `th`, `er`, `port`, with the
+  Expert Mode lines, the rounding and the plot. A notebook is written only
+  if every cell ran. It starts a kernel of its own, on the interpreter
+  running it: the laptop's `python3` kernelspec pointed at a virtualenv in
+  Temp that no longer existed, and the kernel died before replying.
+* `check_books.py` is the one that matters. **A notebook that executes is
+  not a notebook that is right** (#425: the solver's API is not the app).
+  It runs each entry's generated call, posts the same entry through the
+  app's `/api/solve`, and compares every answer the two share, numerically,
+  at random values of the symbols left in it. **464 entries, 7,625 answers,
+  0 differences**; `--prove-red` damages one answer per entry and must
+  report it, and does.
+
+**What the app does to an entry before the package sees it**, each found by
+a failing run and each now taken from the app's own function rather than
+imitated: Expert Mode lines go through `prepare_inputs` (an answer named
+`re` is SymPy's real-part function otherwise) and `_expand_and`; the
+unknowns are one comma list; an `omega` such as `2*pi*2e3` is an
+expression; a TR *limit the results* name goes through
+`_wanted_solver_keys` (`vc` finds `v_c`, and an element's voltage becomes
+the nodes it spans — **`tr()` skips a name it does not know without a
+word**, so seven entries came back empty); a plot key naming an element's
+voltage is plotted as the difference of two node voltages. Lesson 4's Bo2
+Example 3.11 is taught *as* a failure, so it is named in `MEANT_TO_FAIL`,
+shown with its message, and the check requires the app to refuse it too.
+
+**The checker's own two bugs, found before the subject was accused:** it
+re-read answers with a bare `sympify`, which reads `rf` as the rising
+factorial and refuses `is` as a keyword — 70 "differences" between
+identical strings. And the app's solve runs in a subprocess, so a script
+that posts to it on Windows needs a `__main__` guard.
+
+**Package gaps this turned up**, for the release stage 2 needs anyway:
+`draw()` refuses a network with no node 0 (Lesson 13's bracketed ports;
+the app draws it with the tool's reference as the rail), `tr()` and
+`time_samples()` do not know an element's voltage, and `tr()`'s silence on
+an unknown name.
+
+**Stage 2, not started: the helpers.** 85 entries use Evaluate (60), the
+Solve card (22), Define (2) or the Thevenin load question (12); today a
+notebook runs their circuit and says in one line what it left out. The
+cards' logic is in `symbulator_ui.py` (`evaluate_ui`, `solveq_ui` and some
+fifteen private helpers: aliases, conditions as substitutions or filters,
+`pf()`, `limit()`, `s2t`/`t2s`, the rearrangers). The plan is package
+functions returning SymPy, checked against the app's cards over those 85
+entries the way stage 1 is; whether the app then calls them, so there is
+one copy, is Roberto's call. **A solver release, so his word.**
+
+**Stage 3: the rest.** The Baker's Dozen from `build_dozen.py`'s own `P`
+(its runs already name book and entry); the Manual by hand, its 22 circuits
+having no `.cir` behind them; the monograph's notebook stays as #316 wrote
+it; `build.py` copying the notebooks to learn; links are #317's business.
+
 ## #465 — Alexander & Sadiku listed below Nilsson & Riedel in Built-in Examples — **live on install and the ZIP, 19 Sep 2026** (cache v236)
 
 Roberto's ask: the Alexander & Sadiku book led the Built-in Examples
