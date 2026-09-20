@@ -5,6 +5,27 @@ file version 9 never has, so a `git merge v9/main` can never conflict on
 it. `NEXT.md` beside this file is version 9's running list and arrives
 by merge; read it as upstream history, not as a record of X.
 
+## X52 — version 9's #466, solver 0.6.17 (cache v237) — 20 Sep 2026
+
+Roberto's word: *"Merge X."* Version 9 released **0.6.17** the same morning:
+`evaluate()` and `solve()`, the app's Evaluate box and Solve card as package
+functions, `Result.desc`, and a string `omega` accepted by `th`/`er`/`port`;
+plus 24 executed notebooks in the solver repo's `notebooks/books/`, which X
+carries and does not use. **The solver moved, so X's site wants a pull of
+*both* clones** -- `/home/symbulatorx/solver` and
+`/home/symbulatorx/symbulator_web` -- and a Reload, no `pip`, X's solver being
+an editable checkout. That one pull also takes X51, which was pushed on 19 Sep
+2026 and never pulled. Label **`0.6.17+x52`**; the three usual conflicts (the
+version label in `solver`, the build stamp in `server`'s two templates and in
+`local`'s two pages), the last two taken from version 9 and rebuilt with X's
+own interpreter; editable install refreshed, the packaging test being the
+thing that notices otherwise. `branding.py` `0d5c661c…` before and after; X's
+`index.html` `7180be32…` against version 9's `84d22d93…` and `eqsheet.html`
+`5da164d1…` against `66ec4441…`, X's two carrying `#d9a521` and the fork's
+subtitle; Flask renders `/`, `/eqsheet/` and `/healthz`. Suite **575 passed,
+3 skipped** (version 9's 576 and 2; the extra skip is ahkab). The app's
+requirement stays at `symbulator>=0.6.16`, as version 9's does. Pushed.
+
 ## X51 — version 9's #464 and #465 (cache v236) — 19 Sep 2026
 
 #464's two shortened `Lesson_10.cir` titles and #465's menu order:
