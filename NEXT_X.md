@@ -25,6 +25,10 @@ thing that notices otherwise. `branding.py` `0d5c661c…` before and after; X's
 subtitle; Flask renders `/`, `/eqsheet/` and `/healthz`. Suite **575 passed,
 3 skipped** (version 9's 576 and 2; the extra skip is ahkab). The app's
 requirement stays at `symbulator>=0.6.16`, as version 9's does. Pushed.
+**Live the same day after Roberto's pull of both clones and a Reload:**
+`/healthz` read twice reports `0.6.17+x52`, build `2026-09-20 08:54 UTC`
+running *and* on disk, `needs_reload: false`; the menu in the new order and a
+DC solve answering. X51 went live with it.
 
 ## X51 — version 9's #464 and #465 (cache v236) — 19 Sep 2026
 
