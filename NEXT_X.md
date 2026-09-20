@@ -5,6 +5,19 @@ file version 9 never has, so a `git merge v9/main` can never conflict on
 it. `NEXT.md` beside this file is version 9's running list and arrives
 by merge; read it as upstream history, not as a record of X.
 
+## X53 — version 9's notebook fixes and notes, no code (cache v237) — 20 Sep 2026
+
+Roberto: *"Let's bring X up to speed."* Version 9's four commits since X52,
+all clean merges: the solver's `89f9e40` (the notebooks' first cell installs
+the package on Colab, the monograph notebook's showcase cell names its
+unknowns correctly, the quickstart's outputs refreshed -- 28 files under
+`notebooks/`, **none under `symbulator/`**) and three of `local`'s notes
+commits. `server` was level. **Nothing X serves changed**: the label stays
+`0.6.17+x52`, `branding.py` `0d5c661c…` before and after, X's two pages still
+up to date under `build_local.py --check`, so **X's site wants nothing** -- no
+pull, no Reload -- and the suite was not re-run, no Python in the package
+having moved. Pushed. X is level with version 9 again.
+
 ## X52 — version 9's #466, solver 0.6.17 (cache v237) — 20 Sep 2026
 
 Roberto's word: *"Merge X."* Version 9 released **0.6.17** the same morning:
