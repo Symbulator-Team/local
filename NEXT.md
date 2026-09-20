@@ -192,12 +192,55 @@ paid for once: all 22 book notebooks changed in the commit that introduced it,
 in their ids alone. `build_books.py` gained `setup_cells()` and
 `execute_and_write()` so the Dozen's generator reuses them.
 
-**Stage 3, still open.** The Manual by hand: it is prose with circuits
-embedded, not a book of entries (its 22 circuits and 29 result panels live in
-the chapters' markdown, each run described in a sentence, so nothing a script
-can read says how a circuit is run); the monograph's notebook stays as #316
-wrote it; `build.py` copying the notebooks to learn; links are #317's
-business.
+**Stage 3, the Manual: done (20 Sep 2026)**, by writing its setups down as
+data, Roberto's choice of the two ways. The Manual is prose with circuits
+embedded, not a book of `.cir` entries: its 22 circuits and 29 result panels
+sit in the chapters' markdown, and each run is a sentence beside the circuit,
+so nothing a script could read said how a circuit is run. `Documentation/
+tools/manual_runs.py` is that record, 24 runs (the symbols chapter's Define
+and the coupling chapter's reversed coil run a circuit twice), holding **only
+what the chapters leave unsaid** -- the analysis, omega, the nodes a tool is
+given, which panels belong to which run. The circuits, the Define block, the
+printed answers and the words around them are read from the chapters, so
+none can drift. Three tools on it:
+
+* `check_manual_results.py` -- **the first automatic comparison of the
+  Manual's hand-typed result panels with the solver**, which
+  `check_manual_examples.py` had always said nothing did (#370's wrong
+  subscript lived in a panel). It reads each panel's LaTeX back into a SymPy
+  expression and compares it with the package *and* with the real app's
+  `/api/solve` and `/api/evaluate`, and the two with each other. A panel
+  printed with decimals is compared to half its last place; an exact one must
+  simplify to the same expression, else agree numerically at sample points of
+  several sizes -- because `e^(-1000 t)` at t = 1 is 1e-435 for any time
+  constant, and a wrong one would look right. **29 panels, 0 differences.**
+* `build_manual_notebook.py` -- `Manual.ipynb`: 22 circuits, 24 runs, 151
+  cells, 78 of them code, all executed. Each run is the call
+  `manual_runs.call_source` gives, which is also what the check executes, so
+  what the notebook shows is what was checked.
+* `build.py --check` runs the check's package half (4 seconds; the app is
+  110), so a wrong panel now fails the docs build. Wired beside
+  `check_manual_circuits`, with the same graceful degradation.
+
+**Proved red, since a guard nobody has watched fail is not one.**
+`--prove-red` damages every panel two ways -- adds one, and halves a decaying
+exponent -- and catches **32 of 32**. Five structural guards on the table
+(a rewritten fence, a missing one, a panel no run claims, a run claiming too
+many, a replace of a line that is not there) each go red when provoked. And
+through `build.py`'s own function, against a scratch copy of the chapters, a
+wrong digit, a wrong time constant and an extra panel all fail the build.
+
+**Two mistakes worth keeping.** The prove-red fixture first wrapped the whole
+right side as `(…) + 1`, which put the units inside the parentheses, so the
+reader correctly refused it and the check reported 9 of 32 -- a defect in the
+fixture, found before the check was accused. And a block appended to
+`manual_runs.py` through a shell heredoc lost half its backslashes, turning
+`\\d?frac` into a digit class and a docstring's `\text` into a tab; it is in
+the memory notes for exactly this reason and was done anyway. The Edit and
+Write tools do not do it.
+
+**Stage 3, still open.** The monograph's notebook stays as #316 wrote it;
+`build.py` copying the notebooks to learn; links are #317's business.
 
 ## #465 — Alexander & Sadiku listed below Nilsson & Riedel in Built-in Examples — **live on install and the ZIP, 19 Sep 2026** (cache v236)
 
