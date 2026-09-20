@@ -186,6 +186,43 @@ in a number and not in behaviour. **X was merged the same day at Roberto's
 word** (X52, label `0.6.17+x52`, 575 passed and 3 skipped, pushed), which was
 his own step and not part of the release.
 
+**The notebooks on the landing page, and what linking to Colab turned up
+(20 Sep 2026).** Roberto asked for links to the notebooks in the landing
+page's PyPI section, the first item of *For developers*. Twenty-five links
+into `Documentation/landing/index.html`, each to Colab on the GitHub copy
+(the monograph card's pattern): the quick start, the Dozen, the Manual, the
+monograph, the two textbook samplers and the Showcase, and the tutorial's 18
+lesson books, plus a link to the folder. All 25 resolve, the block's HTML is
+balanced, and it was looked at rendered at 1200 and at 375 px (no overflow).
+**Not deployed**: a landing deploy is his word.
+
+Making those links worth following meant fixing three things in the
+notebooks themselves, all found by asking what a Colab reader would see:
+
+* **The first cell did nothing on Colab.** Every notebook opened with
+  `# !pip install symbulator matplotlib` *commented out* and said "on Colab,
+  run the first cell", so on Colab the imports failed on the first run. It is
+  now `if "google.colab" in sys.modules: %pip install -q symbulator
+  matplotlib`, installing only where Colab is (`build_books.INSTALL_CELL`,
+  shared by the generators; the quickstart, which has no generator, edited in
+  place). All 24 generated notebooks changed by exactly that cell.
+* **The monograph notebook had not run since the renames of #286/#288.** Its
+  showcase cell asked for `unknowns=["es", "js"]`, the *elements*; the circuit's
+  unknowns are the symbols `vs` and `is`, its sources' values, so the cell
+  raised on 0.6.16 and 0.6.17 alike. It was the one place a name was typed by
+  hand rather than read from the `.cir`, and the notebook on
+  `learn.symbulator.com/monograph.ipynb` was built before the renames, so its
+  *stored* outputs still looked fine. Fixed (`vs`, `is`, and the package's
+  underscored `p_jd1` inside an equation) and rebuilt: 43 cells run, and the
+  answers match the monograph's text (17.61 V, 0.3973 A, four roots, `2.350∠-36.20°`,
+  `169.94∠30.811°`). **`learn`'s copy is the old one until a docs build and a
+  `learn` deploy**, since `build.py` copies the notebook from here. Its builder
+  was also on the machine's dead `python3` kernelspec and could not have run;
+  it uses `build_books.KERNEL` and stable cell ids now.
+* **The quickstart's stored outputs were stale**: version `0.5.29` under a
+  0.6.17 package, and two AC outputs. Re-executed (it runs cleanly) and the
+  outputs written back.
+
 **Left for Roberto:** the typed prune of the superseded 0.6.16 wheel on the
 install host (still served, HTTP 200); and X's pull, now of *both* clones
 for X51 and X52 together (X's `/healthz` still reads build
