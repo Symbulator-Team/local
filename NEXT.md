@@ -113,15 +113,58 @@ the app draws it with the tool's reference as the rail), `tr()` and
 `time_samples()` do not know an element's voltage, and `tr()`'s silence on
 an unknown name.
 
-**Stage 2, not started: the helpers.** 85 entries use Evaluate (60), the
-Solve card (22), Define (2) or the Thevenin load question (12); today a
-notebook runs their circuit and says in one line what it left out. The
-cards' logic is in `symbulator_ui.py` (`evaluate_ui`, `solveq_ui` and some
-fifteen private helpers: aliases, conditions as substitutions or filters,
-`pf()`, `limit()`, `s2t`/`t2s`, the rearrangers). The plan is package
-functions returning SymPy, checked against the app's cards over those 85
-entries the way stage 1 is; whether the app then calls them, so there is
-one copy, is Roberto's call. **A solver release, so his word.**
+**Stage 2, done: `evaluate()` and `solve()`.** Roberto left the two open
+questions to me (19 Sep 2026): those are the names, and the package gets
+**its own copy** of the logic rather than the app being rewired to call it
+— the app's path is untouched, which keeps 464 verified entries on the
+code that verified them. `symbulator/cards.py`, exported from
+`symbulator`:
+
+    evaluate(res, "vo/vs")
+    evaluate(res, "vc", conditions=["t = 2"])      # the calculator's `|`
+    evaluate(res, "s*vo", conditions=["s = oo"])   # taken as a limit
+    evaluate(th_result, "prl", conditions=["load = 1000"])
+    solve(res, ["im(ze) = 0"], ["w"], conditions=["w > 0"], real_only=True)
+
+Both return SymPy and take any result — `dc`/`ac`/`fd`/`tr`, a `th()`
+whose answers carry version 8's load formulas, a `port()`, or a plain
+mapping, which is how `er()`'s single expression is handed over. Ported
+with it: the name aliases in both directions (the text rewrite that saves
+`re = 12'k` from SymPy's real-part function, and the symbol mapping),
+conditions as substitutions or as `refine()` assumptions, a substitution
+that has to become a limit, `pf()`, `s2t`/`t2s` and `limit()` with the
+answers substituted in *first*, the rearrangers bound as undefined
+functions so `expand(vo)` acts on the answer, `{...}` in FD only, the
+chained comparison, and `real_only` as the calculator's `solve()` against
+its `cSolve()`. A Define line becomes a condition, which is what the
+calculator's `Define` was.
+
+**Two package gaps it exposed, both fixed here.** An element's voltage
+drop is not among `values` in fd or tr — the third level is computed for
+dc and ac alone — so `vc` named an answer on the app's page and nothing in
+the package; `Result` now carries `desc`, the circuit it solved, and
+`cards.py` derives the drop from the nodes the element spans, as the app's
+display does. And `ac()` sympified its `omega` while `th()`, `er()` and
+`port()` did not, so a frequency written as a book writes it,
+`"2*pi*2e3"`, reached the stamping code as a `str` and failed there with
+*can't multiply sequence by non-int of type ImaginaryUnit*, naming nothing
+the caller typed; `_run` sympifies it now, the one place all of them pass
+through.
+
+**Checked, not assumed.** `check_books.py` posts each entry's Evaluate box
+and Solve card to the app's own `/api/evaluate` and `/api/solveq` with the
+values that entry's solve returned, and compares: **464 entries, 7,638
+answers and 82 cards, 0 differences**, with `--prove-red` red on both
+kinds. Suite **575 passed, 2 skipped** (560 before; 15 new in
+`tests/test_cards.py`, each a case the app's cards were once wrong about).
+The README gained an *app's two cards* section whose blocks were run
+verbatim before committing, per #158 — the first draft's symbolic RLC
+example printed a page of `re()`/`im()` and is now the book's own
+resonance entry.
+
+**Unreleased.** The notebooks need this version of the package, so the
+round ends in a solver release on Roberto's word; `requirements.txt` needs
+no bump, the app using none of it.
 
 **Stage 3: the rest.** The Baker's Dozen from `build_dozen.py`'s own `P`
 (its runs already name book and entry); the Manual by hand, its 22 circuits
