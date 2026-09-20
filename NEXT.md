@@ -4370,15 +4370,75 @@ served `symbulator_ui.py` carries `round_sig`. X merged as **X7**
 (`0.5.31+x7`, 412 passed and 1 skipped, pages rebuilt with the gold X,
 pushed). 0.5.30 is on the install host until Roberto's typed prune.
 
-## #317 — documentation for using symbulator in Jupyter — **deferred by Roberto, 6 Sep 2026: "later, when the documentation for the app is ready"**
+## #317 — documentation for using symbulator in Jupyter — **done and live 20 Sep 2026** (deferred 6 Sep: "later, when the documentation for the app is ready")
 
-Not the README section #315 wrote, which is the package's own reference
-and is done; this is a documentation *property* for the notebook use,
-in the docs tree, and it waits until the app's documentation is
-finished. Nothing to do until Roberto says so. The material it will
-draw on already exists: the README's *In a notebook* section,
-`notebooks/quickstart.ipynb` and `notebooks/the_monograph.ipynb` in
-the solver repository (#315, #316).
+Roberto, 20 Sep 2026: *"The app's documentation is ready. Do the Jupyter
+documentation page. Go."* It is **the Manual's new Part 14, *Symbulator in a
+notebook*** (`Documentation/src/35-manual-notebook.md`, listed in `book.yaml`
+between the toolbox and the reference, which move up to Parts 15 and 16 -- the
+credits carry no number), live at `learn.symbulator.com/9/manual-notebook`.
+Version 9 only, web only: **the Manual's PDF is not rebuilt** (held at his word)
+and does not have it.
+
+What it teaches, in the Manual's voice and every cell a real one: a circuit is
+a string and `draw`; answers under the app's names, either spelling, exact
+unless `rounded`; the analyses as a table against the app's menu (`dc`, `ac`,
+`fd`, `tr`, `th`, `er`, `port`); **`evaluate` and `solve` as the Evaluate and Solve
+cards**, including conditions, the load answers on a Thevenin result and a
+resonance found with `w > 0` and `real_only`; Expert Mode as three keywords;
+the `%%dc` family of magics; plotting; **the notebooks to start from**, in a
+table of Colab links; what stays in the app; and the `t` warning, moved from the
+toolbox chapter so it is said once. The landing page's notebooks item links to it
+and its Manual card says *fifteen parts* (a number restated in a second file: it
+is the only one of the three places that counts by hand; the chooser and the
+cover count).
+
+**A new guard, `Documentation/tools/check_manual_python.py`.** It runs every
+`sym 9` cell of a Manual chapter as a notebook does -- one IPython shell, in
+order, magics included -- and compares each cell's result with the `out` fence
+after it: **22 cells, 18 outputs, 0 differences**. `--prove-red` damages the
+chapter three ways and catches all three; `build.py --check` runs it (10 s),
+clean at 20 s overall. It reads its counts from the *previous* build, so the
+index line at the head of a `--web` build is stale by one build -- run
+`--check` twice to see a new chapter's terms (134 terms, 258 locations, Manual
+112, from 131, 254, 109).
+
+**What it found, before the chapter shipped.**
+* **The toolbox chapter's package example said `r.v2`**, which raises
+  `AttributeError: 'Result' object has no attribute 'v2'`. It is `r["v2"]`. It
+  had been live since the Manual was; a printed output that nothing ran. Fixed.
+* **`tr()["vc"]` is a `KeyError`**: in FD and TR the package does not store an
+  element's voltage drop (the third level is computed for DC and AC only) while
+  the app shows one, so what the Manual's TR chapter calls `vc` is not a key of
+  the result. The chapter teaches the two ways round -- the node voltage, or
+  `evaluate(res, "vc")`, which derives it -- and says so. **Roberto's ruling,
+  the same day: the package does not store them, and stays so.** *"Then more
+  time is spent calculating them. It's easier to let the users know what is
+  not given in TR, so they can calculate it by other means, e.g. v2-v1 for
+  voltage drops, and power per element as well"*, and *"when a question asks
+  for a voltage drop, calculate it as a difference of voltages."* So the
+  chapter has a section, **What TR and FD do not give**: a result holds node
+  voltages and element currents and nothing computed from them; the drop is the
+  difference of two node voltages, ground counting as zero; **the power in TR is
+  the drop times the current**, the rule DC uses for every element (verified: the
+  consumed powers of the RC example sum to zero); and **in FD do not multiply**,
+  V(s)I(s) inverting to a `DiracDelta` and not to the power. It no longer teaches
+  `evaluate(res, "vc")`, and `manual_runs.answer_source` writes a TR or FD drop
+  as that difference for both the Manual's notebook
+  (`r14["v_2"]  # vc: node 2 minus ground`) and its result check. **Where power
+  comes from**, asked the same day: the solver computes it for DC (drop times
+  current, sources included) and AC (V times the conjugate of I, halved for peak
+  phasors, `p` its real part and `q` its imaginary part) after the KCL system
+  is solved, in `analysis._derived`, and for TR and FD not at all -- a TR run is
+  FD with the sources moved into s and each node voltage and current inverted,
+  and the app shows no power in TR either.
+* **The README's flat "inside an equation use the underscored form" is too
+  strong**: `equations=["v2 = 6"]` and `pjd1` both work; a name that collides with
+  SymPy (`re`, `im`) does not. The chapter says what is true.
+* **`to_spice` returns a tuple**, the netlist and its notes, not a string.
+
+The material it drew on: the README's *In a notebook* section, the quick start
+and the notebooks of #315, #316 and #466.
 
 ## #316 — the monograph's exemplars as an executed notebook, served beside the PDF and linked from the landing page — **done and live 6 Sep 2026**
 
