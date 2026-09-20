@@ -5,6 +5,17 @@ file version 9 never has, so a `git merge v9/main` can never conflict on
 it. `NEXT.md` beside this file is version 9's running list and arrives
 by merge; read it as upstream history, not as a record of X.
 
+## X54 — version 9's notebook change and notes, no code (cache v237) — 20 Sep 2026
+
+Roberto: *"Bring X up to date."* Version 9's three commits since X53, clean
+merges: the solver's `e1c2bc6` (the Manual notebook reads a TR or FD voltage drop
+as a difference of node voltages -- one notebook, **nothing under `symbulator/`**)
+and two of `local`'s notes commits, the second of which records Roberto's ruling
+that the package stores no drop or power in TR and FD. `server` was level.
+**Nothing X serves changed**: the label stays `0.6.17+x52`, `branding.py`
+`0d5c661c…` before and after, X's pages up to date under `build_local.py
+--check`, so **X's site wants nothing**; the suite was not re-run. Pushed.
+
 ## X53 — version 9's notebook fixes and notes, no code (cache v237) — 20 Sep 2026
 
 Roberto: *"Let's bring X up to speed."* Version 9's four commits since X52,
