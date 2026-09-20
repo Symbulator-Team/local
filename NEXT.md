@@ -194,7 +194,12 @@ into `Documentation/landing/index.html`, each to Colab on the GitHub copy
 monograph, the two textbook samplers and the Showcase, and the tutorial's 18
 lesson books, plus a link to the folder. All 25 resolve, the block's HTML is
 balanced, and it was looked at rendered at 1200 and at 375 px (no overflow).
-**Not deployed**: a landing deploy is his word.
+**Deployed the same day at his word** (*"Please deploy."*), with `learn`: the
+landing page hash-verified and read back live (26 Colab links, 25 distinct --
+the monograph card's own link to the same notebook is the 26th), and `learn`
+moved **one file**, `monograph.ipynb`, 816 already identical (dry run first),
+hash-verified and read back: the fixed notebook, no stored errors, the Colab
+cell in.
 
 Making those links worth following meant fixing three things in the
 notebooks themselves, all found by asking what a Colab reader would see:
@@ -215,8 +220,8 @@ notebooks themselves, all found by asking what a Colab reader would see:
   *stored* outputs still looked fine. Fixed (`vs`, `is`, and the package's
   underscored `p_jd1` inside an equation) and rebuilt: 43 cells run, and the
   answers match the monograph's text (17.61 V, 0.3973 A, four roots, `2.350∠-36.20°`,
-  `169.94∠30.811°`). **`learn`'s copy is the old one until a docs build and a
-  `learn` deploy**, since `build.py` copies the notebook from here. Its builder
+  `169.94∠30.811°`). **`learn`'s copy is current** since the deploy above
+  (`build.py` copies the notebook from here). Its builder
   was also on the machine's dead `python3` kernelspec and could not have run;
   it uses `build_books.KERNEL` and stable cell ids now.
 * **The quickstart's stored outputs were stale**: version `0.5.29` under a
