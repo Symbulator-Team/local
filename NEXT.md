@@ -58,6 +58,8 @@ The sampler's Solve card lines follow it: *Press Solve equations* where
 the default is what the run wants, *Tick* or *Untick* only where it is
 not (13.9's poles in FD leave it off, 14.6's design in FD ticks it).
 
+## #467 — claimed by the docs tree, 20 Sep 2026: all the PDFs rebuilt, and the glyphs that printed as blanks fixed (nineteen in the Manual's PDF, six in the Course's); the build now refuses a PDF whose log has a missing character. Live. Write-up in `Documentation/NEXT_DOCS.md`. Nothing in the app moved.
+
 ## #466 — the problem sets as executed Jupyter notebooks — **solver 0.6.17 released and live on install and the ZIP, 20 Sep 2026** (cache v237); notebooks not yet served from learn
 
 Roberto: *"I think we can now create the Jupyter notebook versions of all
