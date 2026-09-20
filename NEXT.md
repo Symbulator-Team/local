@@ -58,6 +58,214 @@ The sampler's Solve card lines follow it: *Press Solve equations* where
 the default is what the run wants, *Tick* or *Untick* only where it is
 not (13.9's poles in FD leave it off, 14.6's design in FD ticks it).
 
+## #466 — the problem sets as executed Jupyter notebooks — **solver 0.6.17 released and live on install and the ZIP, 20 Sep 2026** (cache v237); notebooks not yet served from learn
+
+Roberto: *"I think we can now create the Jupyter notebook versions of all
+the problem sets, from the course, the manual, the samplers from the book,
+the baker's dozen and the monograph."* His rulings the same day: one
+notebook per built-in book; helpers in the package for what the app's
+Evaluate and Solve cards do, so a notebook reads like the app; the
+notebooks in the solver repo's `notebooks/books/`, served from learn beside
+`monograph.ipynb`.
+
+**Stage 1, done: the generator and its check.** Both in
+`repos/solver/notebooks/`.
+
+* `build_books.py <Book>… | --all` turns a `.cir` book into an executed
+  notebook. Nothing is retyped: each entry is read from
+  `repos/server/examples/`, as `build_monograph.py` does, and becomes its
+  note and picture, the circuit drawn, and the run as the package call a
+  person would type — `dc`, `ac`, `fd`, `tr`, `th`, `er`, `port`, with the
+  Expert Mode lines, the rounding and the plot. A notebook is written only
+  if every cell ran. It starts a kernel of its own, on the interpreter
+  running it: the laptop's `python3` kernelspec pointed at a virtualenv in
+  Temp that no longer existed, and the kernel died before replying.
+* `check_books.py` is the one that matters. **A notebook that executes is
+  not a notebook that is right** (#425: the solver's API is not the app).
+  It runs each entry's generated call, posts the same entry through the
+  app's `/api/solve`, and compares every answer the two share, numerically,
+  at random values of the symbols left in it. **464 entries, 7,625 answers,
+  0 differences**; `--prove-red` damages one answer per entry and must
+  report it, and does.
+
+**What the app does to an entry before the package sees it**, each found by
+a failing run and each now taken from the app's own function rather than
+imitated: Expert Mode lines go through `prepare_inputs` (an answer named
+`re` is SymPy's real-part function otherwise) and `_expand_and`; the
+unknowns are one comma list; an `omega` such as `2*pi*2e3` is an
+expression; a TR *limit the results* name goes through
+`_wanted_solver_keys` (`vc` finds `v_c`, and an element's voltage becomes
+the nodes it spans — **`tr()` skips a name it does not know without a
+word**, so seven entries came back empty); a plot key naming an element's
+voltage is plotted as the difference of two node voltages. Lesson 4's Bo2
+Example 3.11 is taught *as* a failure, so it is named in `MEANT_TO_FAIL`,
+shown with its message, and the check requires the app to refuse it too.
+
+**The checker's own two bugs, found before the subject was accused:** it
+re-read answers with a bare `sympify`, which reads `rf` as the rising
+factorial and refuses `is` as a keyword — 70 "differences" between
+identical strings. And the app's solve runs in a subprocess, so a script
+that posts to it on Windows needs a `__main__` guard.
+
+**Package gaps this turned up**, for the release stage 2 needs anyway:
+`draw()` refuses a network with no node 0 (Lesson 13's bracketed ports;
+the app draws it with the tool's reference as the rail), `tr()` and
+`time_samples()` do not know an element's voltage, and `tr()`'s silence on
+an unknown name.
+
+**Stage 2, done: `evaluate()` and `solve()`.** Roberto left the two open
+questions to me (19 Sep 2026): those are the names, and the package gets
+**its own copy** of the logic rather than the app being rewired to call it
+— the app's path is untouched, which keeps 464 verified entries on the
+code that verified them. `symbulator/cards.py`, exported from
+`symbulator`:
+
+    evaluate(res, "vo/vs")
+    evaluate(res, "vc", conditions=["t = 2"])      # the calculator's `|`
+    evaluate(res, "s*vo", conditions=["s = oo"])   # taken as a limit
+    evaluate(th_result, "prl", conditions=["load = 1000"])
+    solve(res, ["im(ze) = 0"], ["w"], conditions=["w > 0"], real_only=True)
+
+Both return SymPy and take any result — `dc`/`ac`/`fd`/`tr`, a `th()`
+whose answers carry version 8's load formulas, a `port()`, or a plain
+mapping, which is how `er()`'s single expression is handed over. Ported
+with it: the name aliases in both directions (the text rewrite that saves
+`re = 12'k` from SymPy's real-part function, and the symbol mapping),
+conditions as substitutions or as `refine()` assumptions, a substitution
+that has to become a limit, `pf()`, `s2t`/`t2s` and `limit()` with the
+answers substituted in *first*, the rearrangers bound as undefined
+functions so `expand(vo)` acts on the answer, `{...}` in FD only, the
+chained comparison, and `real_only` as the calculator's `solve()` against
+its `cSolve()`. A Define line becomes a condition, which is what the
+calculator's `Define` was.
+
+**Two package gaps it exposed, both fixed here.** An element's voltage
+drop is not among `values` in fd or tr — the third level is computed for
+dc and ac alone — so `vc` named an answer on the app's page and nothing in
+the package; `Result` now carries `desc`, the circuit it solved, and
+`cards.py` derives the drop from the nodes the element spans, as the app's
+display does. And `ac()` sympified its `omega` while `th()`, `er()` and
+`port()` did not, so a frequency written as a book writes it,
+`"2*pi*2e3"`, reached the stamping code as a `str` and failed there with
+*can't multiply sequence by non-int of type ImaginaryUnit*, naming nothing
+the caller typed; `_run` sympifies it now, the one place all of them pass
+through.
+
+**Checked, not assumed.** `check_books.py` posts each entry's Evaluate box
+and Solve card to the app's own `/api/evaluate` and `/api/solveq` with the
+values that entry's solve returned, and compares: **464 entries, 7,638
+answers and 82 cards, 0 differences**, with `--prove-red` red on both
+kinds. Suite **575 passed, 2 skipped** (560 before; 15 new in
+`tests/test_cards.py`, each a case the app's cards were once wrong about).
+The README gained an *app's two cards* section whose blocks were run
+verbatim before committing, per #158 — the first draft's symbolic RLC
+example printed a page of `re()`/`im()` and is now the book's own
+resonance entry.
+
+**Released as 0.6.17 (20 Sep 2026, Roberto: "Release the solver").** Gates
+first: suite **576 passed, 2 skipped** unpiped; `twine check` passed on both
+files; the drift harness 474 cases, 0 disagreements; `verify_lesson` over all
+22 books flagging only Bo2's Example 3.11, which the chapter teaches as a
+failure; the wheel's *contents* read back (cards.py in, notebooks out, both
+fixes present). Then PyPI: wheel sha256 `c7108cbd…`, 316,263 b, sdist
+`3e0b838b…`, **the recorded hash and the downloaded bytes both equal to the
+build**. The same file into `vendor/`, 0.6.16 removed, `WHEEL` and the
+`sw.js` list moved and the cache bumped to **v237** (each read back in
+`git diff`), `build_local.py`, `build_zip.py` (**32,061,396 b**),
+`stage_install_site.py` -- proved the same build as the ZIP, 64 of 64 files
+identical, the bundled wheel equal to PyPI's -- then both deploys with every
+hash passing, and the wheel fetched from the install host and hashed
+separately, since the deploy's own list does not include it.
+
+**`requirements.txt` stays at `>=0.6.16` on purpose**, as it did at 0.6.9: the
+app uses none of the new code (`cards.py` is the package's, the app keeps its
+own copy of that logic), so **version 9's PythonAnywhere account needs no pull
+and no `pip`** for this release. Its `/healthz` will go on reporting solver
+0.6.16 until something the app needs raises the pin, which is a difference
+in a number and not in behaviour. X was not merged for this release; it is
+its own step and waits on Roberto's word (X52, label `0.6.17+x52`, both
+clones on a pull).
+
+**Left for Roberto:** the typed prune of the superseded 0.6.16 wheel on the
+install host (still served, HTTP 200); and X's pull for X51, which is pushed
+and not yet taken (X's `/healthz` still reads build `2026-09-15 20:38 UTC`).
+
+**Stage 3, the Baker's Dozen: done (20 Sep 2026).** `Bakers_Dozen.ipynb`,
+generated by `Documentation/paper/bakers_dozen/build_dozen_ipynb.py`, which
+sits beside the data it reads on the pattern `build_dozen_tex.py` set: it
+imports `P` and `BONUS` from `build_dozen.py`, so the PDF, the LaTeX and the
+notebook cannot disagree about which problems there are or what the booklet
+prints. Its cells are `build_books.py`'s own (`run_cell`, `plot_cell`,
+`card_cells`), so a run here is the call the other twenty-two notebooks make
+for the same entry. 13 problems, 91 cells, 44 of them code, all executed.
+It refuses to build if an entry has moved (`check_dozen.py`'s EXPECT). **Read
+against the booklet for all thirteen**, each executed answer beside the
+booklet's line; Boulet's two, printed in a different shape from the one the
+solver returns, agree to 4e-15 at seven times each. Two things that came up:
+Samples 2 and 12 print a ratio (`Evaluate: v_3/vg`) that the booklet's
+settings line asks for and the *entries* do not carry, so the generator reads
+it from that line; and the booklet prints `169.94∠30.81°` for Sample 6's line
+voltage where the app at the entry's Rounding 4 shows `169.9∠30.81°` -- the
+same value to a digit more, left as it is and noted in the Dozen's README.
+
+**Notebook ids are deterministic now.** nbformat gave every cell a random id,
+so an unchanged notebook rebuilt came out different in every cell and git
+could not say what had really changed; `execute_and_write` numbers them by
+position. Proved by building Showcase twice and hashing (identical), and
+paid for once: all 22 book notebooks changed in the commit that introduced it,
+in their ids alone. `build_books.py` gained `setup_cells()` and
+`execute_and_write()` so the Dozen's generator reuses them.
+
+**Stage 3, the Manual: done (20 Sep 2026)**, by writing its setups down as
+data, Roberto's choice of the two ways. The Manual is prose with circuits
+embedded, not a book of `.cir` entries: its 22 circuits and 29 result panels
+sit in the chapters' markdown, and each run is a sentence beside the circuit,
+so nothing a script could read said how a circuit is run. `Documentation/
+tools/manual_runs.py` is that record, 24 runs (the symbols chapter's Define
+and the coupling chapter's reversed coil run a circuit twice), holding **only
+what the chapters leave unsaid** -- the analysis, omega, the nodes a tool is
+given, which panels belong to which run. The circuits, the Define block, the
+printed answers and the words around them are read from the chapters, so
+none can drift. Three tools on it:
+
+* `check_manual_results.py` -- **the first automatic comparison of the
+  Manual's hand-typed result panels with the solver**, which
+  `check_manual_examples.py` had always said nothing did (#370's wrong
+  subscript lived in a panel). It reads each panel's LaTeX back into a SymPy
+  expression and compares it with the package *and* with the real app's
+  `/api/solve` and `/api/evaluate`, and the two with each other. A panel
+  printed with decimals is compared to half its last place; an exact one must
+  simplify to the same expression, else agree numerically at sample points of
+  several sizes -- because `e^(-1000 t)` at t = 1 is 1e-435 for any time
+  constant, and a wrong one would look right. **29 panels, 0 differences.**
+* `build_manual_notebook.py` -- `Manual.ipynb`: 22 circuits, 24 runs, 151
+  cells, 78 of them code, all executed. Each run is the call
+  `manual_runs.call_source` gives, which is also what the check executes, so
+  what the notebook shows is what was checked.
+* `build.py --check` runs the check's package half (4 seconds; the app is
+  110), so a wrong panel now fails the docs build. Wired beside
+  `check_manual_circuits`, with the same graceful degradation.
+
+**Proved red, since a guard nobody has watched fail is not one.**
+`--prove-red` damages every panel two ways -- adds one, and halves a decaying
+exponent -- and catches **32 of 32**. Five structural guards on the table
+(a rewritten fence, a missing one, a panel no run claims, a run claiming too
+many, a replace of a line that is not there) each go red when provoked. And
+through `build.py`'s own function, against a scratch copy of the chapters, a
+wrong digit, a wrong time constant and an extra panel all fail the build.
+
+**Two mistakes worth keeping.** The prove-red fixture first wrapped the whole
+right side as `(…) + 1`, which put the units inside the parentheses, so the
+reader correctly refused it and the check reported 9 of 32 -- a defect in the
+fixture, found before the check was accused. And a block appended to
+`manual_runs.py` through a shell heredoc lost half its backslashes, turning
+`\\d?frac` into a digit class and a docstring's `\text` into a tab; it is in
+the memory notes for exactly this reason and was done anyway. The Edit and
+Write tools do not do it.
+
+**Stage 3, still open.** The monograph's notebook stays as #316 wrote it;
+`build.py` copying the notebooks to learn; links are #317's business.
+
 ## #465 — Alexander & Sadiku listed below Nilsson & Riedel in Built-in Examples — **live on install and the ZIP, 19 Sep 2026** (cache v236)
 
 Roberto's ask: the Alexander & Sadiku book led the Built-in Examples
