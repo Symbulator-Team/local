@@ -4411,9 +4411,27 @@ index line at the head of a `--web` build is stale by one build -- run
   element's voltage drop (the third level is computed for DC and AC only) while
   the app shows one, so what the Manual's TR chapter calls `vc` is not a key of
   the result. The chapter teaches the two ways round -- the node voltage, or
-  `evaluate(res, "vc")`, which derives it -- and says so. **A real gap in the
-  package, not fixed here**: `Result` could carry the drops in FD and TR, which
-  is a solver release and Roberto's call.
+  `evaluate(res, "vc")`, which derives it -- and says so. **Roberto's ruling,
+  the same day: the package does not store them, and stays so.** *"Then more
+  time is spent calculating them. It's easier to let the users know what is
+  not given in TR, so they can calculate it by other means, e.g. v2-v1 for
+  voltage drops, and power per element as well"*, and *"when a question asks
+  for a voltage drop, calculate it as a difference of voltages."* So the
+  chapter has a section, **What TR and FD do not give**: a result holds node
+  voltages and element currents and nothing computed from them; the drop is the
+  difference of two node voltages, ground counting as zero; **the power in TR is
+  the drop times the current**, the rule DC uses for every element (verified: the
+  consumed powers of the RC example sum to zero); and **in FD do not multiply**,
+  V(s)I(s) inverting to a `DiracDelta` and not to the power. It no longer teaches
+  `evaluate(res, "vc")`, and `manual_runs.answer_source` writes a TR or FD drop
+  as that difference for both the Manual's notebook
+  (`r14["v_2"]  # vc: node 2 minus ground`) and its result check. **Where power
+  comes from**, asked the same day: the solver computes it for DC (drop times
+  current, sources included) and AC (V times the conjugate of I, halved for peak
+  phasors, `p` its real part and `q` its imaginary part) after the KCL system
+  is solved, in `analysis._derived`, and for TR and FD not at all -- a TR run is
+  FD with the sources moved into s and each node voltage and current inverted,
+  and the app shows no power in TR either.
 * **The README's flat "inside an equation use the underscored form" is too
   strong**: `equations=["v2 = 6"]` and `pjd1` both work; a name that collides with
   SymPy (`re`, `im`) does not. The chapter says what is true.
