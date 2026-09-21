@@ -5,6 +5,10 @@ file version 9 never has, so a `git merge v9/main` can never conflict on
 it. `NEXT.md` beside this file is version 9's running list and arrives
 by merge; read it as upstream history, not as a record of X.
 
+## X55 — version 9's #468 and #469, one example entry and the Dozen notebook (cache v238) — 21 Sep 2026
+
+Roberto: *"Push to X."* Version 9's commits since X54: in `server`, `Lesson_13.cir`'s AS7 Problem 19.2 entry naming the book's Fig. 19.66 as its picture; in `local`, the same entry, cache v238 and notes; in `solver`, three commits to `notebooks/books/Bakers_Dozen.ipynb` and **nothing under `symbulator/`**. So the label stays **`0.6.17+x52`**, there is no `pip`, and **X's site needs a pull of `/home/symbulatorx/symbulator_web` alone** and a Reload (the solver clone only if Roberto wants the notebook there). Conflicts were the two build stamps in `server`'s templates and the two generated pages in `local`, all taken from version 9 and then rebuilt with `Application\vX\.venv`; `branding.py` untouched (`0d5c661c…`), X's `index.html` `35884d41…` against version 9's `3d191bef…`, X's two pages carrying `#d9a521`. Solver suite 575 passed, 3 skipped.
+
 ## X54 — version 9's notebook change and notes, no code (cache v237) — 20 Sep 2026
 
 Roberto: *"Bring X up to date."* Version 9's three commits since X53, clean
