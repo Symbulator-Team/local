@@ -58,6 +58,12 @@ The sampler's Solve card lines follow it: *Press Solve equations* where
 the default is what the run wants, *Tick* or *Untick* only where it is
 not (13.9's poles in FD leave it off, 14.6's design in FD ticks it).
 
+## #469 — claimed by the docs tree, 21 Sep 2026: AS7 Problem 19.2 gets the book's own Fig. 19.66 (cropped from `Other/AS7.pdf`, `assets/circuit/as7-prob19-2.jpg`); the picture in the entry's `image:` line in `Lesson_13.cir` is now that figure, so **symbulator-v238** carries it (install and the ZIP; version 9's PythonAnywhere account takes it at its next pull, no `pip`). Write-up in `Documentation/NEXT_DOCS.md`.
+
+## #468 — claimed by the docs tree, 21 Sep 2026: the Baker's Dozen states the frequency and every other setting its runs need (Antony García's find on AS7 Example 12.11), with a permanent guard in `check_dozen.py`. Live on learn; `Bakers_Dozen.ipynb` in the solver repo regenerated. Nothing in the app moved. Write-up in `Documentation/NEXT_DOCS.md`.
+
+## #467 — claimed by the docs tree, 20 Sep 2026: all the PDFs rebuilt, and the glyphs that printed as blanks fixed (nineteen in the Manual's PDF, six in the Course's); the build now refuses a PDF whose log has a missing character. Live. Write-up in `Documentation/NEXT_DOCS.md`. Nothing in the app moved.
+
 ## #466 — the problem sets as executed Jupyter notebooks — **solver 0.6.17 released and live on install and the ZIP, 20 Sep 2026** (cache v237); notebooks not yet served from learn
 
 Roberto: *"I think we can now create the Jupyter notebook versions of all
